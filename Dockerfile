@@ -21,7 +21,7 @@ COPY --from=fe-build /app/.next/standalone ./fe
 COPY --from=fe-build /app/.next/static ./fe/.next/static
 COPY --from=fe-build /app/public ./fe/public
 COPY start.sh ./start.sh
-RUN tr -d '' < start.sh > start.fixed && mv start.fixed start.sh && chmod +x start.sh && mkdir -p /app/be/storage && chown -R node:node /app
+RUN tr -d '\r' < start.sh > start.fixed && mv start.fixed start.sh && chmod +x start.sh && mkdir -p /app/be/storage && chown -R node:node /app
 USER node
 EXPOSE 3000
 CMD ["./start.sh"]
