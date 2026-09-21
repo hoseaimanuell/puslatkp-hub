@@ -1,0 +1,40 @@
+# PUSLATKP Management Hub — dua servis: `be` (Express) dan `fe` (Next.js).
+# Database MySQL "Puslatkp1a" TIDAK ada di sini: pakai MySQL yang sudah ada (Laragon / phpMyAdmin).
+# Salin .env.example -> .env lalu isi nilainya, kemudian jalankan:  docker compose up -d --build
+services:
+  be:
+    build: ./be
+    container_name: puslatkp-be
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET:?Isi JWT_SECRET di file .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-12h}
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_NAME: ${DB_NAME:-Puslatkp1a}
+      STORAGE_DIR: /data/storage
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - be-storage:/data/storage
+    ports:
+      - "${BE_PORT:-4000}:4000"
+
+  fe:
+    build:
+      context: ./fe
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000/api}
+    container_name: puslatkp-fe
+    restart: unless-stopped
+    depends_on:
+      - be
+    ports:
+      - "${FE_PORT:-3000}:3000"
+
+volumes:
+  be-storage:

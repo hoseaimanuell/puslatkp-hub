@@ -1,0 +1,22 @@
+# Blueprint Render (opsional): Render > New > Blueprint > pilih repositori ini.
+services:
+  - type: web
+    name: puslatkp
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: Puslatkp1a
+      - key: DB_SSL
+        value: "true"

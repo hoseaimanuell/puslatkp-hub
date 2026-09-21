@@ -1,0 +1,15 @@
+node_modules
+.next
+.env
+.env.local
+*.log
+_legacy-vite/node_modules
+
+be/storage
+
+fe/.next-online
+
+_legacy-vite
+.agents
+.next-*
+**/.next-*

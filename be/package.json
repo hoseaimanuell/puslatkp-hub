@@ -1,0 +1,29 @@
+{
+  "name": "puslatkp-be",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend REST API PUSLATKP Management Hub (Express + MySQL)",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "db:build": "node scripts/build-sql.js",
+    "db:init": "node scripts/init-db.js",
+    "db:init:sample": "node scripts/init-db.js --sample",
+    "periods": "node scripts/generate-periods.js",
+    "user:password": "node scripts/set-password.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.24.4"
+  }
+}

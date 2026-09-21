@@ -1,0 +1,9 @@
+**/node_modules
+**/.next
+**/.next-*
+**/.env
+**/.env.local
+**/storage
+_legacy-vite
+docs
+*.log

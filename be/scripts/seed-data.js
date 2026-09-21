@@ -1,0 +1,396 @@
+// Data awal (master) PUSLATKP — diekstrak dari mode demo aplikasi lama agar tampilan/data sama.
+export const DEFAULT_UPTS = [
+  { key: 'upt_jakarta', label: 'BPPP Jakarta', aktif: true },
+  { key: 'upt_medan', label: 'BPPP Medan', aktif: true },
+  { key: 'upt_banyuwangi', label: 'BPPP Banyuwangi', aktif: true },
+  { key: 'upt_tegal', label: 'BPPP Tegal', aktif: true },
+  { key: 'upt_bitung', label: 'BPPP Bitung', aktif: true },
+  { key: 'upt_ambon', label: 'BPPP Ambon', aktif: true },
+  { key: 'upt_padang', label: 'BPPP Padang', aktif: true },
+  { key: 'upt_pontianak', label: 'BPPP Pontianak', aktif: true },
+  { key: 'upt_makassar', label: 'BPPP Makassar', aktif: true },
+  { key: 'upt_sorong', label: 'BPPP Sorong', aktif: true },
+]
+
+export const DEFAULT_PROFILES = [
+  // ── Administrator PUSLATKP ──
+  {
+    id: 'usr-admin-1',
+    role: 'admin',
+    upt_key: null,
+    nama_lengkap: 'Admin PUSLATKP',
+    email: 'admin@puslatkp.kkp.go.id',
+    password: 'AdminPuslatkp2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  // Alias Admin (Kompatibilitas)
+  {
+    id: 'usr-admin-alias',
+    role: 'admin',
+    upt_key: null,
+    nama_lengkap: 'Admin PUSLATKP',
+    email: 'admin@kp.go.id',
+    password: 'admin',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+
+  // ── 10 Akun UPT Resmi (BPPP) ──
+  {
+    id: 'usr-upt-jakarta',
+    role: 'upt',
+    upt_key: 'upt_jakarta',
+    nama_lengkap: 'BPPP Jakarta',
+    email: 'bppp.jakarta@kkp.go.id',
+    password: 'Jakarta2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-medan',
+    role: 'upt',
+    upt_key: 'upt_medan',
+    nama_lengkap: 'BPPP Medan',
+    email: 'bppp.medan@kkp.go.id',
+    password: 'Medan2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-banyuwangi',
+    role: 'upt',
+    upt_key: 'upt_banyuwangi',
+    nama_lengkap: 'BPPP Banyuwangi',
+    email: 'bppp.banyuwangi@kkp.go.id',
+    password: 'Banyuwangi2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-tegal',
+    role: 'upt',
+    upt_key: 'upt_tegal',
+    nama_lengkap: 'BPPP Tegal',
+    email: 'bppp.tegal@kkp.go.id',
+    password: 'Tegal2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-bitung',
+    role: 'upt',
+    upt_key: 'upt_bitung',
+    nama_lengkap: 'BPPP Bitung',
+    email: 'bppp.bitung@kkp.go.id',
+    password: 'Bitung2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-ambon',
+    role: 'upt',
+    upt_key: 'upt_ambon',
+    nama_lengkap: 'BPPP Ambon',
+    email: 'bppp.ambon@kkp.go.id',
+    password: 'Ambon2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-padang',
+    role: 'upt',
+    upt_key: 'upt_padang',
+    nama_lengkap: 'BPPP Padang',
+    email: 'bppp.padang@kkp.go.id',
+    password: 'Padang2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-pontianak',
+    role: 'upt',
+    upt_key: 'upt_pontianak',
+    nama_lengkap: 'BPPP Pontianak',
+    email: 'bppp.pontianak@kkp.go.id',
+    password: 'Pontianak2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-makassar',
+    role: 'upt',
+    upt_key: 'upt_makassar',
+    nama_lengkap: 'BPPP Makassar',
+    email: 'bppp.makassar@kkp.go.id',
+    password: 'Makassar2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-sorong',
+    role: 'upt',
+    upt_key: 'upt_sorong',
+    nama_lengkap: 'BPPP Sorong',
+    email: 'bppp.sorong@kkp.go.id',
+    password: 'Sorong2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  // Alias UPT (Kompatibilitas)
+  {
+    id: 'usr-upt-1',
+    role: 'upt',
+    upt_key: 'upt_jakarta',
+    nama_lengkap: 'BPPP Jakarta (Alias)',
+    email: 'upt@kp.go.id',
+    password: 'upt',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+]
+
+// 9 JENIS DATA RESMI
+export const JD_MASYARAKAT_MINGGU_ID = '11111111-0001-0000-0000-000000000001'
+export const JD_MASYARAKAT_BULAN_ID  = '11111111-0002-0000-0000-000000000002'
+export const JD_APARATUR_MINGGU_ID   = '11111111-0003-0000-0000-000000000003'
+export const JD_APARATUR_BULAN_ID    = '11111111-0004-0000-0000-000000000004'
+export const JD_INSTRUKTUR_MINGGU_ID = '11111111-0005-0000-0000-000000000005'
+export const JD_INSTRUKTUR_BULAN_ID  = '11111111-0006-0000-0000-000000000006'
+export const JD_BELANJA_MODAL_ID     = '11111111-0007-0000-0000-000000000007'
+export const JD_ANGGARAN_BELANJA_ID  = '11111111-0008-0000-0000-000000000008'
+export const JD_ANGGARAN_DANA_ID     = '11111111-0009-0000-0000-000000000009'
+
+export const DEFAULT_JENIS_DATA = [
+  // GRUP 1: MASYARAKAT
+  {
+    id: JD_MASYARAKAT_MINGGU_ID,
+    key: 'masyarakat',
+    judul: 'Masyarakat',
+    deskripsi: 'Data mingguan pelatihan masyarakat: pagu, realisasi anggaran, jumlah peserta, dan metode.',
+    level_utama: 'minggu',
+    butuh_input_bulanan: false,
+    pasangan_mingguan_id: null,
+    publik_boleh_lihat: true,
+    aktif: true,
+  },
+  {
+    id: JD_MASYARAKAT_BULAN_ID,
+    key: 'data_masyarakat',
+    judul: 'Data Masyarakat',
+    deskripsi: 'Rekap bulanan peserta pelatihan masyarakat — dihitung otomatis dari gabungan data Minggu 1–4.',
+    level_utama: 'bulan',
+    mode_bulanan: 'rincian',
+    butuh_input_bulanan: true,
+    pasangan_mingguan_id: JD_MASYARAKAT_MINGGU_ID,
+    publik_boleh_lihat: true,
+    aktif: true,
+  },
+
+  // GRUP 2: APARATUR
+  {
+    id: JD_APARATUR_MINGGU_ID,
+    key: 'aparatur',
+    judul: 'Aparatur',
+    deskripsi: 'Data mingguan pelatihan aparatur: kategori diklat, jumlah peserta, pagu, realisasi, dan metode.',
+    level_utama: 'minggu',
+    butuh_input_bulanan: false,
+    pasangan_mingguan_id: null,
+    publik_boleh_lihat: true,
+    aktif: true,
+  },
+  {
+    id: JD_APARATUR_BULAN_ID,
+    key: 'data_aparatur',
+    judul: 'Data Aparatur',
+    deskripsi: 'Rekap bulanan aparatur peserta pelatihan — dihitung otomatis dari gabungan data Minggu 1–4.',
+    level_utama: 'bulan',
+    mode_bulanan: 'rincian',
+    butuh_input_bulanan: true,
+    pasangan_mingguan_id: JD_APARATUR_MINGGU_ID,
+    publik_boleh_lihat: true,
+    aktif: true,
+  },
+
+  // GRUP 3: INSTRUKTUR & WIDYAISWARA
+  {
+    id: JD_INSTRUKTUR_MINGGU_ID,
+    key: 'data_instruktur_dan_wi',
+    judul: 'Data Instruktur dan WI',
+    deskripsi: 'Data mingguan instruktur dan widyaiswara berdasarkan jenjang jabatan dan keahlian.',
+    level_utama: 'minggu',
+    butuh_input_bulanan: false,
+    pasangan_mingguan_id: null,
+    publik_boleh_lihat: true,
+    aktif: true,
+  },
+  {
+    id: JD_INSTRUKTUR_BULAN_ID,
+    key: 'data_instruktur_dan_widyaiswara',
+    judul: 'Data Instruktur dan Widyaiswara',
+    deskripsi: 'Laporan bulanan tenaga pendidik instruktur dan widyaiswara — upload file PDF/Excel dari UPT.',
+    level_utama: 'bulan',
+    mode_bulanan: 'upload_file',
+    butuh_input_bulanan: false,
+    pasangan_mingguan_id: null,
+    publik_boleh_lihat: true,
+    aktif: true,
+  },
+
+  // GRUP 4: FINANSIAL (Minggu saja, tanpa pasangan)
+  {
+    id: JD_BELANJA_MODAL_ID,
+    key: 'data_belanja_modal',
+    judul: 'Data Belanja Modal',
+    deskripsi: 'Data mingguan belanja modal: volume, realisasi anggaran, realisasi fisik, progress, dan hambatan.',
+    level_utama: 'minggu',
+    butuh_input_bulanan: false,
+    pasangan_mingguan_id: null,
+    publik_boleh_lihat: false,
+    aktif: true,
+  },
+  {
+    id: JD_ANGGARAN_BELANJA_ID,
+    key: 'data_capaian_anggaran_per_jenis_belanja',
+    judul: 'Data Capaian Anggaran per Jenis Belanja',
+    deskripsi: 'Data mingguan pagu & realisasi belanja pegawai, belanja barang, dan belanja modal.',
+    level_utama: 'minggu',
+    butuh_input_bulanan: false,
+    pasangan_mingguan_id: null,
+    publik_boleh_lihat: false,
+    aktif: true,
+  },
+  {
+    id: JD_ANGGARAN_DANA_ID,
+    key: 'data_capaian_anggaran_per_sumber_dana',
+    judul: 'Data Capaian Anggaran per Sumber Dana',
+    deskripsi: 'Data mingguan pagu & realisasi sumber dana RM, PNBP/BLU, dan SBSN.',
+    level_utama: 'minggu',
+    butuh_input_bulanan: false,
+    pasangan_mingguan_id: null,
+    publik_boleh_lihat: false,
+    aktif: true,
+  },
+]
+
+export const DEFAULT_FIELDS = [
+  // 1. Masyarakat (Minggu)
+  { id: 'f-1-1', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'nama_pelatihan', label: 'Nama Pelatihan/Judul Pelatihan', tipe: 'teks', wajib: true, urutan: 1, aktif: true },
+  { id: 'f-1-2', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'jumlah_peserta', label: 'Jumlah Peserta', tipe: 'angka', wajib: true, urutan: 2, aktif: true },
+  { id: 'f-1-3', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'tanggal_pelatihan', label: 'Tanggal Pelatihan', tipe: 'tanggal', wajib: false, urutan: 3, aktif: true },
+  { id: 'f-1-4', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'pagu_anggaran', label: 'Pagu Anggaran (Rp)', tipe: 'angka', wajib: false, urutan: 4, aktif: true },
+  { id: 'f-1-5', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'realisasi_anggaran', label: 'Realisasi Anggaran (Rp)', tipe: 'angka', wajib: false, urutan: 5, aktif: true },
+  { id: 'f-1-6', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'sumber_dana', label: 'Sumber Dana', tipe: 'pilihan', opsi_pilihan: ['RM', 'PNBP', 'BLU', 'SBSN'], wajib: false, urutan: 6, aktif: true },
+  { id: 'f-1-7', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'bidang_kompetensi', label: 'Bidang Kompetensi (Sesuai E-Laut)', tipe: 'pilihan', opsi_pilihan: ['Kepelautan', 'Penangkapan Ikan', 'Permesinan Kapal', 'Budidaya Perikanan', 'Pengolahan Hasil Perikanan', 'Konservasi Perairan', 'Sosial Ekonomi KP'], wajib: false, urutan: 7, aktif: true },
+  { id: 'f-1-8', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'program_prioritas', label: 'Program Prioritas', tipe: 'pilihan', opsi_pilihan: ['Ekonomi Biru 1 (Konservasi)', 'Ekonomi Biru 2 (Penangkapan Terukur)', 'Ekonomi Biru 3 (Budidaya Berkelanjutan)', 'Ekonomi Biru 4 (Pengawasan Wilayah)', 'Ekonomi Biru 5 (Pembersihan Sampah Plastik Laut)'], wajib: false, urutan: 8, aktif: true },
+  { id: 'f-1-9', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'metode_pelatihan', label: 'Metode Pelatihan', tipe: 'pilihan', opsi_pilihan: ['Luring', 'Blended', 'Full Online'], wajib: false, urutan: 9, aktif: true },
+  { id: 'f-1-10', jenis_data_id: JD_MASYARAKAT_MINGGU_ID, level: 'minggu', field_key: 'link_laporan_pelatihan', label: 'Link Laporan Pelatihan', tipe: 'teks', wajib: false, urutan: 10, aktif: true },
+
+  // 2. Data Masyarakat (Bulan)
+  { id: 'f-2-1', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'no_urut', label: 'No', tipe: 'teks', wajib: false, urutan: 1, aktif: true },
+  { id: 'f-2-2', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'penyelenggara_pelatihan', label: 'Penyelenggara Pelatihan', tipe: 'teks', wajib: false, urutan: 2, aktif: true },
+  { id: 'f-2-3', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'nama', label: 'Nama Lulusan Pelatihan', tipe: 'teks', wajib: true, is_identitas: true, urutan: 3, aktif: true },
+  { id: 'f-2-4', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'nik', label: 'NIK', tipe: 'teks', wajib: true, is_identitas: true, urutan: 4, aktif: true },
+  { id: 'f-2-5', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'tempat_lahir', label: 'Tempat Lahir', tipe: 'teks', wajib: false, urutan: 5, aktif: true },
+  { id: 'f-2-6', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'tanggal_lahir', label: 'Tanggal Lahir', tipe: 'tanggal', wajib: false, urutan: 6, aktif: true },
+  { id: 'f-2-7', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'jenis_kelamin', label: 'Jenis Kelamin (L/P)', tipe: 'pilihan', opsi_pilihan: ['Laki-laki', 'Perempuan'], wajib: false, urutan: 7, aktif: true },
+  { id: 'f-2-8', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'pendidikan_terakhir', label: 'Pendidikan Terakhir', tipe: 'pilihan', opsi_pilihan: ['SD', 'SMP', 'SMA/SMK', 'D1', 'D2', 'D3', 'D4/S1', 'S2', 'S3'], wajib: false, urutan: 8, aktif: true },
+  { id: 'f-2-9', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'no_telepon', label: 'Nomor Tlp.', tipe: 'teks', wajib: false, is_identitas: true, urutan: 9, aktif: true },
+  { id: 'f-2-10', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'alamat', label: 'Alamat', tipe: 'teks', wajib: false, is_identitas: true, urutan: 10, aktif: true },
+  { id: 'f-2-11', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'provinsi', label: 'Provinsi', tipe: 'teks', wajib: false, urutan: 11, aktif: true },
+  { id: 'f-2-12', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'kab_kota', label: 'Kab/Kota', tipe: 'teks', wajib: false, urutan: 12, aktif: true },
+  { id: 'f-2-13', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'bidang_pelatihan', label: 'Bidang Pelatihan', tipe: 'teks', wajib: false, urutan: 13, aktif: true },
+  { id: 'f-2-14', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'jenis_pelatihan_dukungan_program_terobosan', label: 'Jenis Pelatihan Dukungan Program Terobosan', tipe: 'teks', wajib: false, urutan: 14, aktif: true },
+  { id: 'f-2-15', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'nama_pelatihan', label: 'Nama Pelatihan', tipe: 'teks', wajib: true, urutan: 15, aktif: true },
+  { id: 'f-2-16', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'tanggal_pelatihan', label: 'Tanggal Pelatihan', tipe: 'tanggal', wajib: false, urutan: 16, aktif: true },
+  { id: 'f-2-17', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'no_sertifikat_pelatihan', label: 'No Sertifikat Pelatihan', tipe: 'teks', wajib: false, urutan: 17, aktif: true },
+  { id: 'f-2-18', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'link_sertifikat_pelatihan_by_name', label: 'Link Sertifikat Pelatihan by Name', tipe: 'teks', wajib: false, urutan: 18, aktif: true },
+  { id: 'f-2-19', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'no_kusuka', label: 'No KUSUKA', tipe: 'teks', wajib: false, urutan: 19, aktif: true },
+  { id: 'f-2-20', jenis_data_id: JD_MASYARAKAT_BULAN_ID, level: 'bulan', field_key: 'jenis_pelatihan', label: 'Jenis Pelatihan', tipe: 'pilihan', opsi_pilihan: ['Aspirasi', 'Reguler', 'Kerjasama', 'Mandiri'], wajib: false, urutan: 20, aktif: true },
+
+  // 3. Aparatur (Minggu)
+  { id: 'f-3-1', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'nama_pelatihan', label: 'Nama Pelatihan/Judul Pelatihan', tipe: 'teks', wajib: true, urutan: 1, aktif: true },
+  { id: 'f-3-2', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'kategori_pelatihan', label: 'Kategori Pelatihan', tipe: 'pilihan', opsi_pilihan: ['Struktural', 'Fungsional', 'Teknis', 'Manajerial'], wajib: false, urutan: 2, aktif: true },
+  { id: 'f-3-3', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'jumlah_peserta', label: 'Jumlah Peserta', tipe: 'angka', wajib: true, urutan: 3, aktif: true },
+  { id: 'f-3-4', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'tanggal_pelatihan', label: 'Tanggal Pelatihan', tipe: 'tanggal', wajib: false, urutan: 4, aktif: true },
+  { id: 'f-3-5', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'pagu_anggaran', label: 'Pagu Anggaran (Rp)', tipe: 'angka', wajib: false, urutan: 5, aktif: true },
+  { id: 'f-3-6', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'realisasi_anggaran', label: 'Realisasi Anggaran (Rp)', tipe: 'angka', wajib: false, urutan: 6, aktif: true },
+  { id: 'f-3-7', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'sumber_dana', label: 'Sumber Dana', tipe: 'pilihan', opsi_pilihan: ['RM', 'PNBP', 'BLU', 'SBSN'], wajib: false, urutan: 7, aktif: true },
+  { id: 'f-3-8', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'asal_instansi', label: 'Asal Instansi', tipe: 'teks', wajib: false, urutan: 8, aktif: true },
+  { id: 'f-3-9', jenis_data_id: JD_APARATUR_MINGGU_ID, level: 'minggu', field_key: 'metode_pelatihan', label: 'Metode Pelatihan', tipe: 'pilihan', opsi_pilihan: ['Luring', 'Blended', 'Full Online'], wajib: false, urutan: 9, aktif: true },
+
+  // 4. Data Aparatur (Bulan)
+  { id: 'f-4-1', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'nama', label: 'Nama Lulusan Pelatihan', tipe: 'teks', wajib: true, is_identitas: true, urutan: 1, aktif: true },
+  { id: 'f-4-2', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'nik', label: 'NIK', tipe: 'teks', wajib: true, is_identitas: true, urutan: 2, aktif: true },
+  { id: 'f-4-3', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'tempat_tanggal_lahir', label: 'Tempat & Tanggal Lahir', tipe: 'teks', wajib: false, urutan: 3, aktif: true },
+  { id: 'f-4-4', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'jenis_kelamin', label: 'Jenis Kelamin (L/P)', tipe: 'pilihan', opsi_pilihan: ['Laki-laki', 'Perempuan'], wajib: false, urutan: 4, aktif: true },
+  { id: 'f-4-5', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'nip', label: 'NIP', tipe: 'teks', wajib: false, is_identitas: true, urutan: 5, aktif: true },
+  { id: 'f-4-6', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'jabatan', label: 'Jabatan', tipe: 'teks', wajib: false, urutan: 6, aktif: true },
+  { id: 'f-4-7', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'pangkat_gol_ruang', label: 'Pangkat/Gol. Ruang', tipe: 'teks', wajib: false, urutan: 7, aktif: true },
+  { id: 'f-4-8', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'pendidikan_terakhir', label: 'Pendidikan Terakhir', tipe: 'pilihan', opsi_pilihan: ['SMA/SMK', 'D3', 'D4/S1', 'S2', 'S3'], wajib: false, urutan: 8, aktif: true },
+  { id: 'f-4-9', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'no_telepon', label: 'Nomor Tlp.', tipe: 'teks', wajib: false, is_identitas: true, urutan: 9, aktif: true },
+  { id: 'f-4-10', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'unit_kerja_eselon_i', label: 'Unit Kerja Eselon I', tipe: 'teks', wajib: false, urutan: 10, aktif: true },
+  { id: 'f-4-11', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'unit_kerja', label: 'Unit Kerja', tipe: 'teks', wajib: false, urutan: 11, aktif: true },
+  { id: 'f-4-12', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'alamat_kantor', label: 'Alamat Kantor', tipe: 'teks', wajib: false, urutan: 12, aktif: true },
+  { id: 'f-4-13', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'nama_pelatihan', label: 'Nama Pelatihan', tipe: 'teks', wajib: true, urutan: 13, aktif: true },
+  { id: 'f-4-14', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'jenis_diklat', label: 'Jenis Diklat', tipe: 'pilihan', opsi_pilihan: ['Reguler', 'Full Online', 'Blended'], wajib: false, urutan: 14, aktif: true },
+  { id: 'f-4-15', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'tanggal_pelatihan', label: 'Tanggal Pelatihan', tipe: 'tanggal', wajib: false, urutan: 15, aktif: true },
+
+  // 5. Data Instruktur dan WI (Minggu)
+  { id: 'f-5-1', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jumlah_instruktur_wi', label: 'Jumlah Instruktur dan Widyaiswara', tipe: 'angka', wajib: true, urutan: 1, aktif: true },
+  { id: 'f-5-2', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jenjang_jabatan_instruktur', label: 'Jenjang Jabatan Instruktur', tipe: 'pilihan', opsi_pilihan: ['Penyelia', 'Pertama', 'Muda', 'Madya'], wajib: false, urutan: 2, aktif: true },
+  { id: 'f-5-3', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jenjang_jabatan_widyaiswara', label: 'Jenjang Jabatan Widyaiswara', tipe: 'pilihan', opsi_pilihan: ['Pertama', 'Muda', 'Madya', 'Utama'], wajib: false, urutan: 3, aktif: true },
+  { id: 'f-5-4', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'instruktur_berdasarkan_keahlian', label: 'Instruktur Berdasarkan Keahlian', tipe: 'angka', wajib: false, urutan: 4, aktif: true },
+  { id: 'f-5-5', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'widyaiswara_berdasarkan_keahlian', label: 'Widyaiswara Berdasarkan Keahlian', tipe: 'angka', wajib: false, urutan: 5, aktif: true },
+
+  // 6. Data Instruktur dan Widyaiswara (Bulan)
+  { id: 'f-6-1', jenis_data_id: JD_INSTRUKTUR_BULAN_ID, level: 'bulan', field_key: 'nama', label: 'Nama Lengkap', tipe: 'teks', wajib: true, urutan: 1, aktif: true },
+  { id: 'f-6-2', jenis_data_id: JD_INSTRUKTUR_BULAN_ID, level: 'bulan', field_key: 'nip', label: 'NIP', tipe: 'teks', wajib: true, is_identitas: true, urutan: 2, aktif: true },
+  { id: 'f-6-3', jenis_data_id: JD_INSTRUKTUR_BULAN_ID, level: 'bulan', field_key: 'jenis_kelamin', label: 'Jenis Kelamin', tipe: 'pilihan', opsi_pilihan: ['Laki-laki', 'Perempuan'], wajib: false, urutan: 3, aktif: true },
+  { id: 'f-6-4', jenis_data_id: JD_INSTRUKTUR_BULAN_ID, level: 'bulan', field_key: 'jabatan', label: 'Jabatan (Instruktur / Widyaiswara)', tipe: 'teks', wajib: false, urutan: 4, aktif: true },
+  { id: 'f-6-5', jenis_data_id: JD_INSTRUKTUR_BULAN_ID, level: 'bulan', field_key: 'bidang_keahlian', label: 'Bidang Keahlian', tipe: 'teks', wajib: false, urutan: 5, aktif: true },
+  { id: 'f-6-6', jenis_data_id: JD_INSTRUKTUR_BULAN_ID, level: 'bulan', field_key: 'pendidikan', label: 'Pendidikan', tipe: 'pilihan', opsi_pilihan: ['D3', 'D4/S1', 'S2', 'S3'], wajib: false, urutan: 6, aktif: true },
+  { id: 'f-6-7', jenis_data_id: JD_INSTRUKTUR_BULAN_ID, level: 'bulan', field_key: 'status_asn', label: 'Status ASN (PNS/PPPK)', tipe: 'pilihan', opsi_pilihan: ['PNS', 'PPPK'], wajib: false, urutan: 7, aktif: true },
+
+  // 7. Data Belanja Modal (Minggu)
+  { id: 'f-7-1', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'judul_kegiatan', label: 'Judul Kegiatan', tipe: 'teks', wajib: true, urutan: 1, aktif: true },
+  { id: 'f-7-2', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'volume', label: 'Volume', tipe: 'angka', wajib: false, urutan: 2, aktif: true },
+  { id: 'f-7-3', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'satuan', label: 'Satuan', tipe: 'teks', wajib: false, urutan: 3, aktif: true },
+  { id: 'f-7-4', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'pagu_anggaran', label: 'Pagu Anggaran (Rp)', tipe: 'angka', wajib: false, urutan: 4, aktif: true },
+  { id: 'f-7-5', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'sumber_dana', label: 'Sumber Dana', tipe: 'pilihan', opsi_pilihan: ['RM', 'PNBP', 'BLU', 'SBSN'], wajib: false, urutan: 5, aktif: true },
+  { id: 'f-7-6', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'realisasi_anggaran', label: 'Realisasi Anggaran (Rp)', tipe: 'angka', wajib: false, urutan: 6, aktif: true },
+  { id: 'f-7-7', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'realisasi_fisik', label: 'Realisasi Fisik (%)', tipe: 'angka', wajib: false, urutan: 7, aktif: true },
+  { id: 'f-7-8', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'progress_pelaksanaan', label: 'Progress Pelaksanaan', tipe: 'teks_panjang', wajib: false, urutan: 8, aktif: true },
+  { id: 'f-7-9', jenis_data_id: JD_BELANJA_MODAL_ID, level: 'minggu', field_key: 'permasalahan', label: 'Permasalahan', tipe: 'teks_panjang', wajib: false, urutan: 9, aktif: true },
+
+  // 8. Data Capaian Anggaran per Jenis Belanja (Minggu)
+  { id: 'f-8-1', jenis_data_id: JD_ANGGARAN_BELANJA_ID, level: 'minggu', field_key: 'pagu_belanja_pegawai', label: 'Pagu Belanja Pegawai (Rp)', tipe: 'angka', wajib: false, urutan: 1, aktif: true },
+  { id: 'f-8-2', jenis_data_id: JD_ANGGARAN_BELANJA_ID, level: 'minggu', field_key: 'realisasi_belanja_pegawai', label: 'Realisasi Belanja Pegawai (Rp)', tipe: 'angka', wajib: false, urutan: 2, aktif: true },
+  { id: 'f-8-3', jenis_data_id: JD_ANGGARAN_BELANJA_ID, level: 'minggu', field_key: 'pagu_belanja_barang', label: 'Pagu Belanja Barang (Rp)', tipe: 'angka', wajib: false, urutan: 3, aktif: true },
+  { id: 'f-8-4', jenis_data_id: JD_ANGGARAN_BELANJA_ID, level: 'minggu', field_key: 'realisasi_belanja_barang', label: 'Realisasi Belanja Barang (Rp)', tipe: 'angka', wajib: false, urutan: 4, aktif: true },
+  { id: 'f-8-5', jenis_data_id: JD_ANGGARAN_BELANJA_ID, level: 'minggu', field_key: 'pagu_belanja_modal', label: 'Pagu Belanja Modal (Rp)', tipe: 'angka', wajib: false, urutan: 5, aktif: true },
+  { id: 'f-8-6', jenis_data_id: JD_ANGGARAN_BELANJA_ID, level: 'minggu', field_key: 'realisasi_belanja_modal', label: 'Realisasi Belanja Modal (Rp)', tipe: 'angka', wajib: false, urutan: 6, aktif: true },
+
+  // 9. Data Capaian Anggaran per Sumber Dana (Minggu)
+  { id: 'f-9-1', jenis_data_id: JD_ANGGARAN_DANA_ID, level: 'minggu', field_key: 'pagu_rm', label: 'Pagu RM (Rp)', tipe: 'angka', wajib: false, urutan: 1, aktif: true },
+  { id: 'f-9-2', jenis_data_id: JD_ANGGARAN_DANA_ID, level: 'minggu', field_key: 'realisasi_rm', label: 'Realisasi RM (Rp)', tipe: 'angka', wajib: false, urutan: 2, aktif: true },
+  { id: 'f-9-3', jenis_data_id: JD_ANGGARAN_DANA_ID, level: 'minggu', field_key: 'pagu_pnbp_blu', label: 'Pagu PNBP/BLU (Rp)', tipe: 'angka', wajib: false, urutan: 3, aktif: true },
+  { id: 'f-9-4', jenis_data_id: JD_ANGGARAN_DANA_ID, level: 'minggu', field_key: 'realisasi_pnbp_blu', label: 'Realisasi PNBP/BLU (Rp)', tipe: 'angka', wajib: false, urutan: 4, aktif: true },
+  { id: 'f-9-5', jenis_data_id: JD_ANGGARAN_DANA_ID, level: 'minggu', field_key: 'pagu_sbsn', label: 'Pagu SBSN (Rp)', tipe: 'angka', wajib: false, urutan: 5, aktif: true },
+  { id: 'f-9-6', jenis_data_id: JD_ANGGARAN_DANA_ID, level: 'minggu', field_key: 'realisasi_sbsn', label: 'Realisasi SBSN (Rp)', tipe: 'angka', wajib: false, urutan: 6, aktif: true },
+]
+export const DEFAULT_ACTIVITIES = [
+  {
+    id: 'act-1',
+    upt_key: 'upt_jakarta',
+    tanggal: '2026-09-02',
+    status: 'selesai',
+    uraian: 'Pelaksanaan Uji Kompetensi Keahlian Nautika Kapal Perikanan Angkatan III',
+    pic: ['Dr. Hendra', 'Siti Rahma'],
+    lingkup: 'internal_puslat',
+    output: '30 Taruna dinyatakan kompeten dan lulus sertifikasi BNSP',
+    hambatan: false,
+    interaksi: 'Penguji LSP Kelautan',
+    feedback: 'Fasilitas simulator berfungsi sangat baik',
+  },
+  {
+    id: 'act-2',
+    upt_key: 'upt_jakarta',
+    tanggal: '2026-09-03',
+    status: 'proses',
+    uraian: 'Bimbingan Teknis Pengolahan Hasil Tangkap Mutu Higienis di Muara Baru',
+    pic: ['Ahmad Fauzi', 'Dewi Lestari'],
+    lingkup: 'internal_eksternal',
+    output: 'Pendampingan 45 UMKM pengolah ikan teri nasi dan rajungan',
+    hambatan: false,
+    interaksi: 'Dinas KPKP DKI Jakarta',
+    feedback: 'Antusiasme peserta sangat tinggi',
+  },
+]
