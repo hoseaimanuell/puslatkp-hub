@@ -13,7 +13,7 @@ const norm = s => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim
 
 /** Kolom identitas baris pada berkas impor. */
 export const META = [
-  { id: 'upt', label: 'UPT', alias: ['upt', 'unit', 'balai', 'bppp', 'upt balai', 'unit pelaksana teknis', 'nama upt'] },
+  { id: 'upt', label: 'UPT', alias: ['upt', 'unit', 'balai', 'bppp', 'upt balai', 'unit pelaksana teknis', 'nama upt', 'unit organisasi', 'unit kerja', 'satker', 'instansi'] },
   { id: 'tahun', label: 'Tahun', alias: ['tahun', 'year', 'thn'] },
   { id: 'bulan', label: 'Bulan', alias: ['bulan', 'month', 'bln'] },
   { id: 'minggu', label: 'Minggu', alias: ['minggu', 'minggu ke', 'week', 'mg'] },
