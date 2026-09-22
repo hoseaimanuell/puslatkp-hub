@@ -23,8 +23,9 @@ import {
   Calendar, Building2, Database, Download, Filter,
   CheckCircle2, AlertTriangle, FileSpreadsheet,
   Users, Target, TrendingUp, Layers, ChevronDown,
-  ChevronRight, Calculator, FileText, Loader2, Eye, Sparkles, Search
+  ChevronRight, Calculator, FileText, Loader2, Eye, Sparkles, Search, Trash2, Copy
 } from 'lucide-react'
+import HapusMassalDialog from '../components/HapusMassalDialog'
 
 function num(v) {
   const n = Number(v)
@@ -922,6 +923,8 @@ export default function RekapBulanan({ onNavigate }) {
           selectedUpt={isAdmin ? selectedUpt : (uptKey || 'all')}
           periodLabel={labelBulan(bulan, tahun)}
           loading={loading}
+          isAdmin={isAdmin}
+          onChanged={loadBulananData}
         />
       )}
     </div>
@@ -934,10 +937,11 @@ export default function RekapBulanan({ onNavigate }) {
  * Kolom mengikuti definisi kolom Jenis Data (sama dengan template Excel); kolom UPT ditambahkan
  * di depan saat menampilkan lebih dari satu UPT.
  */
-function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selectedUpt = 'all', periodLabel = '', loading }) {
+function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selectedUpt = 'all', periodLabel = '', loading, isAdmin, onChanged }) {
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
+  const [deleteDialog, setDeleteDialog] = useState(null) // { mode: 'filtered'|'duplikat', ids: [] }
 
   const showUptColumn = selectedUpt === 'all'
   const uptLabelOf = key => uptList.find(u => u.key === key)?.label || key || '-'
@@ -960,9 +964,33 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries, fields, search, showUptColumn, uptList])
 
+  // Duplikat: baris dengan UPT, periode & seluruh isi kolom yang sama persis (mis. akibat unggah/impor dua kali).
+  // Baris pertama tiap kelompok dipertahankan, sisanya ditandai duplikat.
+  const duplicateIds = useMemo(() => {
+    const seen = new Map()
+    const dupIds = []
+    for (const e of entries) {
+      const key = `${e.upt_key}|${e.period_id}|${fields.map(f => cell(e, f)).join('')}`
+      if (seen.has(key)) dupIds.push(e.id)
+      else seen.set(key, e.id)
+    }
+    return dupIds
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries, fields])
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const page = Math.min(currentPage, totalPages)
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+
+  async function handleDelete() {
+    const { ids } = deleteDialog
+    const { error } = await db.from('data_entries').delete().in('id', ids)
+    if (error) return { error }
+    setDeleteDialog(null)
+    setCurrentPage(1)
+    await onChanged?.()
+    return {}
+  }
 
   function handleExport() {
     const rows = sanitizeRows(filtered.map(e => Object.fromEntries([
@@ -994,16 +1022,41 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {uptLabel} · {periodLabel} · <strong>{entries.length}</strong> baris data hasil unggahan
+            {duplicateIds.length > 0 && (
+              <span className="text-amber-600 dark:text-amber-400"> · {duplicateIds.length} terindikasi duplikat</span>
+            )}
           </p>
         </div>
-        <button
-          onClick={handleExport}
-          disabled={filtered.length === 0}
-          className="btn-primary text-xs whitespace-nowrap self-start disabled:opacity-40"
-        >
-          <Download size={14} />
-          <span>Download Excel</span>
-        </button>
+        <div className="flex items-center gap-2 self-start flex-wrap">
+          {isAdmin && duplicateIds.length > 0 && (
+            <button
+              onClick={() => setDeleteDialog({ mode: 'duplikat', ids: duplicateIds })}
+              className="btn-secondary text-xs whitespace-nowrap !text-amber-700 dark:!text-amber-400"
+              title="Hapus baris yang isinya sama persis dengan baris lain (UPT, periode & semua kolom sama), sisakan satu"
+            >
+              <Copy size={14} />
+              <span>Hapus {duplicateIds.length} Duplikat</span>
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => setDeleteDialog({ mode: 'filtered', ids: filtered.map(e => e.id) })}
+              disabled={filtered.length === 0}
+              className="btn-secondary text-xs whitespace-nowrap !text-rose-600 dark:!text-rose-400 disabled:opacity-40"
+            >
+              <Trash2 size={14} />
+              <span>Hapus {search ? 'Hasil Pencarian' : 'Semua'}</span>
+            </button>
+          )}
+          <button
+            onClick={handleExport}
+            disabled={filtered.length === 0}
+            className="btn-primary text-xs whitespace-nowrap disabled:opacity-40"
+          >
+            <Download size={14} />
+            <span>Download Excel</span>
+          </button>
+        </div>
       </div>
 
       <div className="relative max-w-sm w-full">
@@ -1092,6 +1145,20 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
           </div>
         </div>
       )}
+
+      <HapusMassalDialog
+        open={!!deleteDialog}
+        onClose={() => setDeleteDialog(null)}
+        onConfirm={handleDelete}
+        isAdmin={isAdmin}
+        count={deleteDialog?.ids?.length || 0}
+        title={deleteDialog?.mode === 'duplikat' ? 'Hapus Data Duplikat' : 'Hapus Data by Name'}
+        details={[
+          ['Jenis Data', jenisData.judul],
+          ['UPT', uptLabel],
+          ['Periode', periodLabel],
+        ]}
+      />
     </div>
   )
 }
