@@ -41,6 +41,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
   const [uptFilter, setUptFilter] = useState(userUptKey ?? 'all')
   const [rekapRows, setRekapRows] = useState([])
   const [entries, setEntries] = useState([])
+  const [fieldDefs, setFieldDefs] = useState([])
   const [loading, setLoading] = useState(true)
 
   const selectedJd = jdId === 'all' ? null : jenisDataList.find(j => j.id === jdId)
@@ -94,15 +95,17 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
 
   async function loadMeta() {
     setLoading(true)
-    const [{ data: p }, { data: jds }, { data: upts }] = await Promise.all([
+    const [{ data: p }, { data: jds }, { data: upts }, { data: fdefs }] = await Promise.all([
       db.from('periods').select('*'),
       db.from('jenis_data').select('*').eq('aktif', true).order('created_at'),
       db.from('upt_list').select('*').eq('aktif', true).order('label'),
+      db.from('field_definitions').select('*').eq('aktif', true).order('urutan'),
     ])
     const allP = sortPeriods(p || [])
     setPeriods(allP)
     setJenisDataList((jds || []).filter(j => !levelFilter || j.level_utama === levelFilter))
     setUptList(upts || [])
+    setFieldDefs(fdefs || [])
     // Minggu yang sedang berjalan; jika tidak ada, minggu terakhir yang sudah lewat
     const defaultWeek = pickCurrentPeriod((p || []).filter(x => x.level === 'minggu'))
     if (defaultWeek) {
@@ -182,6 +185,42 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
     pagu: tableRows.reduce((a, r) => a + r.pagu, 0),
     realisasi: tableRows.reduce((a, r) => a + r.realisasi, 0),
   }), [tableRows])
+
+  // Rincian seluruh kolom (dipilih satu Jenis Data): satu baris = satu UPT (+ satu pelatihan bila lebih dari 1
+  // per minggu). Semua kolom yang terdaftar di Kelola Jenis Data ikut tampil, sel kosong ditandai "—".
+  const detailFields = useMemo(() => {
+    if (!selectedJd) return []
+    const level = selectedJd.level_utama === 'bulan' ? 'bulan' : 'minggu'
+    return fieldDefs
+      .filter(f => f.jenis_data_id === selectedJd.id && f.level === level)
+      .sort((a, b) => (a.urutan || 0) - (b.urutan || 0))
+  }, [fieldDefs, selectedJd])
+
+  const detailRows = useMemo(() => {
+    if (!selectedJd || !detailFields.length) return []
+    const upts = uptFilter === 'all' ? uptList : uptList.filter(u => u.key === uptFilter)
+    const relevant = rekapRows.filter(r => r.jenis_data_id === selectedJd.id)
+    const rows = []
+    upts.forEach(upt => {
+      const own = relevant.filter(r => r.upt_key === upt.key)
+      const barisKeList = [...new Set(own.map(r => r.baris_ke ?? 1))].sort((a, b) => a - b)
+      ;(barisKeList.length ? barisKeList : [1]).forEach(barisKe => {
+        const forBaris = own.filter(r => (r.baris_ke ?? 1) === barisKe)
+        const values = {}
+        forBaris.forEach(r => { values[r.field_key] = r.value !== null && r.value !== undefined ? r.value : r.value_text })
+        rows.push({
+          key: `${upt.key}-${barisKe}`,
+          upt_label: upt.label,
+          baris_ke: barisKe,
+          hasData: forBaris.length > 0,
+          terlambat: forBaris.some(r => r.terlambat),
+          values,
+        })
+      })
+    })
+    return rows
+  }, [selectedJd, detailFields, uptList, uptFilter, rekapRows])
+  const detailHasMultiBaris = useMemo(() => detailRows.some(r => r.baris_ke > 1), [detailRows])
 
   const chartPerUpt = useMemo(() => {
     const map = {}
@@ -406,6 +445,86 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
           </table>
         )}
       </div>
+
+      {!compact && selectedJd && detailFields.length > 0 && (
+        <div className="card overflow-x-auto">
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+            <h4 className="font-semibold text-sm">Rincian Semua Kolom: {selectedJd.judul} — {periodLabel}</h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Seluruh kolom yang terdaftar di Kelola Jenis Data untuk jenis data ini. Geser ke kanan untuk melihat kolom lainnya; sel kosong ditandai "—".
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="text-xs border-collapse" style={{ minWidth: 'max-content', width: '100%' }}>
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  <th className="text-left px-3 py-2.5 whitespace-nowrap font-semibold border-b border-r border-gray-200 dark:border-gray-700 sticky left-0 z-10 bg-gray-50 dark:bg-gray-800/60" style={{ minWidth: 140 }}>
+                    UPT
+                  </th>
+                  {detailHasMultiBaris && (
+                    <th className="text-center px-3 py-2.5 whitespace-nowrap font-semibold border-b border-r border-gray-200 dark:border-gray-700">
+                      Pelatihan Ke
+                    </th>
+                  )}
+                  {detailFields.map(f => (
+                    <th
+                      key={f.field_key}
+                      className={`px-3 py-2.5 whitespace-nowrap font-semibold border-b border-gray-200 dark:border-gray-700 ${f.tipe === 'angka' ? 'text-right' : 'text-left'}`}
+                      style={{ minWidth: f.tipe === 'angka' ? 120 : 140 }}
+                    >
+                      {f.label}
+                    </th>
+                  ))}
+                  <th className="text-center px-3 py-2.5 whitespace-nowrap font-semibold border-b border-l border-gray-200 dark:border-gray-700">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {detailRows.map(row => (
+                  <tr key={row.key} className={`hover:bg-blue-50/30 dark:hover:bg-blue-950/10 transition-colors ${!row.hasData ? 'opacity-40' : ''}`}>
+                    <td className="px-3 py-2 font-medium text-gray-900 dark:text-white border-r border-gray-100 dark:border-gray-800 whitespace-nowrap sticky left-0 bg-white dark:bg-gray-900 z-10">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Building2 size={12} className="text-blue-400 flex-shrink-0" /> {row.upt_label}
+                      </span>
+                    </td>
+                    {detailHasMultiBaris && (
+                      <td className="px-3 py-2 text-center font-mono text-gray-500 border-r border-gray-100 dark:border-gray-800">
+                        {row.baris_ke}
+                      </td>
+                    )}
+                    {detailFields.map(f => {
+                      const val = row.values[f.field_key]
+                      const isRupiah = f.tipe === 'angka' && (f.field_key.includes('pagu') || f.field_key.includes('anggaran') || f.field_key.includes('belanja'))
+                      const display = val !== undefined && val !== null && val !== ''
+                        ? isRupiah ? formatRp(Number(val)) : f.tipe === 'angka' ? Number(val).toLocaleString('id-ID') : String(val)
+                        : null
+                      return (
+                        <td
+                          key={f.field_key}
+                          className={`px-3 py-2 whitespace-nowrap ${f.tipe === 'angka' ? 'text-right font-mono text-gray-800 dark:text-gray-200' : 'text-left text-gray-700 dark:text-gray-300'}`}
+                          style={{ maxWidth: 220 }}
+                          title={display || ''}
+                        >
+                          {display ? <span className="block truncate">{display}</span> : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                        </td>
+                      )
+                    })}
+                    <td className="px-3 py-2 text-center whitespace-nowrap">
+                      {row.hasData ? (
+                        <>
+                          <Badge variant="success">Sudah</Badge>
+                          {row.terlambat && <span className="ml-1 inline-flex text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
+                        </>
+                      ) : <Badge variant="draft">Menunggu</Badge>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {chartPerUpt.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
