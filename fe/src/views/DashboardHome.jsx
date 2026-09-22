@@ -16,8 +16,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import {
-  Users, Landmark, GraduationCap, Calendar, BarChart3, Activity, ChevronLeft, ChevronRight,
-  Clock, ClipboardList, Database, FileText, Hourglass, Loader2
+  Users, Landmark, GraduationCap, BarChart3, ChevronLeft, ChevronRight, Hourglass, Loader2
 } from 'lucide-react'
 
 // Kunci Jenis Data bawaan yang menjadi sumber angka dashboard
@@ -32,7 +31,7 @@ const formatRp = n => `Rp ${num(n).toLocaleString('id-ID')}`
 
 import PageHeader from '../components/PageHeader'
 
-export default function DashboardHome({ onNavigate }) {
+export default function DashboardHome() {
   const { isAdmin, uptKey, profile } = useAuth()
 
   // Data mingguan dari isian UPT
@@ -297,29 +296,6 @@ export default function DashboardHome({ onNavigate }) {
           ))}
         </div>
       ))}
-
-      {/* Akses cepat */}
-      <InfoCard title="Akses Cepat">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { icon: Database, label: 'Input Mingguan', page: 'input-mingguan', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30' },
-            { icon: Calendar, label: 'Input Bulanan', page: 'input-bulanan', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30' },
-            { icon: BarChart3, label: 'Rekap Triwulan & Tahun', page: 'rekap-triwulan-tahun', color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/30' },
-            { icon: FileText, label: 'Dokumen & Arsip', page: 'dokumen-arsip', color: 'text-teal-600 bg-teal-50 dark:bg-teal-950/30' },
-          ].map(item => (
-            <button
-              key={item.page}
-              onClick={() => onNavigate(item.page)}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all duration-200 group"
-            >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${item.color} group-hover:scale-110 transition-transform`}>
-                <item.icon size={20} />
-              </div>
-              <span className="text-xs font-medium text-gray-700 dark:text-gray-400 text-center">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </InfoCard>
     </div>
   )
 }
