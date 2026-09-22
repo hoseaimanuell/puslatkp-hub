@@ -138,25 +138,18 @@ export default function RekapBulanan({ onNavigate }) {
     [jenisDataList]
   )
   const namaJd = namaJdList.find(j => j.id === selectedJdId) || null
-  const namaUptKey = isAdmin ? (selectedUpt !== 'all' ? selectedUpt : '') : (uptKey || '')
 
-  // Saat masuk mode "nama": paksa pilihan valid (satu jenis data rincian, satu UPT)
+  // Saat masuk mode "nama": paksa pilihan Jenis Data yang valid (harus jenis data rincian per-nama).
+  // UPT boleh "Semua UPT" (Admin) — tabelnya lalu menampilkan kolom UPT per baris.
   useEffect(() => {
     if (tampilan !== 'nama') return
     if (!namaJdList.some(j => j.id === selectedJdId) && namaJdList.length) setSelectedJdId(namaJdList[0].id)
-    if (isAdmin && selectedUpt === 'all' && uptList.length) setSelectedUpt(uptList[0].key)
-  }, [tampilan, namaJdList, uptList, selectedJdId, selectedUpt, isAdmin])
+  }, [tampilan, namaJdList, selectedJdId])
 
   const namaFields = useMemo(
     () => (namaJd ? fieldDefs.filter(f => f.jenis_data_id === namaJd.id && f.level === 'bulan').sort((a, b) => (a.urutan || 0) - (b.urutan || 0)) : []),
     [fieldDefs, namaJd]
   )
-
-  const namaEntries = useMemo(() => {
-    if (!namaJd || !namaUptKey) return []
-    const ids = new Set([currentMonthPeriod?.id, ...currentWeeks.map(w => w.id)])
-    return dataEntries.filter(e => e.jenis_data_id === namaJd.id && e.upt_key === namaUptKey && ids.has(e.period_id))
-  }, [dataEntries, namaJd, namaUptKey, currentMonthPeriod, currentWeeks])
 
   // Filter UPT yang relevan
   const effectiveUptList = useMemo(() => {
@@ -168,6 +161,13 @@ export default function RekapBulanan({ onNavigate }) {
     }
     return uptList
   }, [isAdmin, uptKey, selectedUpt, uptList])
+
+  const namaEntries = useMemo(() => {
+    if (!namaJd) return []
+    const ids = new Set([currentMonthPeriod?.id, ...currentWeeks.map(w => w.id)])
+    const uptKeys = new Set(effectiveUptList.map(u => u.key))
+    return dataEntries.filter(e => e.jenis_data_id === namaJd.id && uptKeys.has(e.upt_key) && ids.has(e.period_id))
+  }, [dataEntries, namaJd, effectiveUptList, currentMonthPeriod, currentWeeks])
 
   // Filter Jenis Data yang relevan
   const effectiveJdList = useMemo(() => {
@@ -471,7 +471,7 @@ export default function RekapBulanan({ onNavigate }) {
                 onChange={e => setSelectedUpt(e.target.value)}
                 className="form-select text-sm w-full"
               >
-                {tampilan === 'rekap' && <option value="all">Semua UPT (10 Balai)</option>}
+                <option value="all">Semua UPT ({uptList.length} Balai)</option>
                 {uptList.map(u => (
                   <option key={u.key} value={u.key}>{u.label}</option>
                 ))}
@@ -918,7 +918,8 @@ export default function RekapBulanan({ onNavigate }) {
           jenisData={namaJd}
           fields={namaFields}
           entries={namaEntries}
-          uptLabel={uptList.find(u => u.key === namaUptKey)?.label || namaUptKey || ''}
+          uptList={uptList}
+          selectedUpt={isAdmin ? selectedUpt : (uptKey || 'all')}
           periodLabel={labelBulan(bulan, tahun)}
           loading={loading}
         />
@@ -929,13 +930,18 @@ export default function RekapBulanan({ onNavigate }) {
 
 
 /**
- * Data by Name: baris-baris hasil unggahan (Excel/form) SATU UPT.
- * Kolom mengikuti definisi kolom Jenis Data (sama dengan template Excel), tanpa kolom UPT.
+ * Data by Name: baris-baris hasil unggahan (Excel/form) satu UPT, atau Semua UPT sekaligus (Admin).
+ * Kolom mengikuti definisi kolom Jenis Data (sama dengan template Excel); kolom UPT ditambahkan
+ * di depan saat menampilkan lebih dari satu UPT.
  */
-function RekapByNama({ jenisData, fields = [], entries = [], uptLabel = '', periodLabel = '', loading }) {
+function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selectedUpt = 'all', periodLabel = '', loading }) {
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
+
+  const showUptColumn = selectedUpt === 'all'
+  const uptLabelOf = key => uptList.find(u => u.key === key)?.label || key || '-'
+  const uptLabel = showUptColumn ? `Semua UPT (${uptList.length} Balai)` : uptLabelOf(selectedUpt)
 
   const cell = (e, f) => {
     const v = e.data_json?.[f.field_key]
@@ -950,17 +956,21 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptLabel = '', peri
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return entries
-    return entries.filter(e => fields.some(f => cell(e, f).toLowerCase().includes(q)))
+    return entries.filter(e => (showUptColumn && uptLabelOf(e.upt_key).toLowerCase().includes(q)) || fields.some(f => cell(e, f).toLowerCase().includes(q)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries, fields, search])
+  }, [entries, fields, search, showUptColumn, uptList])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
   const page = Math.min(currentPage, totalPages)
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   function handleExport() {
-    const rows = sanitizeRows(filtered.map(e => Object.fromEntries(fields.map(f => [f.label, cellForExport(e, f)]))))
-    const ws = XLSX.utils.json_to_sheet(rows, { header: fields.map(f => f.label) })
+    const rows = sanitizeRows(filtered.map(e => Object.fromEntries([
+      ...(showUptColumn ? [['UPT', uptLabelOf(e.upt_key)]] : []),
+      ...fields.map(f => [f.label, cellForExport(e, f)]),
+    ])))
+    const header = [...(showUptColumn ? ['UPT'] : []), ...fields.map(f => f.label)]
+    const ws = XLSX.utils.json_to_sheet(rows, { header })
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, (jenisData?.judul || 'Data').slice(0, 31))
     XLSX.writeFile(wb, `DataByName_${jenisData?.judul}_${uptLabel}_${periodLabel}.xlsx`.replace(/\s+/g, '_'))
@@ -1012,6 +1022,7 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptLabel = '', peri
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <th className="px-3 py-2.5 text-center w-10">#</th>
+              {showUptColumn && <th className="px-3 py-2.5 whitespace-nowrap">UPT</th>}
               {fields.map(f => (
                 <th key={f.id || f.field_key} className="px-3 py-2.5 whitespace-nowrap">{f.label}</th>
               ))}
@@ -1019,12 +1030,12 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptLabel = '', peri
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {loading ? (
-              <tr><td colSpan={fields.length + 1} className="px-4 py-8 text-center text-gray-400">Memuat data…</td></tr>
+              <tr><td colSpan={fields.length + 1 + (showUptColumn ? 1 : 0)} className="px-4 py-8 text-center text-gray-400">Memuat data…</td></tr>
             ) : paginated.length === 0 ? (
               <tr>
-                <td colSpan={fields.length + 1} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={fields.length + 1 + (showUptColumn ? 1 : 0)} className="px-4 py-8 text-center text-gray-400">
                   {entries.length === 0
-                    ? `${uptLabel} belum mengunggah data untuk ${periodLabel}.`
+                    ? (showUptColumn ? `Belum ada UPT yang mengunggah data untuk ${periodLabel}.` : `${uptLabel} belum mengunggah data untuk ${periodLabel}.`)
                     : 'Tidak ada data yang cocok dengan pencarian.'}
                 </td>
               </tr>
@@ -1032,6 +1043,9 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptLabel = '', peri
               paginated.map((e, i) => (
                 <tr key={e.id} className="hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors">
                   <td className="px-3 py-2.5 text-center font-mono text-gray-400">{(page - 1) * pageSize + i + 1}</td>
+                  {showUptColumn && (
+                    <td className="px-3 py-2.5 whitespace-nowrap font-medium text-gray-700 dark:text-gray-300">{uptLabelOf(e.upt_key)}</td>
+                  )}
                   {fields.map(f => (
                     <td key={f.id || f.field_key} className="px-3 py-2.5 whitespace-nowrap text-gray-700 dark:text-gray-300">
                       {f.tipe === 'file'
