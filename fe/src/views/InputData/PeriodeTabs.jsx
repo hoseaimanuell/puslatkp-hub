@@ -21,7 +21,7 @@ import { readExcelFile, exportDataEntries, exportRekapNilai, generateTemplateExc
 import {
   Upload, Plus, Download, CheckCircle2, AlertTriangle, AlertCircle,
   Trash2, Eye, Edit, Search, X, FileSpreadsheet, Loader2,
-  TrendingUp, Calendar, Calculator, Check, ArrowRight, Layers
+  TrendingUp, Calendar, Calculator, Check, ArrowRight, Layers, Copy
 } from 'lucide-react'
 import BulanAgregatView from './BulanAgregatView'
 import BulanUploadView from './BulanUploadView'
@@ -104,10 +104,15 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
     })
   }, [])
 
+  // "Semua UPT" hanya masuk akal untuk jenis data bulanan rincian per-orang (satu tabel gabungan + kolom UPT),
+  // bukan untuk form mingguan/agregasi (nilai per-UPT tidak bisa digabung jadi satu isian).
+  const supportsAllUpt = jenisData.level_utama === 'bulan' && jenisData.mode_bulanan === 'rincian'
+  const isAllUpt = isAdmin && supportsAllUpt && selectedUptKey === 'all'
   const currentUptKey = isAdmin ? selectedUptKey : (uptKey || '')
   const currentUptLabel = isAdmin
-    ? (uptList.find(u => u.key === selectedUptKey)?.label || '')
+    ? (isAllUpt ? `Semua UPT (${uptList.length} Balai)` : (uptList.find(u => u.key === selectedUptKey)?.label || ''))
     : (uptList.find(u => u.key === uptKey)?.label || uptKey || '')
+  const uptLabelOf = key => uptList.find(u => u.key === key)?.label || key || '-'
   const needsUptSelection = isAdmin && !selectedUptKey
 
   useEffect(() => {
@@ -203,7 +208,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
         .eq('jenis_data_id', jenisData.id)
         .eq('period_id', activePeriod.id)
         .order('created_at')
-      q = q.eq('upt_key', currentUptKey)
+      if (!isAllUpt) q = q.eq('upt_key', currentUptKey)
       const { data: entData } = await q
       const currentEntries = entData || []
       setEntries(currentEntries)
@@ -236,7 +241,8 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
 
   // Hitung status 4 minggu pasangan mingguan & bandingkan dengan rincian bulan
   async function checkPartnerWeeklyProgress(currentEntries) {
-    if (!jenisData.pasangan_mingguan_id) {
+    // Validasi kelengkapan mingguan bersifat per-UPT — tidak berarti saat "Semua UPT" digabung dalam satu tabel.
+    if (!jenisData.pasangan_mingguan_id || isAllUpt) {
       setValidation(null)
       return
     }
@@ -443,10 +449,34 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
   const CLEAR_TABLE = { rekap: 'rekap_nilai', entries: 'data_entries' }
 
   function clearQuery(kind, builder) {
-    return builder
+    let q = builder
       .eq('jenis_data_id', jenisData.id)
-      .eq('upt_key', currentUptKey)
       .eq('period_id', activePeriod.id)
+    if (!isAllUpt) q = q.eq('upt_key', currentUptKey)
+    return q
+  }
+
+  // Baris dengan UPT, periode & seluruh isi kolom yang sama persis (mis. akibat unggah/impor dua kali).
+  // Baris pertama tiap kelompok dipertahankan, sisanya ditandai duplikat.
+  const duplicateEntryIds = useMemo(() => {
+    const seen = new Map()
+    const dupIds = []
+    for (const e of entries) {
+      const key = `${e.upt_key}|${e.period_id}|${fieldDefs.map(f => {
+        const v = e.data_json?.[f.field_key]
+        return v !== undefined && v !== null ? String(v) : ''
+      }).join('')}`
+      if (seen.has(key)) dupIds.push(e.id)
+      else seen.set(key, e.id)
+    }
+    return dupIds
+  }, [entries, fieldDefs])
+
+  async function deleteDuplicates() {
+    if (!confirm(`Hapus ${duplicateEntryIds.length} baris duplikat?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.`)) return
+    const { error } = await db.from('data_entries').delete().in('id', duplicateEntryIds)
+    if (error) { alert('Gagal menghapus: ' + error.message); return }
+    loadData()
   }
 
   async function openClear(kind) {
@@ -555,6 +585,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                 className="form-select max-w-xs"
               >
                 <option value="">- Pilih UPT -</option>
+                {supportsAllUpt && <option value="all">Semua UPT ({uptList.length} Balai)</option>}
                 {uptList.map(u => (
                   <option key={u.key} value={u.key}>{u.label}</option>
                 ))}
@@ -712,7 +743,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                   <FileSpreadsheet size={14} />
                   Template Excel
                 </button>
-                {!locked && (
+                {!locked && !isAllUpt && (
                   <>
                     <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileUpload} />
                     <button onClick={() => fileRef.current?.click()} className="btn-secondary text-xs">
@@ -730,14 +761,24 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                     )}
                   </>
                 )}
+                {isAllUpt && duplicateEntryIds.length > 0 && (
+                  <button
+                    onClick={deleteDuplicates}
+                    className="btn-secondary text-xs !text-amber-700 dark:!text-amber-400"
+                    title="Hapus baris yang UPT, periode & seluruh isi kolomnya sama persis dengan baris lain, sisakan satu"
+                  >
+                    <Copy size={14} />
+                    Hapus {duplicateEntryIds.length} Duplikat
+                  </button>
+                )}
                 {!locked && entries.length > 0 && (
                   <button
                     onClick={() => openClear('entries')}
                     className="btn-secondary text-xs text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                    title="Hapus seluruh baris data bulan ini (masuk Tempat Sampah)"
+                    title={isAllUpt ? 'Hapus seluruh baris data bulan ini dari SEMUA UPT (masuk Tempat Sampah)' : 'Hapus seluruh baris data bulan ini (masuk Tempat Sampah)'}
                   >
                     <Trash2 size={14} />
-                    Hapus Semua Data Bulan Ini
+                    Hapus Semua Data Bulan Ini{isAllUpt ? ' (Semua UPT)' : ''}
                   </button>
                 )}
                 <button
@@ -746,7 +787,8 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                     fieldDefs,
                     jenisDataJudul: jenisData.judul,
                     periodLabel: formatPeriodLabel(activePeriod),
-                    uptKey: currentUptKey
+                    uptKey: isAllUpt ? 'Semua UPT' : currentUptKey,
+                    uptLabelOf: isAllUpt ? uptLabelOf : undefined,
                   })}
                   className="btn-secondary text-xs"
                 >
@@ -783,7 +825,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                   {locked ? 'Tidak ada data pada periode ini.' : 'Belum ada rincian data per-orang.'}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {!locked && 'Klik tombol "Tambah Baris" atau "Upload Excel" untuk melengkapi data.'}
+                  {!locked && (isAllUpt ? 'Pilih satu UPT untuk menambah/mengunggah data.' : 'Klik tombol "Tambah Baris" atau "Upload Excel" untuk melengkapi data.')}
                 </p>
               </div>
             ) : (
@@ -799,6 +841,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                             {entry.nama || entry.data_json?.nama || `Baris #${globalIdx}`}{entry.terlambat ? <> {<span title="Disimpan setelah deadline" className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}</> : null}
                           </p>
                           <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex-wrap">
+                            {isAllUpt && <span className="badge-blue text-[10px]">{uptLabelOf(entry.upt_key)}</span>}
                             {entry.nik && <span>NIK: <span className="font-mono">{entry.nik}</span></span>}
                             {entry.data_json?.jenis_kelamin && <span>JK: {entry.data_json.jenis_kelamin}</span>}
                             {entry.data_json?.nama_pelatihan && <span className="text-blue-600 dark:text-blue-400 font-medium truncate">Pelatihan: {entry.data_json.nama_pelatihan}</span>}
@@ -815,13 +858,15 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                           </button>
                           {!locked && (
                             <>
-                              <button
-                                onClick={() => { setEditEntry(entry); setFormValues(entry.data_json || {}); setAddEntryModal(true) }}
-                                className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-                                title="Edit Baris"
-                              >
-                                <Edit size={15} />
-                              </button>
+                              {!isAllUpt && (
+                                <button
+                                  onClick={() => { setEditEntry(entry); setFormValues(entry.data_json || {}); setAddEntryModal(true) }}
+                                  className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                                  title="Edit Baris"
+                                >
+                                  <Edit size={15} />
+                                </button>
+                              )}
                               <button
                                 onClick={() => deleteEntry(entry.id)}
                                 className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"

@@ -36,12 +36,13 @@ export function sanitizeRows(rows) {
  * Export data entries (level bulan) ke Excel
  * @param {Object} options
  */
-export function exportDataEntries({ entries, fieldDefs, jenisDataJudul, periodLabel, uptKey }) {
+export function exportDataEntries({ entries, fieldDefs, jenisDataJudul, periodLabel, uptKey, uptLabelOf }) {
   // Buat header sesuai urutan field_definitions
-  const headers = fieldDefs
+  const baseHeaders = fieldDefs
     .filter(fd => fd.aktif)
     .sort((a, b) => a.urutan - b.urutan)
     .map(fd => fd.label)
+  const headers = uptLabelOf ? ['UPT', ...baseHeaders] : baseHeaders
 
   const sortedFields = fieldDefs.filter(fd => fd.aktif).sort((a, b) => a.urutan - b.urutan)
   const fieldKeys = sortedFields.map(fd => fd.field_key)
@@ -49,10 +50,11 @@ export function exportDataEntries({ entries, fieldDefs, jenisDataJudul, periodLa
   // Baris data dengan sanitasi Formula Injection
   const rows = entries.map(entry => {
     const row = {}
+    if (uptLabelOf) row['UPT'] = sanitizeCellValue(uptLabelOf(entry.upt_key))
     fieldKeys.forEach((key, i) => {
       const rawVal = entry.data_json?.[key] ?? entry[key] ?? ''
       // Kolom bertipe berkas: nilainya id internal, tidak berguna di Excel — tampilkan penanda saja.
-      row[headers[i]] = sortedFields[i].tipe === 'file' ? (rawVal ? '(berkas — lihat di web)' : '') : sanitizeCellValue(rawVal)
+      row[baseHeaders[i]] = sortedFields[i].tipe === 'file' ? (rawVal ? '(berkas — lihat di web)' : '') : sanitizeCellValue(rawVal)
     })
     return row
   })
