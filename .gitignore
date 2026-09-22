@@ -13,4 +13,5 @@ _legacy-vite
 .agents
 .next-*
 **/.next-*
-fe/public/uji_aparatur_sementara.xlsx
+fe/public/uji_*_sementara.xlsx
+fe/scratch-*.js

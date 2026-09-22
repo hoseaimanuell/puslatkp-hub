@@ -10,6 +10,7 @@ import { useAuth } from '../../AuthContext'
 import InfoCard from '../../components/InfoCard'
 import Modal from '../../components/Modal'
 import Badge from '../../components/Badge'
+import BuatJenisDataExcelModal from './BuatJenisDataExcel'
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors
 } from '@dnd-kit/core'
@@ -21,7 +22,7 @@ import {
   Plus, Settings, Trash2, GripVertical, Eye, EyeOff,
   ChevronRight, Globe, GlobeLock, Loader2, ArrowLeft,
   ToggleLeft, ToggleRight, Edit, Link2, Check, Sparkles,
-  AlertTriangle, CheckCircle2
+  AlertTriangle, CheckCircle2, FileSpreadsheet
 } from 'lucide-react'
 
 const TIPE_OPTIONS = [
@@ -124,6 +125,9 @@ export default function KelolaJenisData() {
   const [fields, setFields] = useState([])
   const [loading, setLoading] = useState(true)
   const [fieldLoading, setFieldLoading] = useState(false)
+  const [uptList, setUptList] = useState([])
+  const [periods, setPeriods] = useState([])
+  const [excelWizardOpen, setExcelWizardOpen] = useState(false)
 
   // Modals
   const [createModal, setCreateModal] = useState(false)
@@ -172,7 +176,11 @@ export default function KelolaJenisData() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  useEffect(() => { loadJenisData() }, [])
+  useEffect(() => {
+    loadJenisData()
+    db.from('upt_list').select('*').eq('aktif', true).order('label').then(({ data }) => setUptList(data || []))
+    db.from('periods').select('*').then(({ data }) => setPeriods(data || []))
+  }, [])
 
   useEffect(() => {
     if (selected) {
@@ -716,28 +724,46 @@ export default function KelolaJenisData() {
               Daftar jenis data dan kolom isiannya. Tiap jenis data punya satu level utama: minggu atau bulan.
             </p>
           </div>
-          <button
-            onClick={() => {
-              setJdForm({
-                judul: '',
-                deskripsi: '',
-                level_utama: 'minggu',
-                mode_bulanan: 'rincian',
-                butuh_input_bulanan: false,
-                pasangan_mingguan_id: '',
-                publik_boleh_lihat: false,
-                multi_baris: false,
-                kumulatif_bulanan: false,
-              })
-              setCreateModal(true)
-            }}
-            className="btn-primary"
-          >
-            <Plus size={16} />
-            Buat Jenis Data Baru
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setExcelWizardOpen(true)}
+              className="btn-secondary"
+              title="Buat Jenis Data baru sekaligus impor datanya dari berkas Excel"
+            >
+              <FileSpreadsheet size={16} />
+              Buat dari Excel
+            </button>
+            <button
+              onClick={() => {
+                setJdForm({
+                  judul: '',
+                  deskripsi: '',
+                  level_utama: 'minggu',
+                  mode_bulanan: 'rincian',
+                  butuh_input_bulanan: false,
+                  pasangan_mingguan_id: '',
+                  publik_boleh_lihat: false,
+                  multi_baris: false,
+                  kumulatif_bulanan: false,
+                })
+                setCreateModal(true)
+              }}
+              className="btn-primary"
+            >
+              <Plus size={16} />
+              Buat Jenis Data Baru
+            </button>
+          </div>
         </div>
       </div>
+
+      <BuatJenisDataExcelModal
+        open={excelWizardOpen}
+        onClose={() => setExcelWizardOpen(false)}
+        onCreated={() => loadJenisData()}
+        uptList={uptList}
+        periods={periods}
+      />
 
       <InfoCard title={`Daftar ${jenisDataList.length} Jenis Data & Relasi Pasangan`}>
         {loading ? (
