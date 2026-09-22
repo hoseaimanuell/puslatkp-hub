@@ -18,7 +18,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { ChevronLeft, ChevronRight, Loader2, Building2, Download } from 'lucide-react'
-import { exportTabelRekapRingkasan } from '../lib/excelExport'
+import { exportTabelRekapRingkasan, exportRekapNilai } from '../lib/excelExport'
 
 function num(v) {
   const n = Number(v)
@@ -210,6 +210,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
         forBaris.forEach(r => { values[r.field_key] = r.value !== null && r.value !== undefined ? r.value : r.value_text })
         rows.push({
           key: `${upt.key}-${barisKe}`,
+          upt_key: upt.key,
           upt_label: upt.label,
           baris_ke: barisKe,
           hasData: forBaris.length > 0,
@@ -370,6 +371,9 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
         </div>
       </div>
 
+      {/* Tabel ringkas (Pelatihan/Peserta/Pagu/Realisasi) — dipakai saat "Semua Jenis Data" dipilih, karena
+          kolom lengkap tiap jenis data berbeda-beda dan tidak bisa digabung dalam satu tabel. */}
+      {(compact || !selectedJd || !detailFields.length) && (
       <div className="card overflow-x-auto">
         <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between flex-wrap gap-2">
           <div>
@@ -445,14 +449,34 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
           </table>
         )}
       </div>
+      )}
 
+      {/* Tabel lengkap — menggantikan tabel ringkas di atas begitu satu Jenis Data dipilih, supaya semua
+          kolom yang diminta form (Tanggal Pelatihan, Bidang Kompetensi, dll.) langsung terlihat di sini,
+          bukan tersembunyi di tabel terpisah di bawahnya. */}
       {!compact && selectedJd && detailFields.length > 0 && (
         <div className="card overflow-x-auto">
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-            <h4 className="font-semibold text-sm">Rincian Semua Kolom: {selectedJd.judul} — {periodLabel}</h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Seluruh kolom yang terdaftar di Kelola Jenis Data untuk jenis data ini. Geser ke kanan untuk melihat kolom lainnya; sel kosong ditandai "—".
-            </p>
+          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h4 className="font-semibold text-sm">Rekap UPT/Balai: {periodLabel}</h4>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Semua kolom {selectedJd.judul} ({uptFilter === 'all' ? 'Seluruh UPT' : (uptList.find(u => u.key === uptFilter)?.label || uptFilter)}) — geser ke kanan untuk kolom lainnya; sel kosong ditandai "—".
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => exportRekapNilai({
+                rekapData: detailRows.map(r => ({ upt_key: r.upt_label, values: r.values })),
+                fieldDefs: detailFields,
+                jenisDataJudul: selectedJd.judul,
+                periodLabel,
+              })}
+              className="btn-secondary text-xs py-1.5 px-3"
+              title="Download tabel rekap ini ke file Excel (.xlsx)"
+            >
+              <Download size={14} />
+              <span>Download Excel Rekap</span>
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="text-xs border-collapse" style={{ minWidth: 'max-content', width: '100%' }}>
