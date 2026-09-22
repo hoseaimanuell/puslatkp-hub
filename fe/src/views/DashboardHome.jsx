@@ -17,7 +17,7 @@ import {
 } from 'recharts'
 import {
   Users, Landmark, GraduationCap, Calendar, BarChart3, Activity, ChevronLeft, ChevronRight,
-  Clock, ClipboardList, Database, FileText, CheckCircle2, Hourglass, Loader2
+  Clock, ClipboardList, Database, FileText, Hourglass, Loader2
 } from 'lucide-react'
 
 // Kunci Jenis Data bawaan yang menjadi sumber angka dashboard
@@ -297,53 +297,6 @@ export default function DashboardHome({ onNavigate }) {
           ))}
         </div>
       ))}
-
-      {/* Status pengisian data UPT untuk minggu terpilih */}
-      <InfoCard title={`Status Pengisian Data — ${activeWeek ? formatPeriodLabel(activeWeek) : '-'}`}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left text-gray-500 uppercase tracking-wide">
-                <th className="py-2 pr-3 font-semibold">UPT/Balai</th>
-                {jenisData.map(j => (
-                  <th key={j.id} className="py-2 px-2 font-semibold text-center">{j.judul}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {scopeUpts.length === 0 ? (
-                <tr><td colSpan={jenisData.length + 1} className="py-4 text-center text-gray-400">Belum ada UPT.</td></tr>
-              ) : scopeUpts.map(u => (
-                <tr key={u.key}>
-                  <td className="py-2 pr-3 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">{u.label}</td>
-                  {jenisData.map(j => {
-                    const done = rows.some(r => r.upt_key === u.key && r.jenis_data_id === j.id)
-                    return (
-                      <td key={j.id} className="py-2 px-2 text-center">
-                        {loadingRekap ? '…' : done ? (
-                          rows.some(r => r.upt_key === u.key && r.jenis_data_id === j.id && r.terlambat) ? (
-                            <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium" title="Diisi setelah deadline">
-                              <CheckCircle2 size={13} /> Terlambat
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                              <CheckCircle2 size={13} /> Sudah
-                            </span>
-                          )
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-gray-400">
-                            <Hourglass size={12} /> Menunggu
-                          </span>
-                        )}
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </InfoCard>
 
       {/* Akses cepat */}
       <InfoCard title="Akses Cepat">
