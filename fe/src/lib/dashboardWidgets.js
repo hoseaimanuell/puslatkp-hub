@@ -26,22 +26,23 @@ const JD_APARATUR = 'aparatur'
 const JD_INSTRUKTUR = 'data_instruktur_dan_wi'
 const JD_DANA = 'data_capaian_anggaran_per_sumber_dana'
 const dana = f => [{ jd: JD_DANA, field: f }]
+// Pagu/realisasi anggaran per kegiatan (diisi UPT lewat Masyarakat/Aparatur/Data Belanja Modal) — sumber default
+// untuk "Total Realisasi Anggaran" & grafik "Pagu vs Realisasi", KARENA inilah yang benar-benar diisi UPT setiap
+// minggu. Kartu RM/PNBP-BLU/SBSN di bawah tetap membaca "Data Capaian Anggaran per Sumber Dana" (jenis data
+// terpisah) dan SENGAJA tidak dijumlahkan ke Total, supaya anggaran yang sama tidak terhitung dua kali.
+const anggaranSrc = f => [{ jd: JD_MASYARAKAT, field: f }, { jd: JD_APARATUR, field: f }, { jd: 'data_belanja_modal', field: f }]
 
 export const DEFAULT_WIDGETS = [
   { tipe: 'kartu', judul: 'Masyarakat Dilatih', grup: 'Progress & Status', gaya: 'berwarna', ikon: 'Users', warna: 'bg-blue-600', satuan: 'angka', konfigurasi: { items: [{ jd: JD_MASYARAKAT, field: 'jumlah_peserta' }] } },
   { tipe: 'kartu', judul: 'Aparatur Dilatih', grup: 'Progress & Status', gaya: 'berwarna', ikon: 'Landmark', warna: 'bg-emerald-500', satuan: 'angka', konfigurasi: { items: [{ jd: JD_APARATUR, field: 'jumlah_peserta' }] } },
   { tipe: 'kartu', judul: 'SDM Pelatih (Instruktur & Widyaiswara)', grup: 'Progress & Status', gaya: 'berwarna', ikon: 'GraduationCap', warna: 'bg-amber-500', satuan: 'angka', konfigurasi: { items: [{ jd: JD_INSTRUKTUR, field: 'jumlah_instruktur_wi' }] } },
-  { tipe: 'kartu', judul: 'RM', grup: 'Realisasi Anggaran per Sumber Dana', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_rm'), pembanding: dana('pagu_rm'), pembandingLabel: 'Pagu' } },
-  { tipe: 'kartu', judul: 'PNBP/BLU', grup: 'Realisasi Anggaran per Sumber Dana', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_pnbp_blu'), pembanding: dana('pagu_pnbp_blu'), pembandingLabel: 'Pagu' } },
-  { tipe: 'kartu', judul: 'SBSN', grup: 'Realisasi Anggaran per Sumber Dana', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_sbsn'), pembanding: dana('pagu_sbsn'), pembandingLabel: 'Pagu' } },
   {
-    tipe: 'kartu', judul: 'Total Realisasi Anggaran', grup: 'Realisasi Anggaran per Sumber Dana', gaya: 'putih', satuan: 'rupiah',
-    konfigurasi: {
-      sorot: true, pembandingLabel: 'Pagu',
-      items: [...dana('realisasi_rm'), ...dana('realisasi_pnbp_blu'), ...dana('realisasi_sbsn')],
-      pembanding: [...dana('pagu_rm'), ...dana('pagu_pnbp_blu'), ...dana('pagu_sbsn')],
-    },
+    tipe: 'kartu', judul: 'Total Realisasi Anggaran', grup: 'Realisasi Anggaran', gaya: 'putih', satuan: 'rupiah',
+    konfigurasi: { sorot: true, pembandingLabel: 'Pagu', items: anggaranSrc('realisasi_anggaran'), pembanding: anggaranSrc('pagu_anggaran') },
   },
+  { tipe: 'kartu', judul: 'RM', grup: 'Realisasi Anggaran per Sumber Dana (opsional)', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_rm'), pembanding: dana('pagu_rm'), pembandingLabel: 'Pagu' } },
+  { tipe: 'kartu', judul: 'PNBP/BLU', grup: 'Realisasi Anggaran per Sumber Dana (opsional)', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_pnbp_blu'), pembanding: dana('pagu_pnbp_blu'), pembandingLabel: 'Pagu' } },
+  { tipe: 'kartu', judul: 'SBSN', grup: 'Realisasi Anggaran per Sumber Dana (opsional)', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_sbsn'), pembanding: dana('pagu_sbsn'), pembandingLabel: 'Pagu' } },
   {
     tipe: 'grafik', judul: 'Peserta Dilatih', grup: 'Grafik', satuan: 'angka',
     konfigurasi: { series: [{ label: 'Masyarakat', warna: '#1B5FA8', items: [{ jd: JD_MASYARAKAT, field: 'jumlah_peserta' }] }, { label: 'Aparatur', warna: '#2F9E6E', items: [{ jd: JD_APARATUR, field: 'jumlah_peserta' }] }] },
@@ -50,8 +51,8 @@ export const DEFAULT_WIDGETS = [
     tipe: 'grafik', judul: 'Pagu vs Realisasi', grup: 'Grafik', satuan: 'rupiah',
     konfigurasi: {
       series: [
-        { label: 'Pagu', warna: '#94a3b8', items: [...dana('pagu_rm'), ...dana('pagu_pnbp_blu'), ...dana('pagu_sbsn')] },
-        { label: 'Realisasi', warna: '#0ea5e9', items: [...dana('realisasi_rm'), ...dana('realisasi_pnbp_blu'), ...dana('realisasi_sbsn')] },
+        { label: 'Pagu', warna: '#94a3b8', items: anggaranSrc('pagu_anggaran') },
+        { label: 'Realisasi', warna: '#0ea5e9', items: anggaranSrc('realisasi_anggaran') },
       ],
     },
   },
