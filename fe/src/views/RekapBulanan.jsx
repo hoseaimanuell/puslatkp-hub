@@ -133,7 +133,7 @@ export default function RekapBulanan({ onNavigate }) {
   }
 
   // ── Tampilan "Data by Name" (hasil unggahan Excel per UPT) ──
-  // Hanya jenis data bulanan berbasis rincian per-orang; hanya SATU UPT sekaligus.
+  // Hanya jenis data bulanan berbasis rincian per-orang. UPT boleh "Semua UPT" (Admin).
   const namaJdList = useMemo(
     () => jenisDataList.filter(j => j.level_utama === 'bulan' && j.mode_bulanan === 'rincian'),
     [jenisDataList]
@@ -151,6 +151,35 @@ export default function RekapBulanan({ onNavigate }) {
     () => (namaJd ? fieldDefs.filter(f => f.jenis_data_id === namaJd.id && f.level === 'bulan').sort((a, b) => (a.urutan || 0) - (b.urutan || 0)) : []),
     [fieldDefs, namaJd]
   )
+
+  // Jenis data "kumulatif": bulan yg dipilih belum ada datanya -> otomatis loncat ke bulan TERAKHIR yang sudah
+  // ada datanya (roster bulan terbaru dianggap menggantikan/meng-update bulan sebelumnya, bukan dataset terpisah).
+  useEffect(() => {
+    if (tampilan !== 'nama' || !namaJd?.kumulatif_bulanan || !periods.length) return
+    let cancelled = false
+    ;(async () => {
+      let q = db.from('data_entries').select('period_id, upt_key').eq('jenis_data_id', namaJd.id)
+      if (isAdmin && selectedUpt !== 'all') q = q.eq('upt_key', selectedUpt)
+      const { data } = await q
+      if (cancelled || !data?.length) return
+      const monthPeriods = periods.filter(p => p.level === 'bulan')
+      const periodIdsWithData = new Set(data.map(e => e.period_id))
+      const withData = monthPeriods.filter(p => periodIdsWithData.has(p.id))
+      if (!withData.length) return
+      const currentHasData = withData.some(p => Number(p.tahun) === Number(tahun) && Number(p.bulan) === Number(bulan))
+      if (currentHasData) return
+      const latest = withData.sort((a, b) => (Number(a.tahun) - Number(b.tahun)) || (Number(a.bulan) - Number(b.bulan))).pop()
+      setTahun(Number(latest.tahun))
+      setBulan(Number(latest.bulan))
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tampilan, namaJd, selectedUpt, periods, isAdmin, tahun, bulan])
+
+  // Catatan bawah judul: jenis data kumulatif yang sedang tidak menampilkan bulan kalender berjalan
+  // (baik karena loncat otomatis maupun dipilih manual) berarti sedang melihat snapshot bulan lampau.
+  const namaShowingPastMonth = !!namaJd?.kumulatif_bulanan
+    && (Number(tahun) !== new Date().getFullYear() || Number(bulan) !== new Date().getMonth() + 1)
 
   // Filter UPT yang relevan
   const effectiveUptList = useMemo(() => {
@@ -925,6 +954,7 @@ export default function RekapBulanan({ onNavigate }) {
           loading={loading}
           isAdmin={isAdmin}
           onChanged={loadBulananData}
+          showingPastMonth={namaShowingPastMonth}
         />
       )}
     </div>
@@ -937,7 +967,7 @@ export default function RekapBulanan({ onNavigate }) {
  * Kolom mengikuti definisi kolom Jenis Data (sama dengan template Excel); kolom UPT ditambahkan
  * di depan saat menampilkan lebih dari satu UPT.
  */
-function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selectedUpt = 'all', periodLabel = '', loading, isAdmin, onChanged }) {
+function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selectedUpt = 'all', periodLabel = '', loading, isAdmin, onChanged, showingPastMonth }) {
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
@@ -1019,6 +1049,9 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
           <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Users size={18} className="text-blue-500" />
             <span>{jenisData.judul}</span>
+            {jenisData.kumulatif_bulanan && (
+              <span className="badge-blue text-[10px] uppercase" title="Roster bulan terbaru dianggap menggantikan bulan sebelumnya">Kumulatif</span>
+            )}
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {uptLabel} · {periodLabel} · <strong>{entries.length}</strong> baris data hasil unggahan
@@ -1026,6 +1059,11 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
               <span className="text-amber-600 dark:text-amber-400"> · {duplicateIds.length} terindikasi duplikat</span>
             )}
           </p>
+          {showingPastMonth && (
+            <p className="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">
+              Menampilkan {periodLabel} — bulan terakhir yang sudah ada datanya (belum ada data di bulan kalender berjalan).
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2 self-start flex-wrap">
           {isAdmin && duplicateIds.length > 0 && (

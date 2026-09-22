@@ -13,9 +13,10 @@ const OPTIONAL = [
   { table: 'rekap_nilai', col: 'terlambat', feature: 'terlambat' },
   { table: 'data_entries', col: 'terlambat', feature: 'terlambat' },
   { table: 'dokumen_upload', col: 'terlambat', feature: 'terlambat' },
+  { table: 'jenis_data', col: 'kumulatif_bulanan', feature: 'kumulatifBulanan' },
 ]
 
-export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true }
+export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true }
 
 /** Tabel opsional (migrasi_05/06). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {

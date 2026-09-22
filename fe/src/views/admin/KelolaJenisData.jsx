@@ -141,6 +141,7 @@ export default function KelolaJenisData() {
     pasangan_mingguan_id: '',
     publik_boleh_lihat: false,
     multi_baris: false,
+    kumulatif_bulanan: false,
   })
 
   const [fieldForm, setFieldForm] = useState({
@@ -211,9 +212,7 @@ export default function KelolaJenisData() {
     setSaving(true)
 
     try {
-      const key = jdForm.judul.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
       const payload = {
-        key,
         judul: jdForm.judul,
         deskripsi: jdForm.deskripsi,
         level_utama: jdForm.level_utama,
@@ -222,6 +221,7 @@ export default function KelolaJenisData() {
         pasangan_mingguan_id: jdForm.pasangan_mingguan_id || null,
         publik_boleh_lihat: jdForm.publik_boleh_lihat,
         multi_baris: jdForm.level_utama === 'minggu' && !!jdForm.multi_baris,
+        kumulatif_bulanan: jdForm.level_utama === 'bulan' && jdForm.mode_bulanan === 'rincian' && !!jdForm.kumulatif_bulanan,
         aktif: true,
         dibuat_oleh: profile?.id,
       }
@@ -233,7 +233,9 @@ export default function KelolaJenisData() {
         setEditJdModal(false)
         showToast(`Pengaturan "${jdForm.judul}" berhasil diperbarui!`)
       } else {
-        const { data, error } = await db.from('jenis_data').insert(payload).select().single()
+        // key hanya ditentukan saat membuat baru — mengedit judul TIDAK mengubah key (identitas internal stabil).
+        const key = jdForm.judul.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+        const { data, error } = await db.from('jenis_data').insert({ ...payload, key }).select().single()
         if (error) throw error
         if (data) {
           setSelected(data)
@@ -432,6 +434,7 @@ export default function KelolaJenisData() {
       pasangan_mingguan_id: jd.pasangan_mingguan_id || '',
       publik_boleh_lihat: !!jd.publik_boleh_lihat,
       multi_baris: !!jd.multi_baris,
+      kumulatif_bulanan: !!jd.kumulatif_bulanan,
     })
     setEditJdModal(true)
   }
@@ -724,6 +727,7 @@ export default function KelolaJenisData() {
                 pasangan_mingguan_id: '',
                 publik_boleh_lihat: false,
                 multi_baris: false,
+                kumulatif_bulanan: false,
               })
               setCreateModal(true)
             }}
@@ -970,6 +974,23 @@ export default function KelolaJenisData() {
                 <div>
                   <p className="text-xs font-semibold text-gray-900 dark:text-white">Boleh lebih dari 1 pelatihan per minggu</p>
                   <p className="text-[11px] text-gray-400">Menampilkan tombol "Tambah pelatihan lain" di form mingguan. Bawaan tetap 1 pelatihan.</p>
+                </div>
+              </label>
+            </div>
+          )}
+
+          {jdForm.level_utama === 'bulan' && jdForm.mode_bulanan === 'rincian' && (
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+              <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                <input
+                  type="checkbox"
+                  checked={!!jdForm.kumulatif_bulanan}
+                  onChange={e => setJdForm(f => ({ ...f, kumulatif_bulanan: e.target.checked }))}
+                  className="w-4 h-4 rounded text-blue-600"
+                />
+                <div>
+                  <p className="text-xs font-semibold text-gray-900 dark:text-white">Data kumulatif (bulan terbaru menggantikan sebelumnya)</p>
+                  <p className="text-[11px] text-gray-400">UPT diharapkan mengunggah roster LENGKAP tiap bulan (bukan hanya yang berubah). Data by Name akan otomatis menampilkan bulan terakhir yang sudah ada datanya sebagai "data saat ini", bukan selalu bulan kalender berjalan.</p>
                 </div>
               </label>
             </div>

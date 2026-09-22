@@ -23,8 +23,8 @@ export const TABLES = {
     cols: ['id', 'level', 'tahun', 'triwulan_ke', 'bulan', 'minggu_ke', 'tanggal_mulai', 'tanggal_selesai', 'deadline', 'label'],
   }),
   jenis_data: table({
-    cols: ['id', 'key', 'judul', 'deskripsi', 'level_utama', 'mode_bulanan', 'butuh_input_bulanan', 'pasangan_mingguan_id', 'publik_boleh_lihat', 'multi_baris', 'aktif', 'dibuat_oleh', 'created_at'],
-    bool: ['butuh_input_bulanan', 'publik_boleh_lihat', 'multi_baris', 'aktif'],
+    cols: ['id', 'key', 'judul', 'deskripsi', 'level_utama', 'mode_bulanan', 'butuh_input_bulanan', 'pasangan_mingguan_id', 'publik_boleh_lihat', 'multi_baris', 'kumulatif_bulanan', 'aktif', 'dibuat_oleh', 'created_at'],
+    bool: ['butuh_input_bulanan', 'publik_boleh_lihat', 'multi_baris', 'kumulatif_bulanan', 'aktif'],
     read: 'public',
     // Pengunjung publik hanya boleh melihat jenis data publik & aktif, dengan kolom terbatas.
     anon: { cols: ['id', 'key', 'judul', 'deskripsi'], force: { publik_boleh_lihat: 1, aktif: 1 } },

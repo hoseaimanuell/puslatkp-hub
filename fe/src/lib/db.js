@@ -148,7 +148,7 @@ export function getFeatures() {
   if (!featuresPromise) {
     featuresPromise = api('/health', { method: 'GET' }).then(({ data }) => {
       if (!data) featuresPromise = null
-      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false }
+      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false }
     })
   }
   return featuresPromise
