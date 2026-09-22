@@ -376,34 +376,29 @@ export default function RekapBulanan({ onNavigate }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header Banner */}
-      <div>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="font-semibold text-2xl text-gray-900 dark:text-white">
-              Rekap Data Bulanan
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-2xl">
-              {isAdmin
-                ? 'Akumulasi 4 minggu per bulan untuk seluruh UPT.'
-                : 'Akumulasi 4 minggu per bulan untuk UPT Anda.'}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-
-            {tampilan === 'rekap' && (
-              <button
-                onClick={handleExportExcel}
-                className="btn-primary whitespace-nowrap self-start md:self-auto"
-                title="Download kompilasi rekap bulanan dalam format Excel"
-              >
-                <Download size={15} />
-                <span>Download Excel Bulanan</span>
-              </button>
-            )}
-          </div>
+      {/* Ringkasan (halaman ini disematkan di bawah judul "Input Bulanan") */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+            Rekap Bulanan
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {isAdmin
+              ? 'Akumulasi 4 minggu per bulan untuk seluruh UPT.'
+              : 'Akumulasi 4 minggu per bulan untuk UPT Anda.'}
+          </p>
         </div>
+
+        {tampilan === 'rekap' && (
+          <button
+            onClick={handleExportExcel}
+            className="btn-secondary text-sm whitespace-nowrap self-start md:self-auto"
+            title="Download kompilasi rekap bulanan dalam format Excel"
+          >
+            <Download size={15} />
+            <span>Download Excel Bulanan</span>
+          </button>
+        )}
       </div>
 
       {/* Filter Bar */}

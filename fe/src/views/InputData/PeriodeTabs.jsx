@@ -428,7 +428,8 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
     setEditEntry(null)
     setFormValues({})
     loadData()
-    onSaved?.()
+    // Catatan: onSaved TIDAK dipanggil di sini (beda dengan saveRekap/impor Excel) — menyimpan satu baris rincian
+    // bukan akhir dari sesi input; popup pemanggil (mis. Input Bulanan) baru menyegarkan rekap saat ditutup.
   }
 
   async function deleteEntry(id) {
