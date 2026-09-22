@@ -122,9 +122,9 @@ export default function DashboardHome() {
   const cumulative = (jdKey, field) => modeOf(jdKey, field) === 'last'
   const matching = (jdKey, field, uptFilter, list) => list.filter(r => r.jenis_data_id === jdIdByKey[jdKey] && r.field_key === field && (!uptFilter || r.upt_key === uptFilter))
 
-  // Nilai: kolom kumulatif = nilai terakhir tiap UPT sampai minggu terpilih; kolom lain = jumlah minggu terpilih
+  // Nilai: kolom kumulatif = nilai terakhir tiap UPT sampai minggu terpilih; kolom lain = jumlah seluruh minggu dari minggu 1 tahun berjalan sampai minggu terpilih
   const sum = (jdKey, field, uptFilter) => {
-    if (!cumulative(jdKey, field)) return matching(jdKey, field, uptFilter, rows).reduce((a, r) => a + num(r.value), 0)
+    if (!cumulative(jdKey, field)) return matching(jdKey, field, uptFilter, rowsAll).reduce((a, r) => a + num(r.value), 0)
     const perUpt = {}
     matching(jdKey, field, uptFilter, rowsAll).filter(r => r.value !== null && r.value !== undefined).forEach(r => {
       const o = weekOrder[r.period_id] ?? -1
@@ -146,7 +146,7 @@ export default function DashboardHome() {
 
   // Nilai widget = jumlah baris rekap (minggu terpilih) untuk semua sumber {jd, field}; per UPT bila uptFilter diisi
   const sumItems = (items = [], uptFilter) => items.reduce((a, it) => a + sum(it.jd, it.field, uptFilter), 0)
-  const uptsOf = it => new Set(matching(it.jd, it.field, null, cumulative(it.jd, it.field) ? rowsAll : rows).map(r => r.upt_key))
+  const uptsOf = it => new Set(matching(it.jd, it.field, null, rowsAll).map(r => r.upt_key))
   const hasItems = (items = []) => items.some(it => uptsOf(it).size > 0)
   const fmt = (satuan, v) => (satuan === 'rupiah' ? formatRp(v) : num(v).toLocaleString('id-ID'))
   const groups = useMemo(() => groupWidgets(widgets), [widgets])
