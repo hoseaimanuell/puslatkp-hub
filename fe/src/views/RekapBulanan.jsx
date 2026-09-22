@@ -691,7 +691,7 @@ export default function RekapBulanan({ onNavigate }) {
                         {item.angkaFields.length > 0 && (
                           <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/60">
                             <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-                              ∑ Total Akumulasi Seluruh UPT — {namaBulan(bulan)} {tahun}
+                              ∑ Total Akumulasi {item.uptBreakdown.length > 1 ? 'Seluruh UPT' : (item.uptBreakdown[0]?.upt_label || 'UPT')} — {namaBulan(bulan)} {tahun}
                             </p>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                               {item.angkaFields.map(field => {

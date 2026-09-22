@@ -561,7 +561,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
       {chartPerUpt.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="card p-4">
-            <h4 className="text-sm font-semibold mb-3">Tren peserta per UPT/Balai</h4>
+            <h4 className="text-sm font-semibold mb-3">Tren peserta{uptFilter === 'all' ? ' per UPT/Balai' : ''}</h4>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartPerUpt}>
