@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { db } from '../lib/db'
 import Badge from './Badge'
+import { FileValueDisplay } from './DynamicForm'
 import {
   formatPeriodLabel,
   labelBulan,
@@ -519,6 +520,13 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                     )}
                     {detailFields.map(f => {
                       const val = row.values[f.field_key]
+                      if (f.tipe === 'file') {
+                        return (
+                          <td key={f.field_key} className="px-3 py-2 whitespace-nowrap text-left" style={{ maxWidth: 220 }}>
+                            <FileValueDisplay id={val} />
+                          </td>
+                        )
+                      }
                       const isRupiah = f.tipe === 'angka' && (f.field_key.includes('pagu') || f.field_key.includes('anggaran') || f.field_key.includes('belanja'))
                       const display = val !== undefined && val !== null && val !== ''
                         ? isRupiah ? formatRp(Number(val)) : f.tipe === 'angka' ? Number(val).toLocaleString('id-ID') : String(val)

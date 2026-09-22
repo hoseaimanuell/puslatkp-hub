@@ -30,6 +30,7 @@ const TIPE_OPTIONS = [
   { value: 'teks_panjang', label: 'Teks Panjang / Narasi' },
   { value: 'tanggal', label: 'Tanggal (Kalender)' },
   { value: 'pilihan', label: 'Pilihan (Dropdown Opsi)' },
+  { value: 'file', label: 'Berkas (Upload PDF/Word/Excel)' },
 ]
 
 const QUICK_PRESETS = [

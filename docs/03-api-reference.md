@@ -24,10 +24,10 @@ Base URL: `http://localhost:4000/api` (ubah lewat `NEXT_PUBLIC_API_URL` di front
 Cek server & koneksi database. Tanpa autentikasi.
 
 ```json
-{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "arsip": true, "dashboard": true } }
+{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "arsip": true, "dashboard": true, "fieldFiles": true } }
 ```
 
-`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05). Bila belum,
+`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06). Bila belum,
 fiturnya nonaktif dan aplikasi tetap berjalan.
 
 ## `POST /api/auth/login`
@@ -160,6 +160,21 @@ Berkas Excel/PDF data tahun lalu; isi berkas disimpan di folder `STORAGE_DIR/ars
 
 Berkas yatim (mis. arsip ikut terhapus karena UPT dihapus) disapu otomatis tiap 6 jam.
 
+### Kolom bertipe Berkas (`/api/field-files`) — login diperlukan
+Berkas yang dilampirkan pada SATU sel kolom bertipe `file` (field_definitions.tipe = `file`), mis. "Link Laporan
+Pelatihan". Isi berkas disimpan di folder `STORAGE_DIR/field-files` (bukan di database). Butuh
+`database/migrasi_06_kolom_berkas.sql` (bila belum, semua endpoint menjawab **409**).
+
+| Endpoint | Fungsi |
+| :-- | :-- |
+| `POST /api/field-files?jenis_data_id=&field_key=&upt_key=&nama=` | Unggah. **Body = isi berkas mentah** (`application/octet-stream`, maks. **10 MB**). Hanya `pdf/doc/docx/xls/xlsx`, isi diperiksa (magic bytes). Kolom itu harus benar-benar bertipe `file`, kalau tidak → 400. UPT: `upt_key` dipaksa miliknya. Log: `berkas_kolom_unggah`. Respons: `{ id, file_name, file_ext, file_size }` — `id` inilah yang disimpan FE sebagai **nilai sel** (`rekap_nilai.value_text` atau `data_entries.data_json[field_key]`) |
+| `GET /api/field-files/:id/file` | Unduh (butuh header `Authorization`); milik UPT lain → 404 |
+| `DELETE /api/field-files/:id` | Hapus permanen (Admin: semua; UPT: miliknya). Log: `berkas_kolom_hapus`. FE memanggil ini saat sebuah berkas **diganti** (unggah baru dulu, baru buang yang lama) |
+
+Metadata (nama/ukuran berkas, bukan isinya) juga bisa dibaca lewat `POST /api/db/query` (`table: "field_files"`, `scope: upt`)
+untuk menampilkan nama berkas di tabel rekap tanpa mengunduhnya. Berkas yatim (mis. baris rekap ikut terhapus karena UPT
+dihapus) disapu otomatis tiap 6 jam.
+
 ### Tempat Sampah (`/api/trash`) — khusus Admin
 
 | Endpoint | Fungsi |
@@ -184,5 +199,6 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 | `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat) | semua |
 | `daily_activity`, `dokumen_upload` | — | own | own | semua |
 | `dashboard_widgets` | — | semua (baca) | — | baca/tulis (menu Kelola Dashboard; butuh migrasi_05) |
+| `field_files` | — | own | — (lewat `/api/field-files`) | baca semua |
 | `audit_log` | — | — | hanya aksi `import_kolom_tidak_dikenal` (kolom `oleh` dicap server) | baca + `import_kolom_tidak_dikenal`, `impor_historis` |
 | `profiles` | — | self | — | baca, ubah, hapus (buat akun lewat `/auth/users`) |

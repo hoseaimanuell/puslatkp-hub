@@ -64,7 +64,7 @@ export default function ImporHistoris() {
   const jd = jenisData.find(j => j.id === jdId) || null
   const weekly = false // impor massal hanya data bulanan/tahunan by name
   const level = weekly ? 'minggu' : 'bulan'
-  const fields = useMemo(() => (jd ? fieldDefs.filter(f => f.jenis_data_id === jd.id && f.level === level).sort((a, b) => (a.urutan || 0) - (b.urutan || 0)) : []), [jd, fieldDefs, level])
+  const fields = useMemo(() => (jd ? fieldDefs.filter(f => f.jenis_data_id === jd.id && f.level === level && f.tipe !== 'file').sort((a, b) => (a.urutan || 0) - (b.urutan || 0)) : []), [jd, fieldDefs, level]) // kolom berkas tidak bisa diimpor lewat Excel
   const multi = !!(weekly && jd?.multi_baris && features.multiBaris)
 
   function reset(keepJd = true) {

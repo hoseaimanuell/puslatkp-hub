@@ -955,6 +955,8 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                       values={b.values}
                       onChange={(key, val) => updateBaris(i, key, val)}
                       disabled={locked}
+                      jenisDataId={jenisData.id}
+                      uptKey={currentUptKey}
                     />
                   </div>
                 ))}
@@ -1112,6 +1114,8 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
           disabled={false}
           onSubmit={(e) => { e.preventDefault(); saveEntry(formValues) }}
           loading={saving}
+          jenisDataId={jenisData.id}
+          uptKey={currentUptKey}
         />
       </Modal>
 
@@ -1160,7 +1164,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
         {mappingData && (
           <ColumnMappingScreen
             excelHeaders={mappingData.headers}
-            fieldDefs={fieldDefs}
+            fieldDefs={fieldDefs.filter(f => f.tipe !== 'file')}
             initialMapping={mappingData.initialMapping}
             onConfirm={handleImportConfirm}
             onCancel={() => { setUploadModal(false); setMappingData(null) }}

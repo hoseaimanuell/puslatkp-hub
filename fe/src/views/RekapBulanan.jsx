@@ -8,6 +8,7 @@ import { Fragment, useState, useEffect, useMemo } from 'react'
 import { db } from '../lib/db'
 import { useAuth } from '../AuthContext'
 import Badge from '../components/Badge'
+import { FileValueDisplay } from '../components/DynamicForm'
 import {
   formatPeriodLabel,
   labelBulan,
@@ -774,6 +775,14 @@ export default function RekapBulanan({ onNavigate }) {
                                     </td>
                                     {item.jFields.map(f => {
                                       const val = wd.values[f.field_key]
+                                      if (f.tipe === 'file') {
+                                        const single = val && !String(val).includes(' · ')
+                                        return (
+                                          <td key={f.field_key} className="px-3 py-2 whitespace-nowrap text-left" style={{ maxWidth: 220 }}>
+                                            {single ? <FileValueDisplay id={val} /> : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                                          </td>
+                                        )
+                                      }
                                       const isRupiah = f.tipe === 'angka' && (f.field_key.includes('pagu') || f.field_key.includes('anggaran') || f.field_key.includes('belanja'))
                                       const display = val !== undefined && val !== null && val !== ''
                                         ? isRupiah
@@ -935,6 +944,8 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptLabel = '', peri
     if (f.field_key === 'nik' && e.nik) return e.nik
     return ''
   }
+  // Untuk export Excel: kolom berkas tidak berguna sebagai id mentah — tampilkan penanda saja.
+  const cellForExport = (e, f) => (f.tipe === 'file' ? (cell(e, f) ? '(berkas — lihat di web)' : '') : cell(e, f))
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -948,7 +959,7 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptLabel = '', peri
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   function handleExport() {
-    const rows = sanitizeRows(filtered.map(e => Object.fromEntries(fields.map(f => [f.label, cell(e, f)]))))
+    const rows = sanitizeRows(filtered.map(e => Object.fromEntries(fields.map(f => [f.label, cellForExport(e, f)]))))
     const ws = XLSX.utils.json_to_sheet(rows, { header: fields.map(f => f.label) })
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, (jenisData?.judul || 'Data').slice(0, 31))
@@ -1023,7 +1034,9 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptLabel = '', peri
                   <td className="px-3 py-2.5 text-center font-mono text-gray-400">{(page - 1) * pageSize + i + 1}</td>
                   {fields.map(f => (
                     <td key={f.id || f.field_key} className="px-3 py-2.5 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                      {cell(e, f) || <span className="text-gray-300 dark:text-gray-600">-</span>}
+                      {f.tipe === 'file'
+                        ? <FileValueDisplay id={cell(e, f)} />
+                        : cell(e, f) || <span className="text-gray-300 dark:text-gray-600">-</span>}
                     </td>
                   ))}
                 </tr>

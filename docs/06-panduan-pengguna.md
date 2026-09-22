@@ -259,8 +259,12 @@ Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun hal
   **Boleh dilihat publik**. Tingkat (*level utama*) menentukan apakah jenis data muncul di **Input Mingguan**
   atau **Input Bulanan**.
 * Kelola **kolom**: tambah, ubah, aktif/nonaktif, hapus, ubah urutan (seret-dan-lepas), tipe
-  (*angka, teks, teks panjang, tanggal, pilihan*), opsi pilihan, wajib, dan penanda **Identitas Pribadi**
+  (*angka, teks, teks panjang, tanggal, pilihan, berkas*), opsi pilihan, wajib, dan penanda **Identitas Pribadi**
   (tidak pernah tampil di publik).
+* **Tipe Berkas** — UPT mengunggah berkas (PDF, Word, atau Excel; maks. **10 MB**) langsung dari form, menggantikan
+  cara lama mengetik link (mis. "Link Laporan Pelatihan"). Di tabel rekap, sel ini menampilkan tombol **📎 unduh**
+  berisi nama berkas asli, bukan teks link. Mengganti berkas otomatis membuang berkas lama. **Tidak bisa** diisi
+  lewat Excel — kolom bertipe Berkas dikecualikan dari template & impor Excel (termasuk Impor Data Historis).
 * Untuk kolom **angka** pada jenis data mingguan tersedia **Cara Rekap** (jumlahkan / nilai terakhir / rata-rata /
   maksimum) — atur *nilai terakhir* untuk angka kumulatif. Lencana cara rekap tampil di daftar kolom.
 * Pada jenis data mingguan, kotak **Boleh lebih dari 1 pelatihan per minggu** (di *Edit Pengaturan*) menampilkan

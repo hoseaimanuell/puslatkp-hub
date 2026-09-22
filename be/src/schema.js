@@ -67,6 +67,12 @@ export const TABLES = {
     json: ['konfigurasi'], bool: ['aktif'],
     read: 'auth', // semua akun login membaca; hanya Admin yang menulis
   }),
+  field_files: table({
+    // Metadata berkas kolom bertipe 'file' (isi berkas di disk, lewat /api/field-files — bukan endpoint ini).
+    // Hanya untuk membaca nama berkas dsb.; menulis tetap lewat /api/field-files (validasi ekstensi & isi berkas).
+    cols: ['id', 'upt_key', 'jenis_data_id', 'field_key', 'file_name', 'file_ext', 'file_size', 'uploaded_by_label', 'created_at'],
+    scope: 'upt', // non-admin hanya melihat berkas UPT-nya sendiri
+  }),
   audit_log: table({
     cols: ['id', 'actor_id', 'actor_upt_key', 'action', 'detail', 'created_at'],
     json: ['detail'], read: 'admin', write: 'auth', insertOnly: true,

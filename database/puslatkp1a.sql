@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS field_definitions (
   `level`       ENUM('tahun','triwulan','bulan','minggu') NOT NULL,
   field_key     VARCHAR(120) NOT NULL,
   label         VARCHAR(255) NOT NULL,
-  tipe          ENUM('angka','teks','teks_panjang','tanggal','pilihan') NOT NULL DEFAULT 'teks',
+  tipe          ENUM('angka','teks','teks_panjang','tanggal','pilihan','file') NOT NULL DEFAULT 'teks',
   opsi_pilihan  JSON         NULL,
   agregasi      ENUM('sum','last','avg','max') NOT NULL DEFAULT 'sum' COMMENT 'Cara rekap bulan/triwulan/tahun dari data mingguan (last = nilai kumulatif terakhir)',
   wajib         TINYINT(1)   NOT NULL DEFAULT 0,
@@ -261,7 +261,29 @@ CREATE TABLE IF NOT EXISTS dashboard_widgets (
   KEY idx_dashboard_urutan (urutan)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 13. View publik (agregat saja, tanpa data pribadi)
+-- 13. Berkas kolom bertipe "file" (mis. Link Laporan Pelatihan diganti unggah berkas)
+-- Nilai sel di rekap_nilai (value_text) / data_entries (data_json[field_key]) menyimpan id baris ini;
+-- isi berkas ada di disk (STORAGE_DIR/field-files), bukan di database.
+CREATE TABLE IF NOT EXISTS field_files (
+  id                CHAR(36)     NOT NULL,
+  upt_key           VARCHAR(64)  NOT NULL,
+  jenis_data_id     CHAR(36)     NOT NULL,
+  field_key         VARCHAR(120) NOT NULL,
+  file_name         VARCHAR(255) NOT NULL,
+  file_ext          VARCHAR(10)  NOT NULL,
+  file_size         BIGINT       NOT NULL,
+  storage_key       VARCHAR(80)  NOT NULL COMMENT 'Nama berkas di folder storage/field-files',
+  uploaded_by       CHAR(36)     NULL,
+  uploaded_by_label VARCHAR(190) NULL,
+  created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_field_files_scope (jenis_data_id, field_key, upt_key),
+  CONSTRAINT fk_ff_upt FOREIGN KEY (upt_key)       REFERENCES upt_list(`key`) ON DELETE CASCADE,
+  CONSTRAINT fk_ff_jd  FOREIGN KEY (jenis_data_id) REFERENCES jenis_data(id)   ON DELETE CASCADE,
+  CONSTRAINT fk_ff_by  FOREIGN KEY (uploaded_by)   REFERENCES profiles(id)     ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 14. View publik (agregat saja, tanpa data pribadi)
 CREATE OR REPLACE VIEW v_publik_rekap AS
 SELECT
   de.jenis_data_id,
@@ -301,17 +323,17 @@ ON DUPLICATE KEY UPDATE `label` = VALUES(`label`), `aktif` = VALUES(`aktif`);
 -- AKUN AWAL (password di-hash bcrypt; lihat docs/05-akun-dan-keamanan.md)
 -- ==========================================================
 INSERT IGNORE INTO `profiles` (`id`, `email`, `password_hash`, `role`, `upt_key`, `nama_lengkap`, `created_at`) VALUES
-  ('0d0fcaf3-78a1-4ee0-8446-9a5c81167ffd', 'admin@puslatkp.kkp.go.id', '$2b$10$hzGtVtj.X/8Y/voOlfELVOIQkbN1b6RmrW6bYi1eWgpKBHiZcEJGS', 'admin', NULL, 'Admin PUSLATKP', '2026-01-01 00:00:00'),
-  ('9802d06b-f2a0-4f6c-82e8-940d7e13a1df', 'bppp.jakarta@kkp.go.id', '$2b$10$ezbGxTj6mWFNjiTeSMgMdewFb/Kduj2Ob5bi6KoX6TuiebBGfMr7G', 'upt', 'upt_jakarta', 'BPPP Jakarta', '2026-01-01 00:00:00'),
-  ('d5ae756b-5036-45bd-8f57-a22ae970b179', 'bppp.medan@kkp.go.id', '$2b$10$t0Y9tpDCOX3wtxaPLXMK7.TDk2M1FqDF9y.mHtajC6QJLFIwCWKwa', 'upt', 'upt_medan', 'BPPP Medan', '2026-01-01 00:00:00'),
-  ('cb80a328-398c-4339-8e9b-a7c27db00701', 'bppp.banyuwangi@kkp.go.id', '$2b$10$XNwPoUDIT9BXVZr/.TYYeerx7MGGgJOezWAhTfu4aSJk1yGtEIrPS', 'upt', 'upt_banyuwangi', 'BPPP Banyuwangi', '2026-01-01 00:00:00'),
-  ('1d1c82c1-cc51-4431-8f3b-69487d0fc662', 'bppp.tegal@kkp.go.id', '$2b$10$2Lfe7lgqTwcdVtTqVOxSHekj3CEmLlCh4Z/9ESsrQpEJvLOxhk3Py', 'upt', 'upt_tegal', 'BPPP Tegal', '2026-01-01 00:00:00'),
-  ('66bcf275-7c59-45d7-8cc6-942667bcdfdf', 'bppp.bitung@kkp.go.id', '$2b$10$53fq5qZpoUZY0uxZAfE8kuRcpuvQWOTEigmWSjbBFHclYG4gwgTXy', 'upt', 'upt_bitung', 'BPPP Bitung', '2026-01-01 00:00:00'),
-  ('e8a1fe30-d2fe-47ee-85fd-429f76d696a7', 'bppp.ambon@kkp.go.id', '$2b$10$7wSsWsuLki8rap/Ido5Pvu8LMEBOTaG2kO9.JV9TB2s.VKAnA4ZX6', 'upt', 'upt_ambon', 'BPPP Ambon', '2026-01-01 00:00:00'),
-  ('050b142e-809a-4212-800c-b90b91584fbd', 'bppp.padang@kkp.go.id', '$2b$10$vDibNjvKIcsjwgiaxdKXieOsphLFhGwg6Na4lfGPqlkhp/SHFsP16', 'upt', 'upt_padang', 'BPPP Padang', '2026-01-01 00:00:00'),
-  ('1357883c-c49d-4d5b-8c58-573713f9505d', 'bppp.pontianak@kkp.go.id', '$2b$10$kACOJK6z1tD7BPxO37RPve110/LHPPIGLIK7XLYA1VJhNuhPJMUWq', 'upt', 'upt_pontianak', 'BPPP Pontianak', '2026-01-01 00:00:00'),
-  ('9a8aa809-b18e-48cb-86d8-fb903f4fa692', 'bppp.makassar@kkp.go.id', '$2b$10$5m0/w2mCeaIEejplpO70k.ZbfzRpMruf3B1XNN/T4.EiGSxlq6FAW', 'upt', 'upt_makassar', 'BPPP Makassar', '2026-01-01 00:00:00'),
-  ('f380f850-fc65-4d66-817b-8f55abf1f172', 'bppp.sorong@kkp.go.id', '$2b$10$rOrvewRRtpczMfkQLkcNIejINExb8kJQz7nJFRUQ0rW6bnw2kzjCi', 'upt', 'upt_sorong', 'BPPP Sorong', '2026-01-01 00:00:00');
+  ('0d0fcaf3-78a1-4ee0-8446-9a5c81167ffd', 'admin@puslatkp.kkp.go.id', '$2b$10$nOgnynJjlKYy0pMRIluPfebCU0lQuW.XRgO1NDh/EIw3LHtIJOemu', 'admin', NULL, 'Admin PUSLATKP', '2026-01-01 00:00:00'),
+  ('9802d06b-f2a0-4f6c-82e8-940d7e13a1df', 'bppp.jakarta@kkp.go.id', '$2b$10$zK7MgQGwcd5PzWg4mefIMOIE6UO0Zse7hjy9OoDTFlij2W9tS6JC2', 'upt', 'upt_jakarta', 'BPPP Jakarta', '2026-01-01 00:00:00'),
+  ('d5ae756b-5036-45bd-8f57-a22ae970b179', 'bppp.medan@kkp.go.id', '$2b$10$sawGHvMclBCcuA12qEhTYOSgDz8YiUqAe5soREsSai/1aRILAJRSS', 'upt', 'upt_medan', 'BPPP Medan', '2026-01-01 00:00:00'),
+  ('cb80a328-398c-4339-8e9b-a7c27db00701', 'bppp.banyuwangi@kkp.go.id', '$2b$10$EYLeeNku5eUsveSDBDW4pOYwTnLOrh7XuqGPMlsTINmYBshmNJsZ.', 'upt', 'upt_banyuwangi', 'BPPP Banyuwangi', '2026-01-01 00:00:00'),
+  ('1d1c82c1-cc51-4431-8f3b-69487d0fc662', 'bppp.tegal@kkp.go.id', '$2b$10$dqaAyb.sKIjlipOz2.iqG.02phTA77pv8GCxWqPTChiDeu0LRGiK6', 'upt', 'upt_tegal', 'BPPP Tegal', '2026-01-01 00:00:00'),
+  ('66bcf275-7c59-45d7-8cc6-942667bcdfdf', 'bppp.bitung@kkp.go.id', '$2b$10$R3zJoAyLhRs/s6lszssjj.dvdownFS.BOPscedXfUlMNVjJaCyw/2', 'upt', 'upt_bitung', 'BPPP Bitung', '2026-01-01 00:00:00'),
+  ('e8a1fe30-d2fe-47ee-85fd-429f76d696a7', 'bppp.ambon@kkp.go.id', '$2b$10$bsncybZT1WyshwMI0Ymx0.mSvhSKgDgcZLfF8ydOT4RiZD3Zjb/sW', 'upt', 'upt_ambon', 'BPPP Ambon', '2026-01-01 00:00:00'),
+  ('050b142e-809a-4212-800c-b90b91584fbd', 'bppp.padang@kkp.go.id', '$2b$10$/b6OzovuVg7xyTQQ71nj.OTLusR/RhBd8Tm8rU6PSLyqMLm0DD/Pe', 'upt', 'upt_padang', 'BPPP Padang', '2026-01-01 00:00:00'),
+  ('1357883c-c49d-4d5b-8c58-573713f9505d', 'bppp.pontianak@kkp.go.id', '$2b$10$cbkvAcq4mUhlXhJDqMi8Qe3Kk8dDY0Z.z9cwRvRLQMIKulrzg8eG2', 'upt', 'upt_pontianak', 'BPPP Pontianak', '2026-01-01 00:00:00'),
+  ('9a8aa809-b18e-48cb-86d8-fb903f4fa692', 'bppp.makassar@kkp.go.id', '$2b$10$qJoR0UEVYvitC0VeCydJ9e9N7f7wYV6GA1arE9D/AFi.BKtGD0xpa', 'upt', 'upt_makassar', 'BPPP Makassar', '2026-01-01 00:00:00'),
+  ('f380f850-fc65-4d66-817b-8f55abf1f172', 'bppp.sorong@kkp.go.id', '$2b$10$DyDk7lBkOrRqkEf8Cb7YcenRJce7g77y8kmiYzHaeu3uozH9gDzG2', 'upt', 'upt_sorong', 'BPPP Sorong', '2026-01-01 00:00:00');
 
 -- ==========================================================
 -- DATA MASTER — 9 JENIS DATA

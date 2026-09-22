@@ -17,13 +17,19 @@ const OPTIONAL = [
 
 export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true }
 
-/** Tabel opsional (migrasi_05). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
+/** Tabel opsional (migrasi_05/06). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {
   const [t] = await pool.query("SHOW TABLES LIKE 'dashboard_widgets'")
-  if (t.length) return
-  features.dashboard = false
-  delete TABLES.dashboard_widgets
-  console.warn('PERINGATAN: tabel dashboard_widgets belum ada. Jalankan database/migrasi_05_pengaturan_dashboard.sql agar Kelola Dashboard aktif.')
+  if (!t.length) {
+    features.dashboard = false
+    delete TABLES.dashboard_widgets
+    console.warn('PERINGATAN: tabel dashboard_widgets belum ada. Jalankan database/migrasi_05_pengaturan_dashboard.sql agar Kelola Dashboard aktif.')
+  }
+  const [ff] = await pool.query("SHOW TABLES LIKE 'field_files'")
+  if (!ff.length) {
+    delete TABLES.field_files
+    // fitur fieldFiles dilaporkan lewat fieldFilesEnabled() di routes/fieldFiles.js, bukan objek features ini
+  }
 }
 
 export async function detectOptionalColumns() {

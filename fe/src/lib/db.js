@@ -105,13 +105,50 @@ export const arsip = {
   },
 }
 
+/** Berkas kolom bertipe "Berkas" (field_definitions.tipe = 'file') — satu berkas per sel, mis. Link Laporan Pelatihan. */
+export const fieldFiles = {
+  remove: id => api('/field-files/' + id, { method: 'DELETE' }),
+  /** Unggah isi berkas mentah; metadata (jenis_data_id, field_key, upt_key) lewat query string. Balikan: {id, file_name, file_ext, file_size}. */
+  async upload(file, meta) {
+    const token = getToken()
+    const qs = new URLSearchParams({ ...Object.fromEntries(Object.entries(meta).filter(([, v]) => v)), nama: file.name })
+    try {
+      const res = await fetch(`${apiBase()}/field-files?${qs}`, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: file })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) return { data: null, error: { message: json?.error?.message || `Unggah gagal (${res.status})` } }
+      return { data: json.data, error: null }
+    } catch {
+      return { data: null, error: { message: 'Tidak dapat terhubung ke server.' } }
+    }
+  },
+  /** Unduh langsung ke perangkat (nama berkas asli diambil dari header server). */
+  async download(id) {
+    const token = getToken()
+    const res = await fetch(`${apiBase()}/field-files/${id}/file`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      throw new Error(json?.error?.message || `Gagal mengambil berkas (${res.status})`)
+    }
+    const cd = res.headers.get('Content-Disposition') || ''
+    const match = /filename\*=UTF-8''([^;]+)/.exec(cd)
+    const filename = match ? decodeURIComponent(match[1]) : `berkas-${id}`
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 2000)
+  },
+}
+
 let featuresPromise = null
 /** Fitur yang aktif di backend/database (mis. beberapa pelatihan per minggu). Di-cache. */
 export function getFeatures() {
   if (!featuresPromise) {
     featuresPromise = api('/health', { method: 'GET' }).then(({ data }) => {
       if (!data) featuresPromise = null
-      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false }
+      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false }
     })
   }
   return featuresPromise

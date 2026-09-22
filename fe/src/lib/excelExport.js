@@ -43,17 +43,16 @@ export function exportDataEntries({ entries, fieldDefs, jenisDataJudul, periodLa
     .sort((a, b) => a.urutan - b.urutan)
     .map(fd => fd.label)
 
-  const fieldKeys = fieldDefs
-    .filter(fd => fd.aktif)
-    .sort((a, b) => a.urutan - b.urutan)
-    .map(fd => fd.field_key)
+  const sortedFields = fieldDefs.filter(fd => fd.aktif).sort((a, b) => a.urutan - b.urutan)
+  const fieldKeys = sortedFields.map(fd => fd.field_key)
 
   // Baris data dengan sanitasi Formula Injection
   const rows = entries.map(entry => {
     const row = {}
     fieldKeys.forEach((key, i) => {
       const rawVal = entry.data_json?.[key] ?? entry[key] ?? ''
-      row[headers[i]] = sanitizeCellValue(rawVal)
+      // Kolom bertipe berkas: nilainya id internal, tidak berguna di Excel — tampilkan penanda saja.
+      row[headers[i]] = sortedFields[i].tipe === 'file' ? (rawVal ? '(berkas — lihat di web)' : '') : sanitizeCellValue(rawVal)
     })
     return row
   })
@@ -94,7 +93,8 @@ export function exportRekapNilai({ rekapData, fieldDefs, jenisDataJudul, periodL
       UPT: sanitizeCellValue(item.upt_key),
     }
     fieldDefs.forEach(fd => {
-      row[fd.label] = sanitizeCellValue(item.values?.[fd.field_key] ?? '')
+      const raw = item.values?.[fd.field_key] ?? ''
+      row[fd.label] = fd.tipe === 'file' ? (raw ? '(berkas — lihat di web)' : '') : sanitizeCellValue(raw)
     })
     return row
   })
@@ -283,7 +283,7 @@ export function exportGabunganSemuaUPT({ data, jenisDataJudul, tahun }) {
  */
 export function generateTemplateExcel({ fieldDefs = [], jenisDataJudul = 'Template', format = 'xlsx' }) {
   const activeFields = fieldDefs
-    .filter(fd => fd.aktif !== false)
+    .filter(fd => fd.aktif !== false && fd.tipe !== 'file') // kolom berkas diisi lewat unggah di web, bukan Excel
     .sort((a, b) => (a.urutan || 0) - (b.urutan || 0))
 
   const headers = activeFields.map(f => f.label)

@@ -31,7 +31,8 @@ puslatkp-hub/
 │  ├─ migrasi_02_tempat_sampah.sql      Peningkatan DB lama (tempat sampah / soft delete)
 │  ├─ migrasi_03_baris_dan_agregasi.sql Peningkatan DB lama (beberapa pelatihan/minggu + rekap kumulatif)
 │  ├─ migrasi_04_terlambat_dan_arsip.sql Peningkatan DB lama (penanda terlambat + Arsip Data Historis)
-│  └─ migrasi_05_pengaturan_dashboard.sql Peningkatan DB lama (menu Kelola Dashboard)
+│  ├─ migrasi_05_pengaturan_dashboard.sql Peningkatan DB lama (menu Kelola Dashboard)
+│  └─ migrasi_06_kolom_berkas.sql        Peningkatan DB lama (kolom bertipe Berkas: upload PDF/Word/Excel)
 ├─ docs/                Dokumentasi lengkap
 ├─ docker-compose.yml   Menjalankan fe + be
 ├─ run.bat / run.ps1    Peluncur development di Windows (Laragon)

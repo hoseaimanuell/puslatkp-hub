@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS field_definitions (
   `level`       ENUM('tahun','triwulan','bulan','minggu') NOT NULL,
   field_key     VARCHAR(120) NOT NULL,
   label         VARCHAR(255) NOT NULL,
-  tipe          ENUM('angka','teks','teks_panjang','tanggal','pilihan') NOT NULL DEFAULT 'teks',
+  tipe          ENUM('angka','teks','teks_panjang','tanggal','pilihan','file') NOT NULL DEFAULT 'teks',
   opsi_pilihan  JSON         NULL,
   agregasi      ENUM('sum','last','avg','max') NOT NULL DEFAULT 'sum' COMMENT 'Cara rekap bulan/triwulan/tahun dari data mingguan (last = nilai kumulatif terakhir)',
   wajib         TINYINT(1)   NOT NULL DEFAULT 0,
@@ -261,7 +261,29 @@ CREATE TABLE IF NOT EXISTS dashboard_widgets (
   KEY idx_dashboard_urutan (urutan)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 13. View publik (agregat saja, tanpa data pribadi)
+-- 13. Berkas kolom bertipe "file" (mis. Link Laporan Pelatihan diganti unggah berkas)
+-- Nilai sel di rekap_nilai (value_text) / data_entries (data_json[field_key]) menyimpan id baris ini;
+-- isi berkas ada di disk (STORAGE_DIR/field-files), bukan di database.
+CREATE TABLE IF NOT EXISTS field_files (
+  id                CHAR(36)     NOT NULL,
+  upt_key           VARCHAR(64)  NOT NULL,
+  jenis_data_id     CHAR(36)     NOT NULL,
+  field_key         VARCHAR(120) NOT NULL,
+  file_name         VARCHAR(255) NOT NULL,
+  file_ext          VARCHAR(10)  NOT NULL,
+  file_size         BIGINT       NOT NULL,
+  storage_key       VARCHAR(80)  NOT NULL COMMENT 'Nama berkas di folder storage/field-files',
+  uploaded_by       CHAR(36)     NULL,
+  uploaded_by_label VARCHAR(190) NULL,
+  created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_field_files_scope (jenis_data_id, field_key, upt_key),
+  CONSTRAINT fk_ff_upt FOREIGN KEY (upt_key)       REFERENCES upt_list(`key`) ON DELETE CASCADE,
+  CONSTRAINT fk_ff_jd  FOREIGN KEY (jenis_data_id) REFERENCES jenis_data(id)   ON DELETE CASCADE,
+  CONSTRAINT fk_ff_by  FOREIGN KEY (uploaded_by)   REFERENCES profiles(id)     ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 14. View publik (agregat saja, tanpa data pribadi)
 CREATE OR REPLACE VIEW v_publik_rekap AS
 SELECT
   de.jenis_data_id,

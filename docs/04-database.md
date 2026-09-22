@@ -95,10 +95,22 @@ Kolom-kolom form per Jenis Data per level.
 | :-- | :-- |
 | `jenis_data_id`, `level`, `field_key` | Kunci unik gabungan |
 | `label`, `urutan`, `aktif`, `wajib` | Tampilan & validasi |
-| `tipe` | `angka` / `teks` / `teks_panjang` / `tanggal` / `pilihan` |
+| `tipe` | `angka` / `teks` / `teks_panjang` / `tanggal` / `pilihan` / `file` (unggah PDF/Word/Excel — lihat `field_files` di bawah) |
 | `opsi_pilihan` | JSON array (untuk `pilihan`) |
 | `is_identitas` | Data pribadi (NIK, telepon, alamat, NIP) – **tidak pernah ditampilkan ke publik** |
 | `agregasi` | Cara rekap bulan/triwulan/tahun: `sum` (jumlahkan) / `last` (nilai terakhir, angka kumulatif) / `avg` / `max`. Bawaan: pagu*, realisasi*, jumlah instruktur/widyaiswara, volume = `last` |
+
+### `field_files` — Berkas kolom bertipe `file`
+Satu baris = satu berkas yang diunggah UPT untuk mengisi SATU sel bertipe `file` (mis. "Link Laporan Pelatihan" pada
+Jenis Data *Masyarakat*, yang diganti dari teks link menjadi unggah berkas). Nilai sel itu sendiri, di `rekap_nilai.value_text`
+(level minggu) atau `data_entries.data_json[field_key]` (level bulan), hanyalah **id baris ini** — isi berkas ada di disk
+(`STORAGE_DIR/field-files/<id>.<ext>`), bukan di database. PDF/Word/Excel saja, maks. **10 MB**; isi berkas diperiksa
+(magic bytes), bukan hanya ekstensinya. Baca: pemilik UPT + Admin (`scope: upt`); tulis/hapus lewat `/api/field-files`
+(bukan `/api/db/query`) supaya validasi ekstensi & isi berkas tetap ditegakkan. Ikut terhapus (`ON DELETE CASCADE`) bila
+UPT atau Jenis Data pemiliknya dihapus; berkas fisik disapu otomatis tiap 6 jam.
+
+> Kolom bertipe `file` sengaja **dikecualikan** dari template Excel, impor Excel, dan Impor Data Historis — tidak ada
+> cara mengisi berkas lewat sel Excel, jadi UPT mengisinya langsung di form web.
 
 ### Tempat sampah (soft delete)
 Tabel `rekap_nilai`, `data_entries`, `dokumen_upload`, `daily_activity` memiliki kolom `deleted_at` (NULL = aktif),

@@ -10,6 +10,7 @@ import dbRoutes from './routes/db.js'
 import trashRoutes from './routes/trash.js'
 import periodRoutes from './routes/periods.js'
 import arsipRoutes, { detectArsip, arsipEnabled, sweepArsipFiles } from './routes/arsip.js'
+import fieldFilesRoutes, { detectFieldFiles, fieldFilesEnabled, sweepFieldFiles } from './routes/fieldFiles.js'
 import { ensureCurrentYears } from './lib/yearService.js'
 import { detectSoftDelete, purgeExpired, trashEnabled } from './lib/trash.js'
 import { detectOptionalColumns, detectOptionalTables, features } from './lib/compat.js'
@@ -28,13 +29,14 @@ app.use((req, res, next) => (req.user ? jsonLoggedIn : jsonAnonymous)(req, res, 
 
 app.get('/api/health', async (_req, res) => {
   await pool.query('SELECT 1')
-  res.json({ status: 'ok', database: config.db.database, trash: trashEnabled(), features: { ...features, arsip: arsipEnabled() } })
+  res.json({ status: 'ok', database: config.db.database, trash: trashEnabled(), features: { ...features, arsip: arsipEnabled(), fieldFiles: fieldFilesEnabled() } })
 })
 app.use('/api/auth', authRoutes)
 app.use('/api/db', dbRoutes)
 app.use('/api/trash', trashRoutes)
 app.use('/api/periods', periodRoutes)
 app.use('/api/arsip', arsipRoutes)
+app.use('/api/field-files', fieldFilesRoutes)
 
 app.use((_req, _res, next) => next(new HttpError(404, 'Endpoint tidak ditemukan.')))
 app.use((err, _req, res, _next) => {
@@ -46,10 +48,14 @@ await detectSoftDelete()
 await detectOptionalColumns()
 await detectOptionalTables()
 await detectArsip()
+await detectFieldFiles()
 const purge = () => purgeExpired().catch(e => console.error('Gagal membuang tempat sampah kedaluwarsa:', e.message))
 const sweep = () => sweepArsipFiles().catch(e => console.error('Gagal menyapu berkas arsip yatim:', e.message))
+const sweepFF = () => sweepFieldFiles().catch(e => console.error('Gagal menyapu berkas kolom yatim:', e.message))
 sweep()
+sweepFF()
 setInterval(sweep, 6 * 60 * 60 * 1000).unref()
+setInterval(sweepFF, 6 * 60 * 60 * 1000).unref()
 purge()
 setInterval(purge, 6 * 60 * 60 * 1000).unref() // bersihkan tempat sampah kedaluwarsa tiap 6 jam
 

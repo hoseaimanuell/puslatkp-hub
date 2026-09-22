@@ -32,7 +32,7 @@ npm run periods -- 2024 --reset     # KEMBALIKAN tanggal & deadline tahun itu ke
 
 ### Backup
 Lihat [04-database.md](04-database.md#backup--restore). Jadwalkan `mysqldump` harian pada produksi **dan salin folder `be/storage`**
-(berkas Arsip Historis) — keduanya harus dari waktu yang sama; simpan di luar server.
+(berkas Arsip Historis + kolom bertipe Berkas) — keduanya harus dari waktu yang sama; simpan di luar server.
 
 ### Mengganti password / membuat akun
 [05-akun-dan-keamanan.md](05-akun-dan-keamanan.md#mengelola-akun).
@@ -54,12 +54,19 @@ Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut
 | `database/migrasi_03_baris_dan_agregasi.sql` | Menambah `rekap_nilai.baris_ke`, `jenis_data.multi_baris`, `field_definitions.agregasi` (beberapa pelatihan per minggu + cara rekap kumulatif) dan mengisi nilai bawaannya. Jalankan **setelah** migrasi_02 |
 | `database/migrasi_04_terlambat_dan_arsip.sql` | Menambah kolom `terlambat` (deadline tidak lagi mengunci) pada 3 tabel data + tabel `arsip_historis` (Arsip Data Historis). Jalankan **setelah** migrasi_03. Folder `be/storage` dibuat otomatis oleh server |
 | `database/migrasi_05_pengaturan_dashboard.sql` | Membuat tabel `dashboard_widgets` (menu Kelola Dashboard). Tabel kosong = tampilan bawaan. Jalankan setelah migrasi_04, lalu restart be |
+| `database/migrasi_06_kolom_berkas.sql` | Menambah tipe kolom `file` (Kelola Jenis Data) + tabel `field_files`. Jalankan setelah migrasi_05, lalu restart be |
 | `database/migrasi_02_tempat_sampah.sql` | Menambah kolom tempat sampah (`deleted_*`) pada 4 tabel data + memperbarui view publik. Jalankan **setelah** migrasi_01 |
 
 Instalasi baru dari `puslatkp1a.sql` terbaru sudah memuat keduanya. Jalankan setiap berkas **sekali saja**
 (menjalankan ulang migrasi_02 menghasilkan galat "Duplicate column" yang tidak berbahaya). Backend tetap berjalan sebelum
 migrasi_02 dijalankan — tempat sampah otomatis nonaktif dan penghapusan bersifat permanen sampai migrasi dijalankan. Cek hasil: di phpMyAdmin buka tabel `rekap_nilai` →
 *Structure* → *Relation view*; kolom `upt_key` harus berstatus `ON DELETE CASCADE`.
+
+Alternatif tanpa phpMyAdmin (dari folder `be`, kredensial diambil dari `be/.env`):
+
+```bash
+node scripts/run-migration.mjs migrasi_06_kolom_berkas.sql
+```
 
 ## Mengubah skema database
 
@@ -136,6 +143,7 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 | Data tidak muncul untuk akun UPT | Pastikan `profiles.upt_key` terisi & sama dengan `upt_key` pada data |
 | Data UPT bertanda merah "Terlambat" | Disimpan setelah deadline. Normal; tidak dapat diubah kecuali data dihapus & diisi ulang oleh Admin |
 | "Arsip Historis belum aktif" (409) | Jalankan `database/migrasi_04_terlambat_dan_arsip.sql` lalu restart be |
+| "Kolom bertipe Berkas belum aktif" (409) | Jalankan `database/migrasi_06_kolom_berkas.sql` lalu restart be |
 | "Berkas fisik tidak ditemukan di server" | Folder `be/storage`/`STORAGE_DIR` tidak ikut dipulihkan dari backup |
 | "Kolom tidak dikenal: …" | Kolom baru belum didaftarkan di `be/src/schema.js` |
 | Jam/tanggal bergeser satu hari | Sesi MySQL dipaksa UTC; `DATE` dikirim sebagai teks tanpa konversi zona waktu, `DATETIME` sebagai ISO UTC |
