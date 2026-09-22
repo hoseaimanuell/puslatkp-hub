@@ -183,5 +183,6 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 | `upt_list` | — | **own** (hanya UPT-nya) | — | baca/tulis (semua UPT) |
 | `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat) | semua |
 | `daily_activity`, `dokumen_upload` | — | own | own | semua |
+| `dashboard_widgets` | — | semua (baca) | — | baca/tulis (menu Kelola Dashboard; butuh migrasi_05) |
 | `audit_log` | — | — | hanya aksi `import_kolom_tidak_dikenal` (kolom `oleh` dicap server) | baca + `import_kolom_tidak_dikenal`, `impor_historis` |
 | `profiles` | — | self | — | baca, ubah, hapus (buat akun lewat `/auth/users`) |

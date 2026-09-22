@@ -24,7 +24,7 @@ Akun **Admin** melihat semua UPT dan dapat memilih UPT saat memfilter/menginput.
 | :-- | :-- | :-- | :-- |
 | Dashboard | `/dashboard` | Semua | Ringkasan mingguan dari isian UPT (lihat di bawah) |
 | **Input Mingguan** | `/input-mingguan` | Semua | Input & rekap data **mingguan** |
-| **Input Bulanan** | `/input-bulanan` | Semua | Input data **bulanan** + tab **Rekap Bulanan** |
+| **Input Bulanan** | `/input-bulanan` | Semua | Rekap bulanan (akumulasi 4 minggu / data by name) + popup **Input Bulanan** |
 | **Rekap Triwulan & Tahun** | `/rekap-triwulan-tahun` | Semua | Hasil rekap **triwulan** dan **tahunan** (baca saja) |
 | Kelola Akun UPT | `/kelola-upt` | Admin | Buat/hapus akun UPT, tambah/hapus UPT |
 | Kelola Jenis Data | `/kelola-jenis-data` | Admin | Form Builder: jenis data & kolom |
@@ -42,22 +42,28 @@ Alamat lama `/input-data` dan `/rekap-bulanan` otomatis dialihkan ke `/input-min
 Semua angka di dashboard **berasal dari isian UPT** dan mengikuti **periode mingguan** yang dipilih pada filter
 di bagian atas (tombol ◀ ▶ untuk pindah minggu; bawaan = minggu berjalan).
 
-* **3 kartu utama**
+Isi kartu & grafik **diatur Admin lewat menu Kelola Dashboard** (lihat bawah) — bukan tetap di kode. Bawaannya:
+
+* **3 kartu Progress & Status**
   * **Masyarakat Dilatih** – jumlah peserta Jenis Data *Masyarakat*.
   * **Aparatur Dilatih** – jumlah peserta Jenis Data *Aparatur*.
   * **SDM Pelatih** – jumlah instruktur dan widyaiswara (*Data Instruktur dan WI*).
-* **Realisasi Anggaran per Sumber Dana** (nilai kumulatif: nilai terakhir tiap UPT sampai minggu terpilih; dari *Data Capaian Anggaran per Sumber Dana*): kotak **RM**,
-  **PNBP/BLU**, **SBSN**, dan **Total Realisasi Anggaran** (= RM + PNBP/BLU + SBSN), masing-masing dengan pagunya.
+* **Total Realisasi Anggaran** (nilai kumulatif: nilai terakhir tiap UPT sampai minggu terpilih; dijumlahkan dari
+  kolom Pagu/Realisasi Anggaran milik *Masyarakat + Aparatur + Data Belanja Modal* — jenis data yang memang diisi
+  UPT tiap minggu), dengan pagunya sebagai pembanding.
+* **RM / PNBP-BLU / SBSN** (opsional, dari *Data Capaian Anggaran per Sumber Dana*) — kartu terpisah, **tidak**
+  ikut dijumlahkan ke Total Realisasi Anggaran (supaya anggaran yang sama tidak terhitung dua kali kalau UPT
+  mengisi kedua jenis data itu).
 * **Grafik** *Peserta Dilatih* dan *Pagu vs Realisasi* per UPT.
-* **Status Pengisian Data** – tabel ✔ *Sudah* / ⏳ *Menunggu* per UPT untuk tiap Jenis Data mingguan.
-* Akses cepat ke Input Mingguan, Input Bulanan, Rekap Triwulan & Tahun, dan Dokumen & Arsip.
 
 Bila periode tersedia untuk lebih dari satu tahun, di samping pilihan minggu tampil pilihan **Tahun** (daftar minggu hanya
 menampilkan 48 minggu pada tahun terpilih).
 
 Selama UPT belum memasukkan data pada minggu itu, kartu menampilkan **–** dengan keterangan
 *"Menunggu input UPT"*, dan grafik menampilkan pesan menunggu. Begitu data disimpan di **Input Mingguan**, angka
-otomatis muncul (Admin juga melihat "N dari M UPT sudah input"). Untuk akun UPT, dashboard hanya berisi data UPT tersebut.
+otomatis muncul (Admin juga melihat "N dari M UPT sudah input"; angka ini mengikuti jumlah UPT **aktif** saat ini — bila
+satu UPT dihapus, penyebutnya otomatis berkurang dan datanya tidak lagi ikut terhitung). Untuk akun UPT, dashboard
+hanya berisi data UPT tersebut.
 
 ## Input Mingguan
 
@@ -82,15 +88,16 @@ Anggaran per Jenis Belanja, dan per Sumber Dana.
 
 ## Input Bulanan
 
-Berisi **hanya Jenis Data bulanan**. Setiap jenis data bulanan berbentuk salah satu dari dua:
-**Per nama (rincian)** atau **Rekap angka saja**. Terdapat dua tab:
+Pola halamannya sama seperti Input Mingguan: yang tampil pertama adalah **rekap bulanan**, dan tombol
+**+ Input Bulanan** (kanan atas) membuka **popup** untuk mengisi/mengunggah data. Berisi **hanya Jenis Data bulanan**;
+setiap jenis data bulanan berbentuk salah satu dari dua: **Per nama (rincian)** atau **Rekap angka saja**.
 
-### Tab "Input Bulanan"
-Pilih Jenis Data bulanan (sudah terfilter) lalu periode bulan.
+### Popup "Input Bulanan"
+Di dalam popup: pilih Jenis Data bulanan (sudah terfilter), periode bulan, dan (Admin) UPT.
 
 | Jenis | Cara isi |
 | :-- | :-- |
-| **Per nama (rincian)** (mis. Data Masyarakat, Data Aparatur) | **Tambah Baris** (per orang) atau **Upload Excel**. Baris dapat diedit/dihapus |
+| **Per nama (rincian)** (mis. Data Masyarakat, Data Aparatur) | **Tambah Baris** (per orang) atau **Upload Excel**. Baris dapat diedit/dihapus. Menyimpan satu baris **tidak menutup popup** — lanjutkan menambah baris berikutnya, lalu tutup popup (✕) saat selesai |
 | **Rekap angka saja** | Hanya angka total per bulan yang dijumlahkan otomatis dari isian mingguan pasangannya; tidak diisi manual |
 | Unggah berkas *(mode lama)* | Hanya untuk jenis data lama yang sudah memakainya (mis. Data Instruktur dan Widyaiswara bawaan). Tidak tersedia untuk jenis data baru; ganti ke salah satu mode di atas lewat Kelola Jenis Data bila perlu |
 
@@ -105,11 +112,13 @@ baris rincian bulan dengan total peserta dari 4 minggu pasangannya dan menampilk
 2. Isi data, lalu **Upload Excel**. Layar **pemetaan kolom** mencocokkan kolom berkas dengan kolom sistem
    secara otomatis; Anda dapat mengoreksinya.
 3. Kolom yang tidak dikenali disimpan sebagai *data ekstra* dan dicatat di `audit_log`.
-4. Mengimpor ulang baris dengan NIK yang sama **memperbarui** baris tersebut, bukan menggandakan.
+4. Mengimpor ulang baris dengan NIK yang sama **memperbarui** baris tersebut, bukan menggandakan (setelah impor
+   selesai, popup otomatis menutup dan rekap di belakangnya menyegarkan).
 
-### Tab "Rekap Bulanan"
-Pindahan dari menu *Rekap Bulanan* yang lama. Pilih **Tahun**, **Bulan**, **UPT** (Admin), dan **Jenis Data**, lalu
-pilih tampilan:
+Menutup popup (✕ / klik luar / Esc) selalu menyegarkan rekap di halaman Input Bulanan.
+
+### Rekap Bulanan (tampilan utama halaman)
+Pilih **Tahun**, **Bulan**, **UPT** (Admin), dan **Jenis Data**, lalu pilih tampilan:
 
 * **Rekap 4 Minggu** – total pelatihan, peserta, pagu, realisasi, berkas; rincian per Jenis Data dan status
   kelengkapan tiap minggu. **Download Excel Bulanan** menghasilkan berkas multi-sheet.
@@ -260,9 +269,10 @@ Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun hal
   definisi terbaru.
 * Menghapus Jenis Data menghapus juga kolom, nilai rekap, data rincian, dan berkas terkait (ada konfirmasi).
 
-> Dashboard menghitung angka berdasarkan **key** Jenis Data bawaan (`masyarakat`, `aparatur`,
-> `data_instruktur_dan_wi`, `data_capaian_anggaran_per_sumber_dana`) dan kolom `jumlah_peserta`,
-> `jumlah_instruktur_wi`, `pagu_*`/`realisasi_*`. Jangan mengubah key/kolom tersebut bila dashboard masih dipakai.
+> Kartu/grafik Dashboard mengambil angka dari **key** Jenis Data & **field_key** kolom yang dipilih di **Kelola
+> Dashboard** (lihat menu Admin di bawah) — bukan lagi tertanam tetap di kode. Mengganti `key` jenis data atau
+> `field_key` kolom yang sedang dipakai sebagai sumber widget membuat widget itu berhenti menemukan datanya
+> (tampil kosong); buka **Kelola Dashboard** untuk memilih ulang sumbernya setelah mengganti key/kolom.
 
 ## Dokumen & Arsip
 

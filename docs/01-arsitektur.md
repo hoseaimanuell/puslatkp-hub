@@ -83,7 +83,8 @@ fe/src/
 │  ├─ publik/page.jsx      Tampilan publik (tanpa login)
 │  └─ (portal)/            Grup route yang memakai sidebar + topbar (PortalShell)
 │     └─ dashboard | dokumen-arsip | input-mingguan | input-bulanan | rekap-triwulan-tahun
-│        | documents | kelola-upt | kelola-jenis-data
+│        | kelola-upt | kelola-jenis-data | kelola-dashboard | kelola-periode
+│        | impor-historis | tempat-sampah
 ├─ components/             Sidebar, TopBar, PortalShell, DataTable, DynamicForm, Modal, ...
 ├─ views/                  Halaman (isi tiap route) – tampilan asli tidak berubah
 ├─ lib/                    db.js (klien API), periods.js, excelExport.js, deadline.js, ...
