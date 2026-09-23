@@ -77,12 +77,12 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
         <NavItem icon={Database} label="Input Mingguan" page="input-mingguan" />
         <NavItem icon={CalendarDays} label="Input Bulanan" page="input-bulanan" />
         <NavItem icon={BarChart2} label="Rekap Triwulan & Tahun" page="rekap-triwulan-tahun" />
-        <NavItem icon={FileText} label="Dokumen & Arsip" page="dokumen-arsip" />
 
         {/* ADMIN SECTION */}
         {isAdmin && (
           <>
             <SectionLabel label="Administrasi" />
+            <NavItem icon={FileText} label="Dokumen & Arsip" page="dokumen-arsip" />
             <NavItem icon={Users} label="Kelola Akun UPT" page="kelola-upt" />
             <NavItem icon={Settings} label="Kelola Jenis Data" page="kelola-jenis-data" />
             <NavItem icon={LayoutGrid} label="Kelola Dashboard" page="kelola-dashboard" />

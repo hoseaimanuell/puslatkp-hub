@@ -1,6 +1,11 @@
 'use client'
+import AdminOnly from '../../../components/AdminOnly'
 import DokumenArsip from '../../../views/DokumenArsip'
 
 export default function Page() {
-  return <DokumenArsip />
+  return (
+    <AdminOnly>
+      <DokumenArsip />
+    </AdminOnly>
+  )
 }
