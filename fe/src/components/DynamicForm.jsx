@@ -116,7 +116,7 @@ function FileFieldInput({ field, value, onChange, disabled, idPrefix, jenisDataI
   )
 }
 
-export function FieldInput({ field, value, onChange, disabled, idPrefix = '', jenisDataId, uptKey }) {
+export function FieldInput({ field, value, onChange, disabled, idPrefix = '', jenisDataId, uptKey, allValues, allFields }) {
   const base = `form-input ${disabled ? 'opacity-60 cursor-not-allowed bg-gray-50 dark:bg-gray-800' : ''}`
 
   switch (field.tipe) {
@@ -205,22 +205,37 @@ export function FieldInput({ field, value, onChange, disabled, idPrefix = '', je
       )
     }
 
-    case 'pilihan':
+    case 'pilihan': {
+      // Opsi bersyarat: kolom pilihan lain yang opsinya berbeda tergantung nilai kolom "depends_on" di baris yang sama
+      // (mis. "Jenjang Jabatan" opsinya beda untuk Instruktur vs Widyaiswara). Dikonfigurasi lewat field.opsi_bersyarat.
+      let opsi = field.opsi_pilihan || []
+      let waitingOn = null
+      if (field.opsi_bersyarat?.depends_on) {
+        const driverKey = field.opsi_bersyarat.depends_on
+        const driverVal = allValues?.[driverKey]
+        if (!driverVal) {
+          opsi = []
+          waitingOn = allFields?.find(f => f.field_key === driverKey)?.label || 'kolom sebelumnya'
+        } else {
+          opsi = field.opsi_bersyarat.options?.[driverVal] || []
+        }
+      }
       return (
         <select
           id={`${idPrefix}field-${field.field_key}`}
           value={value ?? ''}
           onChange={(e) => onChange(field.field_key, e.target.value || null)}
           className={`${base} form-select`}
-          disabled={disabled}
+          disabled={disabled || !!waitingOn}
           required={field.wajib}
         >
-          <option value="">- Pilih -</option>
-          {(field.opsi_pilihan || []).map(opt => (
+          <option value="">{waitingOn ? `- Pilih ${waitingOn} dulu -` : '- Pilih -'}</option>
+          {opsi.map(opt => (
             <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
       )
+    }
 
     case 'teks_panjang':
       return (
@@ -274,6 +289,12 @@ export function DynamicFormRekap({ fields, values, onChange, disabled, onSubmit,
   const activeFields = fields.filter(f => f.aktif).sort((a, b) => a.urutan - b.urutan)
   // bare: hanya kolom-kolomnya (dipakai saat satu <form> memuat beberapa baris/pelatihan)
   const Wrapper = bare ? 'div' : 'form'
+  // Saat kolom "penentu" (depends_on) berubah, kosongkan kolom yang opsinya bergantung padanya (opsi lama bisa tidak
+  // relevan lagi untuk nilai baru — mis. ganti dari Instruktur ke Widyaiswara, Jenjang Jabatan harus dipilih ulang).
+  const handleChange = (key, val) => {
+    onChange(key, val)
+    activeFields.filter(f => f.opsi_bersyarat?.depends_on === key).forEach(f => onChange(f.field_key, null))
+  }
 
   return (
     <Wrapper onSubmit={bare ? undefined : onSubmit} className="space-y-4">
@@ -292,11 +313,13 @@ export function DynamicFormRekap({ fields, values, onChange, disabled, onSubmit,
               <FieldInput
                 field={field}
                 value={values[field.field_key]}
-                onChange={onChange}
+                onChange={handleChange}
                 disabled={disabled}
                 idPrefix={idPrefix}
                 jenisDataId={jenisDataId}
                 uptKey={uptKey}
+                allValues={values}
+                allFields={activeFields}
               />
             </div>
           )
@@ -319,6 +342,10 @@ export function DynamicFormRekap({ fields, values, onChange, disabled, onSubmit,
  */
 export function DynamicFormEntry({ fields, values, onChange, disabled, onSubmit, loading, idPrefix = '', jenisDataId, uptKey }) {
   const activeFields = fields.filter(f => f.aktif).sort((a, b) => a.urutan - b.urutan)
+  const handleChange = (key, val) => {
+    onChange(key, val)
+    activeFields.filter(f => f.opsi_bersyarat?.depends_on === key).forEach(f => onChange(f.field_key, null))
+  }
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -337,10 +364,12 @@ export function DynamicFormEntry({ fields, values, onChange, disabled, onSubmit,
               <FieldInput
                 field={field}
                 value={values[field.field_key]}
-                onChange={onChange}
+                onChange={handleChange}
                 disabled={disabled}
                 jenisDataId={jenisDataId}
                 uptKey={uptKey}
+                allValues={values}
+                allFields={activeFields}
               />
             </div>
           )

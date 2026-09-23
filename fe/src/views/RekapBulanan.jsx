@@ -23,7 +23,7 @@ import {
   Calendar, Building2, Database, Download, Filter,
   CheckCircle2, AlertTriangle, FileSpreadsheet,
   Users, Target, TrendingUp, Layers, ChevronDown,
-  ChevronRight, Calculator, FileText, Loader2, Eye, Sparkles, Search, Trash2, Copy
+  ChevronRight, Calculator, FileText, Loader2, Eye, Sparkles, Search, Trash2, Copy, GraduationCap
 } from 'lucide-react'
 import HapusMassalDialog from '../components/HapusMassalDialog'
 
@@ -250,6 +250,57 @@ export default function RekapBulanan({ onNavigate }) {
       totalDokumen,
     }
   }, [rekapRows, uploadedDocs, effectiveUptList, currentWeeks, fieldDefs])
+
+  // "Data Instruktur dan WI (Mingguan)": saat jenis data ini dipilih di filter, kartu ringkasan berganti jadi
+  // Total Instruktur / Total Widyaiswara (dipisah dari kolom "Jenis" per baris, bukan "Total Pelatihan/Peserta"
+  // yang tidak relevan untuk jenis data ini).
+  const instrukturWiJd = useMemo(() => jenisDataList.find(j => j.key === 'data_instruktur_dan_wi'), [jenisDataList])
+  const showInstrukturWiCards = tampilan === 'rekap' && !!instrukturWiJd && selectedJdId === instrukturWiJd.id
+
+  const instrukturWiMetrics = useMemo(() => {
+    if (!instrukturWiJd) return { totalInstruktur: 0, totalWidyaiswara: 0 }
+    const uptKeys = new Set(effectiveUptList.map(u => u.key))
+    const weekIds = new Set(currentWeeks.map(w => w.id))
+    const weekOrder = new Map(currentWeeks.map((w, i) => [w.id, i]))
+
+    // Kumpulkan per (upt, minggu, baris): pasangan nilai kolom "Jenis" & "Jumlah" (disimpan sebagai baris terpisah)
+    const perBaris = new Map()
+    for (const r of rekapRows) {
+      if (r.jenis_data_id !== instrukturWiJd.id || !uptKeys.has(r.upt_key) || !weekIds.has(r.period_id)) continue
+      if (r.field_key !== 'jenis_instruktur_wi' && r.field_key !== 'jumlah') continue
+      const key = `${r.upt_key}|${r.period_id}|${r.baris_ke ?? 1}`
+      const g = perBaris.get(key) || {}
+      if (r.field_key === 'jenis_instruktur_wi') g.jenis = r.value_text || r.value
+      if (r.field_key === 'jumlah') g.jumlah = num(r.value)
+      perBaris.set(key, g)
+    }
+
+    // Jumlahkan antar baris dalam minggu yang sama (mis. beberapa "Pelatihan ke-N" jenis sama), per (upt, minggu, jenis)
+    const perUptWeekJenis = new Map()
+    for (const [key, g] of perBaris) {
+      if (!g.jenis || g.jumlah === undefined) continue
+      const [upt, periodId] = key.split('|')
+      const k3 = `${upt}|${periodId}|${g.jenis}`
+      perUptWeekJenis.set(k3, (perUptWeekJenis.get(k3) || 0) + g.jumlah)
+    }
+
+    // Kumulatif: nilai TERAKHIR per (upt, jenis) di antara minggu yang ada datanya, baru dijumlahkan antar UPT
+    const latestPerUptJenis = new Map()
+    for (const [k3, jumlah] of perUptWeekJenis) {
+      const [upt, periodId, jenis] = k3.split('|')
+      const order = weekOrder.get(periodId) ?? -1
+      const k2 = `${upt}|${jenis}`
+      const cur = latestPerUptJenis.get(k2)
+      if (!cur || order > cur.order) latestPerUptJenis.set(k2, { order, jumlah })
+    }
+
+    let totalInstruktur = 0, totalWidyaiswara = 0
+    for (const [k2, v] of latestPerUptJenis) {
+      if (k2.endsWith('|Instruktur')) totalInstruktur += v.jumlah
+      else if (k2.endsWith('|Widyaiswara')) totalWidyaiswara += v.jumlah
+    }
+    return { totalInstruktur, totalWidyaiswara }
+  }, [rekapRows, effectiveUptList, currentWeeks, instrukturWiJd])
 
   // Bangun tabel rekap per jenis data
   const recapPerJenisData = useMemo(() => {
@@ -555,27 +606,55 @@ export default function RekapBulanan({ onNavigate }) {
       <>
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="card p-4 border border-gray-100 dark:border-gray-800 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
-          <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-1">
-            <span className="text-xs font-medium">Total Pelatihan</span>
-            <Target size={16} className="text-blue-500" />
-          </div>
-          <p className="text-2xl font-bold font-display text-gray-900 dark:text-white tabular-nums">
-            {loading ? '…' : monthlyMetrics.totalPelatihan.toLocaleString('id-ID')}
-          </p>
-          <p className="text-[10px] text-gray-400 mt-0.5">Bulan {namaBulan(bulan)}</p>
-        </div>
+        {showInstrukturWiCards ? (
+          <>
+            <div className="card p-4 border border-gray-100 dark:border-gray-800 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+              <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-1">
+                <span className="text-xs font-medium">Total Instruktur</span>
+                <Users size={16} className="text-blue-500" />
+              </div>
+              <p className="text-2xl font-bold font-display text-gray-900 dark:text-white tabular-nums">
+                {loading ? '…' : instrukturWiMetrics.totalInstruktur.toLocaleString('id-ID')}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Minggu terakhir yang ada data, per UPT</p>
+            </div>
 
-        <div className="card p-4 border border-gray-100 dark:border-gray-800 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
-          <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-1">
-            <span className="text-xs font-medium">Total Peserta</span>
-            <Users size={16} className="text-emerald-500" />
-          </div>
-          <p className="text-2xl font-bold font-display text-gray-900 dark:text-white tabular-nums">
-            {loading ? '…' : monthlyMetrics.totalPeserta.toLocaleString('id-ID')}
-          </p>
-          <p className="text-[10px] text-gray-400 mt-0.5">Orang / Aparatur / Masyarakat</p>
-        </div>
+            <div className="card p-4 border border-gray-100 dark:border-gray-800 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+              <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-1">
+                <span className="text-xs font-medium">Total Widyaiswara</span>
+                <GraduationCap size={16} className="text-emerald-500" />
+              </div>
+              <p className="text-2xl font-bold font-display text-gray-900 dark:text-white tabular-nums">
+                {loading ? '…' : instrukturWiMetrics.totalWidyaiswara.toLocaleString('id-ID')}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Minggu terakhir yang ada data, per UPT</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="card p-4 border border-gray-100 dark:border-gray-800 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+              <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-1">
+                <span className="text-xs font-medium">Total Pelatihan</span>
+                <Target size={16} className="text-blue-500" />
+              </div>
+              <p className="text-2xl font-bold font-display text-gray-900 dark:text-white tabular-nums">
+                {loading ? '…' : monthlyMetrics.totalPelatihan.toLocaleString('id-ID')}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Bulan {namaBulan(bulan)}</p>
+            </div>
+
+            <div className="card p-4 border border-gray-100 dark:border-gray-800 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+              <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-1">
+                <span className="text-xs font-medium">Total Peserta</span>
+                <Users size={16} className="text-emerald-500" />
+              </div>
+              <p className="text-2xl font-bold font-display text-gray-900 dark:text-white tabular-nums">
+                {loading ? '…' : monthlyMetrics.totalPeserta.toLocaleString('id-ID')}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Orang / Aparatur / Masyarakat</p>
+            </div>
+          </>
+        )}
 
         <div className="card p-4 border border-gray-100 dark:border-gray-800 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
           <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 mb-1">
