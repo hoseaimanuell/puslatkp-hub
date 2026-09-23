@@ -1,6 +1,6 @@
 /**
  * views/DashboardHome.jsx
- * Dashboard utama: ringkasan mingguan (dari isian data UPT) dan status pengisian. Isi kartu/grafik diatur Admin (Kelola Dashboard).
+ * Dashboard utama: ringkasan mingguan (dari isian data UPT) dan status pengisian. Isi kartu/grafik/tabel diatur Admin (Kelola Dashboard).
  * Akun UPT hanya melihat data UPT-nya sendiri; Admin melihat semua UPT.
  */
 import { useState, useEffect, useMemo } from 'react'
@@ -151,6 +151,7 @@ export default function DashboardHome() {
   const fmt = (satuan, v) => (satuan === 'rupiah' ? formatRp(v) : num(v).toLocaleString('id-ID'))
   const groups = useMemo(() => groupWidgets(widgets), [widgets])
   const charts = groups.flatMap(g => g.widgets.filter(w => w.tipe === 'grafik'))
+  const tables = groups.flatMap(g => g.widgets.filter(w => w.tipe === 'tabel'))
   const chartData = w => scopeUpts.map(u => {
     const row = { name: u.label }
     ;(w.konfigurasi?.series || []).forEach(sr => { row[sr.label] = sumItems(sr.items, u.key) })
@@ -294,6 +295,49 @@ export default function DashboardHome() {
               </div>
             </div>
           ))}
+        </div>
+      ))}
+
+      {/* Tabel — sumber angka sama seperti grafik, ditampilkan sebagai angka langsung */}
+      {tables.length > 0 && (loadingRekap ? (
+        <div className="card flex justify-center py-10">
+          <Loader2 className="animate-spin text-gray-400" />
+        </div>
+      ) : !anyData ? (
+        <div className="card p-6 text-center text-sm text-gray-400">
+          <Hourglass size={28} className="mx-auto mb-2 opacity-40" />
+          {isAdmin
+            ? 'Menunggu UPT memasukkan data untuk minggu ini. Tabel akan tampil otomatis setelah ada isian.'
+            : 'Menunggu Anda memasukkan data untuk minggu ini di menu Input Mingguan.'}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {tables.map(w => {
+            const series = w.konfigurasi?.series || []
+            return (
+              <div key={w.id} className="card p-4">
+                <h4 className="text-sm font-semibold mb-3">{w.judul} {isAdmin ? 'per UPT/Balai' : ''}</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200 dark:border-gray-700">
+                        <th className="py-2 px-2">UPT/Balai</th>
+                        {series.map((sr, i) => <th key={i} className="py-2 px-2 text-right">{sr.label}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {chartData(w).map((row, i) => (
+                        <tr key={i}>
+                          <td className="py-2 px-2">{row.name}</td>
+                          {series.map((sr, j) => <td key={j} className="py-2 px-2 text-right tabular-nums">{fmt(w.satuan, row[sr.label])}</td>)}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          })}
         </div>
       ))}
     </div>

@@ -1,6 +1,6 @@
 /**
  * views/admin/KelolaDashboard.jsx
- * Admin: atur kartu & grafik Dashboard tanpa coding. Sumber angka dipilih dari jenis data + kolom (angka, level minggu).
+ * Admin: atur kartu, grafik & tabel Dashboard tanpa coding. Sumber angka dipilih dari jenis data + kolom (angka, level minggu).
  * Selama belum ada pengaturan tersimpan, Dashboard memakai tampilan bawaan (lib/dashboardWidgets.js).
  */
 import { useState, useEffect, useMemo } from 'react'
@@ -11,6 +11,8 @@ import { Loader2, Plus, Trash2, ArrowUp, ArrowDown, Pencil, Copy, Eye, EyeOff, X
 
 const blankKartu = grup => ({ tipe: 'kartu', judul: '', grup, gaya: 'berwarna', ikon: 'BarChart3', warna: 'bg-blue-600', satuan: 'angka', aktif: true, konfigurasi: { items: [{ jd: '', field: '' }] } })
 const blankGrafik = () => ({ tipe: 'grafik', judul: '', grup: 'Grafik', gaya: 'berwarna', satuan: 'angka', aktif: true, konfigurasi: { series: [{ label: '', warna: CHART_COLORS[0], items: [{ jd: '', field: '' }] }] } })
+const blankTabel = () => ({ tipe: 'tabel', judul: '', grup: 'Tabel', gaya: 'berwarna', satuan: 'angka', aktif: true, konfigurasi: { series: [{ label: '', warna: CHART_COLORS[0], items: [{ jd: '', field: '' }] }] } })
+const TIPE_LABEL = { kartu: 'Kartu', grafik: 'Grafik', tabel: 'Tabel' }
 
 /** Editor daftar sumber {jd, field}. */
 function ItemsEditor({ items, onChange, jenisData, fieldsOf, label }) {
@@ -138,7 +140,7 @@ export default function KelolaDashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <PageHeader title="Kelola Dashboard" description="Atur kartu dan grafik di Dashboard. Sumber angka dipilih dari jenis data dan kolom." />
+      <PageHeader title="Kelola Dashboard" description="Atur kartu, grafik, dan tabel di Dashboard. Sumber angka dipilih dari jenis data dan kolom." />
 
       {msg && <div className={`rounded-lg px-4 py-3 text-sm ${msg.type === 'error' ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'}`}>{msg.text}</div>}
 
@@ -150,11 +152,12 @@ export default function KelolaDashboard() {
       )}
 
       <InfoCard
-        title={`Daftar Kartu & Grafik (${list.length})`}
+        title={`Daftar Kartu, Grafik & Tabel (${list.length})`}
         action={!usingDefault && (
           <div className="flex gap-2">
             <button className="btn-secondary text-xs" onClick={() => setEdit(blankKartu(list[0]?.grup || 'Ringkasan'))}><Plus size={13} /> Kartu</button>
             <button className="btn-secondary text-xs" onClick={() => setEdit(blankGrafik())}><Plus size={13} /> Grafik</button>
+            <button className="btn-secondary text-xs" onClick={() => setEdit(blankTabel())}><Plus size={13} /> Tabel</button>
             <button className="btn-secondary text-xs text-rose-600" onClick={resetAll}>Kembali ke bawaan</button>
           </div>
         )}
@@ -171,7 +174,7 @@ export default function KelolaDashboard() {
                 <tr key={w.id} className={w.aktif === false ? 'opacity-50' : ''}>
                   <td className="py-2 px-2 font-medium">{w.judul}</td>
                   <td className="py-2 px-2 text-xs">{w.grup}</td>
-                  <td className="py-2 px-2 text-xs">{w.tipe === 'grafik' ? 'Grafik batang' : w.gaya === 'putih' ? 'Kartu putih' : 'Kartu berwarna'} · {w.satuan === 'rupiah' ? 'Rp' : 'angka'}</td>
+                  <td className="py-2 px-2 text-xs">{w.tipe === 'grafik' ? 'Grafik batang' : w.tipe === 'tabel' ? 'Tabel angka' : w.gaya === 'putih' ? 'Kartu putih' : 'Kartu berwarna'} · {w.satuan === 'rupiah' ? 'Rp' : 'angka'}</td>
                   <td className="py-2 px-2 text-[11px] text-gray-500 max-w-[320px] truncate" title={src(w)}>{src(w)}</td>
                   <td className="py-2 px-2 whitespace-nowrap text-right">
                     {!usingDefault && (
@@ -193,7 +196,7 @@ export default function KelolaDashboard() {
       </InfoCard>
 
       {edit && (
-        <InfoCard title={edit.id ? `Ubah ${edit.tipe === 'grafik' ? 'Grafik' : 'Kartu'}` : `${edit.tipe === 'grafik' ? 'Grafik' : 'Kartu'} Baru`} action={<button onClick={() => setEdit(null)} className="p-1 text-gray-400"><X size={16} /></button>}>
+        <InfoCard title={edit.id ? `Ubah ${TIPE_LABEL[edit.tipe]}` : `${TIPE_LABEL[edit.tipe]} Baru`} action={<button onClick={() => setEdit(null)} className="p-1 text-gray-400"><X size={16} /></button>}>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="text-xs font-medium">Judul
               <input className="form-input w-full mt-1" value={edit.judul} onChange={e => setW({ judul: e.target.value })} />
@@ -248,14 +251,16 @@ export default function KelolaDashboard() {
                 {edit.konfigurasi.series.map((sr, i) => (
                   <div key={i} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 space-y-2">
                     <div className="flex gap-2 items-center">
-                      <input className="form-input text-xs flex-1" placeholder="Nama seri (mis. Masyarakat)" value={sr.label} onChange={e => setK({ series: edit.konfigurasi.series.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} />
-                      <input type="color" value={sr.warna || '#1B5FA8'} onChange={e => setK({ series: edit.konfigurasi.series.map((x, j) => (j === i ? { ...x, warna: e.target.value } : x)) })} className="h-8 w-10 rounded" title="Warna batang" />
+                      <input className="form-input text-xs flex-1" placeholder={edit.tipe === 'tabel' ? 'Nama kolom (mis. Masyarakat)' : 'Nama seri (mis. Masyarakat)'} value={sr.label} onChange={e => setK({ series: edit.konfigurasi.series.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} />
+                      {edit.tipe !== 'tabel' && (
+                        <input type="color" value={sr.warna || '#1B5FA8'} onChange={e => setK({ series: edit.konfigurasi.series.map((x, j) => (j === i ? { ...x, warna: e.target.value } : x)) })} className="h-8 w-10 rounded" title="Warna batang" />
+                      )}
                       <button type="button" className="p-1 text-gray-400 hover:text-rose-600" onClick={() => setK({ series: edit.konfigurasi.series.filter((_, j) => j !== i) })} title="Hapus seri"><X size={14} /></button>
                     </div>
                     <ItemsEditor items={sr.items} onChange={items => setK({ series: edit.konfigurasi.series.map((x, j) => (j === i ? { ...x, items } : x)) })} jenisData={jenisData} fieldsOf={fieldsOf} />
                   </div>
                 ))}
-                <button type="button" className="text-xs text-sky-600 hover:underline" onClick={() => setK({ series: [...edit.konfigurasi.series, { label: '', warna: CHART_COLORS[edit.konfigurasi.series.length % CHART_COLORS.length], items: [{ jd: '', field: '' }] }] })}>+ tambah seri</button>
+                <button type="button" className="text-xs text-sky-600 hover:underline" onClick={() => setK({ series: [...edit.konfigurasi.series, { label: '', warna: CHART_COLORS[edit.konfigurasi.series.length % CHART_COLORS.length], items: [{ jd: '', field: '' }] }] })}>+ tambah {edit.tipe === 'tabel' ? 'kolom' : 'seri'}</button>
               </>
             )}
           </div>
