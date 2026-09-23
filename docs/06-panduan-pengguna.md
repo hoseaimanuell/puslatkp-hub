@@ -246,8 +246,10 @@ Admin mengatur isi Dashboard sendiri, tanpa mengubah kode.
 2. **Kartu**: judul, bagian, gaya (*berwarna* dengan ikon/warna, atau *putih* dengan pembanding seperti Pagu), satuan (angka/rupiah),
    dan **sumber angka** = jenis data + kolom (bisa lebih dari satu, dijumlahkan).
 3. **Grafik**: batang per UPT; tiap **seri** punya nama, warna, dan sumber angka.
-4. Tombol panah mengubah urutan, ikon mata menyembunyikan, pensil mengubah, tempat sampah menghapus; **Kembali ke bawaan** menghapus semua pengaturan.
-5. Berlaku untuk semua akun; akun UPT tetap hanya melihat angka UPT-nya sendiri.
+4. **Tabel**: sumber angka disusun sama seperti Grafik (kolom = seri per jenis data + kolom), tapi tampil sebagai tabel
+   angka per UPT/Balai, bukan grafik batang — cocok bila Admin ingin melihat angka pastinya langsung tanpa membaca batang.
+5. Tombol panah mengubah urutan, ikon mata menyembunyikan, pensil mengubah, tempat sampah menghapus; **Kembali ke bawaan** menghapus semua pengaturan.
+6. Berlaku untuk semua akun; akun UPT tetap hanya melihat angka UPT-nya sendiri.
 
 Jenis data atau kolom baru (Kelola Jenis Data, level mingguan, tipe angka) otomatis muncul sebagai pilihan sumber. Rumus yang berbeda
 (mis. persentase realisasi terhadap pagu) belum tersedia sebagai tipe widget dan perlu ditambahkan di kode.
