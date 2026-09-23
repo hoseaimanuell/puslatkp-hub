@@ -14,44 +14,6 @@ import {
   BookOpen, ShieldCheck, ExternalLink, Search, Plus, Trash2, CheckCircle2, ChevronDown
 } from 'lucide-react'
 
-const STORAGE_DOCS_KEY = 'puslatkp_official_docs_v1'
-
-const DEFAULT_REPO_DOCS = [
-  {
-    id: 'doc-2',
-    title: 'Petunjuk Teknis Pelaporan Kinerja & Aktivitas Harian UPT',
-    desc: 'Buku panduan pengisian daily activity, batas waktu pelaporan, dan rekonsiliasi data mingguan.',
-    category: 'Pedoman',
-    format: 'TXT',
-    size: '12 KB',
-    content: 'PETUNJUK TEKNIS PELAPORAN KINERJA & AKTIVITAS HARIAN UPT\nPUSLATKP - KEMENTERIAN KELAUTAN DAN PERIKANAN\n\n1. Ketentuan Umum:\n- Seluruh UPT wajib melaporkan aktivitas harian dan rekap mingguan.\n- Batas waktu input data mingguan adalah setiap akhir periode berjalan.\n- Rekonsiliasi bulanan mencocokkan total peserta 4 minggu dengan rincian data peserta by name.\n\n2. Format & Prosedur:\n- Gunakan template excel resmi untuk unggah massal.\n- Laporkan kendala dan output nyata kegiatan pada modul Daily Activity.',
-    fileName: 'Juknis_Pelaporan_Kinerja_UPT_PUSLATKP.txt',
-    mime: 'text/plain;charset=utf-8;'
-  },
-  {
-    id: 'doc-3',
-    title: 'Kepmen KKP tentang Standar Pelatihan Kelautan dan Perikanan',
-    desc: 'Dasar regulasi dan acuan standar kompetensi pelatihan aparatur dan masyarakat kelautan perikanan.',
-    category: 'Regulasi',
-    format: 'TXT',
-    size: '18 KB',
-    content: 'SALINAN KEPUTUSAN MENTERI KELAUTAN DAN PERIKANAN REPUBLIK INDONESIA\nTENTANG STANDAR PELATIHAN KELAUTAN DAN PERIKANAN\n\nMenimbang: Perlunya standardisasi mutu kompetensi sumber daya manusia kelautan dan perikanan...\nMengingat: Undang-Undang Kelautan dan Perikanan Republik Indonesia...\n\nMenetapkan:\nStandar Kurikulum, Silabus, Sarana Prasarana, dan Tenaga Pendidik / Instruktur / Widyaiswara pada Balai Pelatihan Kelautan dan Perikanan.',
-    fileName: 'Kepmen_Standar_Pelatihan_Kelautan_Perikanan.txt',
-    mime: 'text/plain;charset=utf-8;'
-  },
-  {
-    id: 'doc-4',
-    title: 'Standar Operasional Prosedur (SOP) Validasi Selisih Data',
-    desc: 'Protokol penyesuaian saat terdeteksi selisih angka antara level Bulanan dan Mingguan.',
-    category: 'SOP',
-    format: 'TXT',
-    size: '10 KB',
-    content: 'STANDAR OPERASIONAL PROSEDUR (SOP) VALIDASI DATA & REKONSILIASI SELISIH\n\nLangkah-langkah Penanganan:\n1. Buka modul Input Data pada jenis data yang bersangkutan.\n2. Cek banner status validasi pada tab Bulan.\n3. Periksa selisih jumlah baris nama peserta dengan angka total mingguan.\n4. Lakukan penyesuaian data baris atau perbarui nilai form mingguan sebelum periode dikunci oleh admin.',
-    fileName: 'SOP_Validasi_Selisih_Data_PUSLATKP.txt',
-    mime: 'text/plain;charset=utf-8;'
-  },
-]
-
 import PageHeader from '../components/PageHeader'
 
 export default function Documents() {
@@ -60,15 +22,11 @@ export default function Documents() {
   const [jenisDataList, setJenisDataList] = useState([])
   const [selectedJdId, setSelectedJdId] = useState('')
   const [fieldDefsMap, setFieldDefsMap] = useState({})
-  const [docsList, setDocsList] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_DOCS_KEY)
-    if (saved) {
-      try { return JSON.parse(saved) } catch (e) {}
-    }
-    return DEFAULT_REPO_DOCS
-  })
+  const [docsList, setDocsList] = useState([])
+  const [loadingDocs, setLoadingDocs] = useState(true)
 
   const [modalOpen, setModalOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [newDoc, setNewDoc] = useState({
     title: '',
     desc: '',
@@ -79,6 +37,7 @@ export default function Documents() {
 
   useEffect(() => {
     loadJenisDataAndFields()
+    loadDocs()
   }, [])
 
   async function loadJenisDataAndFields() {
@@ -99,22 +58,25 @@ export default function Documents() {
     setFieldDefsMap(map)
   }
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_DOCS_KEY, JSON.stringify(docsList))
-  }, [docsList])
+  async function loadDocs() {
+    setLoadingDocs(true)
+    const { data } = await db.from('dokumen_resmi').select('*').order('created_at')
+    setDocsList(data || [])
+    setLoadingDocs(false)
+  }
 
   const filtered = docsList.filter(d =>
-    d.title.toLowerCase().includes(search.toLowerCase()) ||
-    d.desc.toLowerCase().includes(search.toLowerCase()) ||
-    d.category.toLowerCase().includes(search.toLowerCase())
+    d.judul.toLowerCase().includes(search.toLowerCase()) ||
+    (d.deskripsi || '').toLowerCase().includes(search.toLowerCase()) ||
+    d.kategori.toLowerCase().includes(search.toLowerCase())
   )
 
   function handleDownload(doc) {
-    const blob = new Blob([doc.content || `${doc.title}\n\n${doc.desc}`], { type: doc.mime || 'text/plain;charset=utf-8;' })
+    const blob = new Blob([doc.isi || `${doc.judul}\n\n${doc.deskripsi || ''}`], { type: doc.mime || 'text/plain;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = doc.fileName || `${doc.title.replace(/\s+/g, '_')}.${doc.format.toLowerCase()}`
+    a.download = doc.file_name || `${doc.judul.replace(/\s+/g, '_')}.${doc.format.toLowerCase()}`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -130,31 +92,34 @@ export default function Documents() {
     })
   }
 
-  function handleAddDoc(e) {
+  async function handleAddDoc(e) {
     e.preventDefault()
     if (!newDoc.title.trim()) return
+    setSaving(true)
 
     const ext = newDoc.format.toLowerCase() === 'xlsx' || newDoc.format.toLowerCase() === 'csv' ? 'csv' : 'txt'
-    const added = {
-      id: `doc-${Date.now()}`,
-      title: newDoc.title,
-      desc: newDoc.desc,
-      category: newDoc.category,
+    const { error } = await db.from('dokumen_resmi').insert({
+      judul: newDoc.title,
+      deskripsi: newDoc.desc,
+      kategori: newDoc.category,
       format: newDoc.format.toUpperCase(),
-      size: `${Math.max(1, Math.round((newDoc.content.length || 500) / 1024))} KB`,
-      content: newDoc.content || `${newDoc.title}\n\n${newDoc.desc}`,
-      fileName: `${newDoc.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.${ext}`,
-      mime: ext === 'csv' ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;'
-    }
+      isi: newDoc.content || `${newDoc.title}\n\n${newDoc.desc}`,
+      file_name: `${newDoc.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.${ext}`,
+      mime: ext === 'csv' ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;',
+    })
+    setSaving(false)
+    if (error) { alert('Gagal menyimpan dokumen: ' + error.message); return }
 
-    setDocsList(prev => [added, ...prev])
     setNewDoc({ title: '', desc: '', category: 'Pedoman', format: 'TXT', content: '' })
     setModalOpen(false)
+    loadDocs()
   }
 
-  function handleDeleteDoc(id, title) {
+  async function handleDeleteDoc(id, title) {
     if (!confirm(`Hapus dokumen "${title}" dari repositori?`)) return
-    setDocsList(prev => prev.filter(d => d.id !== id))
+    const { error } = await db.from('dokumen_resmi').delete().eq('id', id)
+    if (error) { alert('Gagal menghapus dokumen: ' + error.message); return }
+    loadDocs()
   }
 
   return (
@@ -249,6 +214,13 @@ export default function Documents() {
           </div>
         }
       >
+        {loadingDocs ? (
+          <p className="text-sm text-gray-400 text-center py-8">Memuat dokumen...</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">
+            {docsList.length === 0 ? 'Belum ada dokumen.' : 'Tidak ada dokumen yang cocok dengan pencarian.'}
+          </p>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
           {filtered.map((doc) => (
             <div
@@ -258,24 +230,24 @@ export default function Documents() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                    {doc.category}
+                    {doc.kategori}
                   </span>
                   <span className="text-xs font-mono text-gray-400 font-semibold">
-                    {doc.format} • {doc.size}
+                    {doc.format} • {Math.max(1, Math.round((doc.isi?.length || 0) / 1024))} KB
                   </span>
                 </div>
                 <h4 className="font-semibold text-sm text-gray-900 dark:text-white mb-1.5">
-                  {doc.title}
+                  {doc.judul}
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                  {doc.desc}
+                  {doc.deskripsi}
                 </p>
               </div>
 
               <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                 {isAdmin ? (
                   <button
-                    onClick={() => handleDeleteDoc(doc.id, doc.title)}
+                    onClick={() => handleDeleteDoc(doc.id, doc.judul)}
                     className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
                     title="Hapus dokumen"
                   >
@@ -294,6 +266,7 @@ export default function Documents() {
             </div>
           ))}
         </div>
+        )}
       </InfoCard>
 
       {/* Modal Admin Tambah Dokumen */}
@@ -303,8 +276,10 @@ export default function Documents() {
         title="Tambah Dokumen / Panduan Resmi"
         footer={
           <>
-            <button onClick={() => setModalOpen(false)} className="btn-secondary">Batal</button>
-            <button form="add-doc-form" type="submit" className="btn-primary">Simpan & Publikasikan</button>
+            <button onClick={() => setModalOpen(false)} className="btn-secondary" disabled={saving}>Batal</button>
+            <button form="add-doc-form" type="submit" className="btn-primary disabled:opacity-40" disabled={saving}>
+              {saving ? 'Menyimpan...' : 'Simpan & Publikasikan'}
+            </button>
           </>
         }
       >

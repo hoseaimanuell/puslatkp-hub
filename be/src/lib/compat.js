@@ -16,9 +16,9 @@ const OPTIONAL = [
   { table: 'jenis_data', col: 'kumulatif_bulanan', feature: 'kumulatifBulanan' },
 ]
 
-export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true }
+export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true }
 
-/** Tabel opsional (migrasi_05/06). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
+/** Tabel opsional (migrasi_05/06/08). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {
   const [t] = await pool.query("SHOW TABLES LIKE 'dashboard_widgets'")
   if (!t.length) {
@@ -30,6 +30,12 @@ export async function detectOptionalTables() {
   if (!ff.length) {
     delete TABLES.field_files
     // fitur fieldFiles dilaporkan lewat fieldFilesEnabled() di routes/fieldFiles.js, bukan objek features ini
+  }
+  const [dr] = await pool.query("SHOW TABLES LIKE 'dokumen_resmi'")
+  if (!dr.length) {
+    features.dokumenResmi = false
+    delete TABLES.dokumen_resmi
+    console.warn('PERINGATAN: tabel dokumen_resmi belum ada. Jalankan database/migrasi_08_dokumen_resmi.sql agar menu Dokumen & Panduan tersimpan di database.')
   }
 }
 

@@ -73,6 +73,12 @@ export const TABLES = {
     cols: ['id', 'upt_key', 'jenis_data_id', 'field_key', 'file_name', 'file_ext', 'file_size', 'uploaded_by_label', 'created_at'],
     scope: 'upt', // non-admin hanya melihat berkas UPT-nya sendiri
   }),
+  dokumen_resmi: table({
+    // Repositori "Dokumen & Panduan": semua akun login membaca, hanya Admin menulis/menghapus.
+    cols: ['id', 'judul', 'deskripsi', 'kategori', 'format', 'isi', 'file_name', 'mime', 'created_by', 'created_by_label', 'created_at'],
+    read: 'auth',
+    stamp: { created_by: 'id', created_by_label: 'email' },
+  }),
   audit_log: table({
     cols: ['id', 'actor_id', 'actor_upt_key', 'action', 'detail', 'created_at'],
     json: ['detail'], read: 'admin', write: 'auth', insertOnly: true,
