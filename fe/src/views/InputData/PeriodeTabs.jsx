@@ -104,9 +104,10 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
     })
   }, [])
 
-  // "Semua UPT" hanya masuk akal untuk jenis data bulanan rincian per-orang (satu tabel gabungan + kolom UPT),
-  // bukan untuk form mingguan/agregasi (nilai per-UPT tidak bisa digabung jadi satu isian).
-  const supportsAllUpt = jenisData.level_utama === 'bulan' && jenisData.mode_bulanan === 'rincian'
+  // "Semua UPT" untuk bulanan rincian per-orang: satu tabel gabungan + kolom UPT (bisa dilihat & diedit).
+  // Untuk mingguan: nilai per-UPT tidak bisa digabung jadi satu form isian, jadi "Semua UPT" di sana HANYA
+  // dipakai sebagai target aksi "Kosongkan/Hapus Data Minggu Ini" massal, bukan untuk mengisi/melihat form.
+  const supportsAllUpt = (jenisData.level_utama === 'bulan' && jenisData.mode_bulanan === 'rincian') || jenisData.level_utama === 'minggu'
   const isAllUpt = isAdmin && supportsAllUpt && selectedUptKey === 'all'
   const currentUptKey = isAdmin ? selectedUptKey : (uptKey || '')
   const currentUptLabel = isAdmin
@@ -216,22 +217,29 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
       // 2. Evaluasi validasi & kelengkapan 4 minggu pasangan
       await checkPartnerWeeklyProgress(currentEntries)
     } else if (activeLevel === 'minggu') {
-      // Ambil nilai rekap minggual
-      let q = db.from('rekap_nilai')
-        .select('*')
-        .eq('jenis_data_id', jenisData.id)
-        .eq('period_id', activePeriod.id)
-      q = q.eq('upt_key', currentUptKey)
-      const { data } = await q
-      const snap = {}
-      ;(data || []).forEach(r => {
-        const b = r.baris_ke ?? 1
-        ;(snap[b] ||= {})[r.field_key] = r.value !== null && r.value !== undefined ? r.value : r.value_text
-      })
-      setSavedSnap(snap)
-      setLateRekap((data || []).some(r => r.terlambat))
-      const list = Object.keys(snap).map(Number).sort((a, b) => a - b).map(b => ({ baris_ke: b, values: { ...snap[b] } }))
-      setBarisList(list.length ? list : [{ baris_ke: 1, values: {} }])
+      if (isAllUpt) {
+        // "Semua UPT" di mingguan cuma target aksi massal (Kosongkan/Hapus) — tidak ada form gabungan untuk diisi.
+        setSavedSnap({})
+        setLateRekap(false)
+        setBarisList([{ baris_ke: 1, values: {} }])
+      } else {
+        // Ambil nilai rekap mingguan
+        let q = db.from('rekap_nilai')
+          .select('*')
+          .eq('jenis_data_id', jenisData.id)
+          .eq('period_id', activePeriod.id)
+          .eq('upt_key', currentUptKey)
+        const { data } = await q
+        const snap = {}
+        ;(data || []).forEach(r => {
+          const b = r.baris_ke ?? 1
+          ;(snap[b] ||= {})[r.field_key] = r.value !== null && r.value !== undefined ? r.value : r.value_text
+        })
+        setSavedSnap(snap)
+        setLateRekap((data || []).some(r => r.terlambat))
+        const list = Object.keys(snap).map(Number).sort((a, b) => a - b).map(b => ({ baris_ke: b, values: { ...snap[b] } }))
+        setBarisList(list.length ? list : [{ baris_ke: 1, values: {} }])
+      }
     } else if (activeLevel === 'bulan' || activeLevel === 'triwulan' || activeLevel === 'tahun') {
       await calculateAggregation()
     }
@@ -945,33 +953,41 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                 <p className="text-sm text-gray-500 dark:text-gray-400">{formatPeriodLabel(activePeriod)}</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                {!locked && Object.keys(savedSnap).length > 0 && (
+                {!locked && (isAllUpt || Object.keys(savedSnap).length > 0) && (
                   <button
                     onClick={() => openClear('rekap')}
                     className="btn-secondary text-xs text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                    title="Hapus seluruh isian minggu ini (masuk Tempat Sampah)"
+                    title={isAllUpt ? 'Hapus seluruh isian minggu ini dari SEMUA UPT (masuk Tempat Sampah)' : 'Hapus seluruh isian minggu ini (masuk Tempat Sampah)'}
                   >
                     <Trash2 size={14} />
-                    Kosongkan Data Minggu Ini
+                    Kosongkan Data Minggu Ini{isAllUpt ? ' (Semua UPT)' : ''}
                   </button>
                 )}
-                <button
-                  onClick={() => exportRekapNilai({
-                    rekapData: barisList.filter(b => Object.keys(b.values).length).map(b => ({ upt_key: currentUptKey, values: b.values })),
-                    fieldDefs,
-                    jenisDataJudul: jenisData.judul,
-                    periodLabel: formatPeriodLabel(activePeriod)
-                  })}
-                  className="btn-secondary text-xs"
-                >
-                  <Download size={14} />
-                  Download Excel Mingguan
-                </button>
+                {!isAllUpt && (
+                  <button
+                    onClick={() => exportRekapNilai({
+                      rekapData: barisList.filter(b => Object.keys(b.values).length).map(b => ({ upt_key: currentUptKey, values: b.values })),
+                      fieldDefs,
+                      jenisDataJudul: jenisData.judul,
+                      periodLabel: formatPeriodLabel(activePeriod)
+                    })}
+                    className="btn-secondary text-xs"
+                  >
+                    <Download size={14} />
+                    Download Excel Mingguan
+                  </button>
+                )}
               </div>
             </div>
 
             {loading ? (
               <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-gray-400" /></div>
+            ) : isAllUpt ? (
+              <div className="text-center py-14 text-gray-400 dark:text-gray-500">
+                <Building2 size={32} className="mx-auto mb-3 opacity-30" />
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pilih satu UPT untuk mengisi atau melihat data mingguan.</p>
+                <p className="text-xs text-gray-400 mt-1">"Semua UPT" di sini cuma untuk mengosongkan data minggu ini sekaligus lewat tombol di atas.</p>
+              </div>
             ) : fieldDefs.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-8">Belum ada kolom konfigurasi untuk jenis data mingguan ini.</p>
             ) : (
