@@ -1,6 +1,7 @@
 /**
  * views/DashboardHome.jsx
- * Dashboard utama: ringkasan mingguan (dari isian data UPT) dan status pengisian. Isi kartu/grafik/tabel diatur Admin (Kelola Dashboard).
+ * Dashboard utama: ringkasan mingguan (dari isian data UPT) dan status pengisian. Isi kartu/grafik diatur Admin (Kelola Dashboard).
+ * Tiap kartu grafik punya tombol untuk beralih tampilan grafik batang / tabel angka (state lokal, tidak disimpan).
  * Akun UPT hanya melihat data UPT-nya sendiri; Admin melihat semua UPT.
  */
 import { useState, useEffect, useMemo } from 'react'
@@ -16,7 +17,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import {
-  Users, Landmark, GraduationCap, BarChart3, ChevronLeft, ChevronRight, Hourglass, Loader2
+  Users, Landmark, GraduationCap, BarChart3, ChevronLeft, ChevronRight, Hourglass, Loader2, Table2
 } from 'lucide-react'
 
 // Kunci Jenis Data bawaan yang menjadi sumber angka dashboard
@@ -44,6 +45,7 @@ export default function DashboardHome() {
   const [widgets, setWidgets] = useState(DEFAULT_WIDGETS)
   const [fieldDefs, setFieldDefs] = useState([])
   const [loadingRekap, setLoadingRekap] = useState(true)
+  const [chartView, setChartView] = useState({}) // widget.id -> 'grafik' | 'tabel'
 
   useEffect(() => {
     loadMeta()
@@ -151,7 +153,6 @@ export default function DashboardHome() {
   const fmt = (satuan, v) => (satuan === 'rupiah' ? formatRp(v) : num(v).toLocaleString('id-ID'))
   const groups = useMemo(() => groupWidgets(widgets), [widgets])
   const charts = groups.flatMap(g => g.widgets.filter(w => w.tipe === 'grafik'))
-  const tables = groups.flatMap(g => g.widgets.filter(w => w.tipe === 'tabel'))
   const chartData = w => scopeUpts.map(u => {
     const row = { name: u.label }
     ;(w.konfigurasi?.series || []).forEach(sr => { row[sr.label] = sumItems(sr.items, u.key) })
@@ -278,63 +279,65 @@ export default function DashboardHome() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {charts.map(w => (
-            <div key={w.id} className="card p-4">
-              <h4 className="text-sm font-semibold mb-3">{w.judul} {isAdmin ? 'per UPT/Balai' : ''}</h4>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData(w)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-25} textAnchor="end" height={60} />
-                    <YAxis />
-                    <Tooltip formatter={v => fmt(w.satuan, v)} />
-                    <Legend />
-                    {(w.konfigurasi?.series || []).map((sr, i) => <Bar key={i} dataKey={sr.label} name={sr.label} fill={sr.warna || '#1B5FA8'} />)}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          ))}
-        </div>
-      ))}
-
-      {/* Tabel — sumber angka sama seperti grafik, ditampilkan sebagai angka langsung */}
-      {tables.length > 0 && (loadingRekap ? (
-        <div className="card flex justify-center py-10">
-          <Loader2 className="animate-spin text-gray-400" />
-        </div>
-      ) : !anyData ? (
-        <div className="card p-6 text-center text-sm text-gray-400">
-          <Hourglass size={28} className="mx-auto mb-2 opacity-40" />
-          {isAdmin
-            ? 'Menunggu UPT memasukkan data untuk minggu ini. Tabel akan tampil otomatis setelah ada isian.'
-            : 'Menunggu Anda memasukkan data untuk minggu ini di menu Input Mingguan.'}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {tables.map(w => {
+          {charts.map(w => {
+            const view = chartView[w.id] || 'grafik'
             const series = w.konfigurasi?.series || []
             return (
               <div key={w.id} className="card p-4">
-                <h4 className="text-sm font-semibold mb-3">{w.judul} {isAdmin ? 'per UPT/Balai' : ''}</h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200 dark:border-gray-700">
-                        <th className="py-2 px-2">UPT/Balai</th>
-                        {series.map((sr, i) => <th key={i} className="py-2 px-2 text-right">{sr.label}</th>)}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                      {chartData(w).map((row, i) => (
-                        <tr key={i}>
-                          <td className="py-2 px-2">{row.name}</td>
-                          {series.map((sr, j) => <td key={j} className="py-2 px-2 text-right tabular-nums">{fmt(w.satuan, row[sr.label])}</td>)}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold">{w.judul} {isAdmin ? 'per UPT/Balai' : ''}</h4>
+                  <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
+                    <button
+                      type="button"
+                      className={`p-1.5 ${view === 'grafik' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-700'}`}
+                      onClick={() => setChartView(v => ({ ...v, [w.id]: 'grafik' }))}
+                      title="Tampilkan sebagai grafik"
+                    >
+                      <BarChart3 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      className={`p-1.5 ${view === 'tabel' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-700'}`}
+                      onClick={() => setChartView(v => ({ ...v, [w.id]: 'tabel' }))}
+                      title="Tampilkan sebagai tabel angka"
+                    >
+                      <Table2 size={14} />
+                    </button>
+                  </div>
                 </div>
+                {view === 'tabel' ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-xs uppercase tracking-wide text-gray-500 border-b border-gray-200 dark:border-gray-700">
+                          <th className="py-2 px-2">UPT/Balai</th>
+                          {series.map((sr, i) => <th key={i} className="py-2 px-2 text-right">{sr.label}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                        {chartData(w).map((row, i) => (
+                          <tr key={i}>
+                            <td className="py-2 px-2">{row.name}</td>
+                            {series.map((sr, j) => <td key={j} className="py-2 px-2 text-right tabular-nums">{fmt(w.satuan, row[sr.label])}</td>)}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData(w)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-25} textAnchor="end" height={60} />
+                        <YAxis />
+                        <Tooltip formatter={v => fmt(w.satuan, v)} />
+                        <Legend />
+                        {series.map((sr, i) => <Bar key={i} dataKey={sr.label} name={sr.label} fill={sr.warna || '#1B5FA8'} />)}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             )
           })}

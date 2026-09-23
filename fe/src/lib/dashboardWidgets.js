@@ -7,9 +7,8 @@
  *   { tipe: 'kartu', judul, grup, gaya: 'berwarna'|'putih', ikon, warna, satuan: 'angka'|'rupiah', urutan, aktif,
  *     konfigurasi: { items: [{jd, field}], pembanding?: [{jd, field}], pembandingLabel?, sorot? } }
  *   { tipe: 'grafik', judul, grup, satuan, urutan, aktif,
- *     konfigurasi: { series: [{ label, warna, items: [{jd, field}] }] } }
- *   { tipe: 'tabel', judul, grup, satuan, urutan, aktif,
- *     konfigurasi: { series: [{ label, items: [{jd, field}] }] } }  — sama seperti grafik, ditampilkan sebagai tabel angka
+ *     konfigurasi: { series: [{ label, warna, items: [{jd, field}] }] } }  — tampilan Dashboard punya tombol untuk
+ *     beralih ke tabel angka per UPT (state lokal, sumber angka sama persis, tidak perlu pengaturan tambahan)
  * `jd` = kunci jenis data (jenis_data.key), `field` = field_key. Nilai = jumlah seluruh baris rekap minggu terpilih.
  */
 import { Users, Landmark, GraduationCap, Activity, BarChart3, Database, FileText, ClipboardList, Calendar, Clock } from 'lucide-react'
