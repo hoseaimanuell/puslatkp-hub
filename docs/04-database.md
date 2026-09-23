@@ -24,6 +24,7 @@ erDiagram
   periods ||--o{ data_entries : "period_id"
   periods ||--o{ dokumen_upload : "period_id"
   profiles ||--o{ audit_log : "actor_id"
+  profiles ||--o{ dokumen_resmi : "created_by"
 ```
 
 ## Tabel
@@ -59,10 +60,11 @@ erDiagram
 | `butuh_input_bulanan` | TINYINT(1) | |
 | `pasangan_mingguan_id` | → `jenis_data.id` | Jenis data mingguan pasangan (validasi silang) |
 | `publik_boleh_lihat` | TINYINT(1) | Tampil di `/publik` (agregat saja) |
-| `multi_baris` | TINYINT(1) | Mingguan: boleh >1 pelatihan (baris) per minggu. Bawaan 1 untuk Masyarakat, Aparatur, Data Belanja Modal |
+| `multi_baris` | TINYINT(1) | Mingguan: boleh >1 pelatihan (baris) per minggu — tombol "Tambah pelatihan lain". Bawaan aktif untuk Masyarakat, Aparatur, Data Belanja Modal, Data Instruktur dan WI (mingguan) |
+| `kumulatif_bulanan` | TINYINT(1) | **Migrasi 07.** Hanya untuk bulanan `rincian` (Per nama): bulan terbaru dianggap **menggantikan** bulan sebelumnya (UPT mengunggah roster lengkap tiap bulan), bukan dataset bulanan terpisah-pisah. Saat aktif, tampilan **Data by Name** otomatis meloncat ke bulan terakhir yang sudah ada datanya bila bulan yang dipilih masih kosong |
 | `aktif`, `dibuat_oleh`, `created_at` | | |
 
-Sembilan jenis data bawaan (berpasangan):
+Sembilan jenis data bawaan (berpasangan) dari instalasi awal:
 
 | Mingguan | Bulanan (`mode_bulanan`) |
 | :-- | :-- |
@@ -70,6 +72,12 @@ Sembilan jenis data bawaan (berpasangan):
 | Aparatur | Data Aparatur (`rincian`) |
 | Data Instruktur dan WI | Data Instruktur dan Widyaiswara (`upload_file`) |
 | Data Belanja Modal · Capaian Anggaran per Jenis Belanja · Capaian Anggaran per Sumber Dana | (mingguan saja, tidak dipublikasikan) |
+
+> Admin bebas menambah/mengubah jenis data lewat **Kelola Jenis Data** (termasuk lewat wizard **Buat dari Excel**,
+> lihat [06-panduan-pengguna.md](06-panduan-pengguna.md#kelola-jenis-data-form-builder)); daftar di atas hanya
+> baseline instalasi. Di lingkungan pengembangan saat ini, misalnya, "Data Aparatur" dan "Data Instruktur dan WI"
+> (bulanan) sudah direstrukturisasi ulang kolom-kolomnya lewat menu Admin — struktur kolom yang berlaku selalu
+> yang ada di `field_definitions`, bukan tabel di atas.
 
 ### `periods` — Periode pelaporan
 1 tahun = 1 periode `tahun` + 4 `triwulan` + 12 `bulan` + **48 `minggu`** (4 minggu per bulan: tanggal 1–7, 8–14,
@@ -96,7 +104,8 @@ Kolom-kolom form per Jenis Data per level.
 | `jenis_data_id`, `level`, `field_key` | Kunci unik gabungan |
 | `label`, `urutan`, `aktif`, `wajib` | Tampilan & validasi |
 | `tipe` | `angka` / `teks` / `teks_panjang` / `tanggal` / `pilihan` / `file` (unggah PDF/Word/Excel — lihat `field_files` di bawah) |
-| `opsi_pilihan` | JSON array (untuk `pilihan`) |
+| `opsi_pilihan` | JSON array (untuk `pilihan`), dipakai bila `opsi_bersyarat` kosong |
+| `opsi_bersyarat` | **Migrasi 09.** JSON, opsional, hanya untuk `pilihan`: `{ "depends_on": "<field_key kolom lain>", "options": { "<nilai 1>": [...], "<nilai 2>": [...] } }`. Opsi dropdown kolom ini lalu **berbeda tergantung nilai kolom `depends_on`** di baris yang sama (mis. "Jenjang Jabatan" beda opsinya untuk "Jenis" = Instruktur vs Widyaiswara pada jenis data *Data Instruktur dan WI*). Belum ada editor visual — dikonfigurasi lewat `POST /api/db/query` langsung. Mengubah kolom `depends_on` di form otomatis mengosongkan ulang kolom yang bergantung padanya (lihat `fe/src/components/DynamicForm.jsx`) |
 | `is_identitas` | Data pribadi (NIK, telepon, alamat, NIP) – **tidak pernah ditampilkan ke publik** |
 | `agregasi` | Cara rekap bulan/triwulan/tahun: `sum` (jumlahkan) / `last` (nilai terakhir, angka kumulatif) / `avg` / `max`. Bawaan: pagu*, realisasi*, jumlah instruktur/widyaiswara, volume = `last` |
 
@@ -142,6 +151,15 @@ Metadata berkas Excel/PDF tahun lalu (`tahun`, `upt_key` NULL = arsip pusat, `je
 `storage_key`). **Isi berkas ada di disk** (`be/storage/arsip/<storage_key>`, atau `STORAGE_DIR`), bukan di MySQL. Ikut terhapus bila UPT dihapus
 (`ON DELETE CASCADE`); berkasnya disapu otomatis.
 
+### `dokumen_resmi` — Repositori Dokumen & Panduan
+**Migrasi 08.** Daftar dokumen/pedoman/SOP yang tampil di tab **Dokumen & Panduan** (menu **Dokumen & Arsip**, khusus
+Admin). `judul`, `deskripsi`, `kategori` (Pedoman/Template/Regulasi/SOP), `format` (label tampilan, mis. `TXT`),
+`isi` (LONGTEXT, isi teks yang diunduh), `file_name`, `mime`, `created_by` → `profiles.id` (`ON DELETE SET NULL`),
+`created_by_label` (email penulis, dicap server). Baca: semua akun login; tulis/hapus: Admin. **Sebelum migrasi ini**,
+daftar dokumen tersimpan di `localStorage` **browser** — dokumen yang ditambahkan Admin hanya terlihat di browser
+Admin sendiri, tidak pernah tersinkron ke akun/perangkat lain. Isi berkas 3 dokumen bawaan disemai otomatis oleh
+migrasi ini.
+
 ### `dashboard_widgets` — Pengaturan Dashboard
 Satu baris = satu kartu/grafik (`tipe`, `judul`, `grup`, `gaya`, `ikon`, `warna`, `satuan`, `urutan`, `aktif`). Sumber angka ada di kolom JSON
 `konfigurasi` (`items`/`pembanding`/`series` berisi pasangan `{jd: kunci jenis data, field: field_key}`). Tabel kosong = tampilan bawaan
@@ -170,6 +188,14 @@ Jumlah baris `data_entries` per jenis data & periode, **hanya** untuk jenis data
 | Jenis Data | 9 |
 | Definisi kolom | 87 |
 | Periode 2026 | 65 |
+
+> **Baseline instalasi baru saja** (isi `database/puslatkp1a.sql`, dari `be/scripts/seed-data.js` + `ddl.sql`).
+> UPT/akun/Jenis Data/kolom baru yang ditambahkan lewat menu Admin (**Kelola Akun UPT**, **Kelola Jenis Data**,
+> termasuk wizard **Buat dari Excel**) hanya tersimpan di database yang berjalan — **belum otomatis ikut ke dalam
+> `puslatkp1a.sql`**. Bila instalasi ini sudah dipakai untuk kerja nyata, jumlah sebenarnya bisa lebih besar (lihat
+> [05-akun-dan-keamanan.md](05-akun-dan-keamanan.md) untuk daftar UPT/akun yang sudah dibuat menyusul baseline).
+> Untuk membuat `puslatkp1a.sql` ikut memuat penambahan itu, perbarui `be/scripts/seed-data.js`/`ddl.sql` lalu
+> jalankan `npm run db:build` (lihat [07-pemeliharaan.md](07-pemeliharaan.md#mengubah-skema-database)).
 
 ## Backup & restore
 

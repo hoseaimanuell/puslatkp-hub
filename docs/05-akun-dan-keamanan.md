@@ -19,6 +19,25 @@
 | UPT | BPPP Makassar | `bppp.makassar@kkp.go.id` | `Makassar2026!` |
 | UPT | BPPP Sorong | `bppp.sorong@kkp.go.id` | `Sorong2026!` |
 
+## Akun UPT tambahan (dibuat lewat menu Admin, bukan baseline instalasi)
+
+18 UPT total kini terdaftar di lingkungan ini — 8 organisasi berikut ditambahkan lewat **Kelola Akun UPT** setelah
+instalasi awal (bukan bagian dari `database/puslatkp1a.sql`, lihat catatan di
+[04-database.md](04-database.md#data-awal-seed)). Emailnya dapat diverifikasi lewat `profiles` di database;
+**passwordnya diberikan langsung ke Admin saat akun dibuat dan tidak tersimpan sebagai teks biasa di mana pun**
+(hanya hash bcrypt di `profiles.password_hash`) — bila lupa, reset lewat `npm run user:password` (lihat di bawah).
+
+| UPT | Email |
+| :-- | :-- |
+| BDA Sukamandi | `bda.sukamandi@kkp.go.id` |
+| BPMPKP Buleleng | `bpmpkp.buleleng@kkp.go.id` |
+| BPPPA Denpasar | `bpppa.denpasar@kkp.go.id` |
+| BPPSDMKP | `bppsdmkp@kkp.go.id` |
+| BRBIH Depok | `brbih.depok@kkp.go.id` |
+| BRPBAPPP Maros | `brpbappp.maros@kkp.go.id` |
+| BRPI | `brpi@kkp.go.id` |
+| Pusat Pelatihan KP | `pusat.pelatihan.kp@kkp.go.id` |
+
 **Akun alias lama tidak disertakan.** Versi sebelumnya punya `admin@kp.go.id` (password `admin`) dan
 `upt@kp.go.id` (password `upt`). Karena password-nya mudah ditebak, keduanya sengaja tidak dimasukkan ke database.
 Bila tetap dibutuhkan untuk uji coba lokal, buat lewat menu *Kelola Akun UPT* (UPT) atau `INSERT` manual.

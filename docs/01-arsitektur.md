@@ -82,12 +82,14 @@ fe/src/
 │  ├─ page.jsx             "/" → /dashboard (mendukung tautan lama ?page=publik)
 │  ├─ publik/page.jsx      Tampilan publik (tanpa login)
 │  └─ (portal)/            Grup route yang memakai sidebar + topbar (PortalShell)
-│     └─ dashboard | dokumen-arsip | input-mingguan | input-bulanan | rekap-triwulan-tahun
-│        | kelola-upt | kelola-jenis-data | kelola-dashboard | kelola-periode
+│     └─ dashboard | dokumen-arsip (Admin, dibungkus AdminOnly) | input-mingguan | input-bulanan
+│        | rekap-triwulan-tahun | kelola-upt | kelola-jenis-data | kelola-dashboard | kelola-periode
 │        | impor-historis | tempat-sampah
-├─ components/             Sidebar, TopBar, PortalShell, DataTable, DynamicForm, Modal, ...
+├─ components/             Sidebar, TopBar, PortalShell, AdminOnly, DataTable, DynamicForm, Modal, ...
 ├─ views/                  Halaman (isi tiap route) – tampilan asli tidak berubah
-├─ lib/                    db.js (klien API), periods.js, excelExport.js, deadline.js, ...
+│  └─ admin/BuatJenisDataExcel.jsx   Wizard "Buat dari Excel" (Kelola Jenis Data): tebak kolom & tipe dari
+│                                    contoh berkas, lalu buat Jenis Data + impor datanya sekaligus
+├─ lib/                    db.js (klien API), periods.js, excelExport.js, deadline.js, historisImport.js, ...
 └─ AuthContext.jsx         Sesi & profil pengguna (JWT)
 
 be/
@@ -97,9 +99,10 @@ be/
 ├─ src/auth.js             JWT, middleware attachUser/requireAdmin
 ├─ src/schema.js           Whitelist tabel + aturan akses
 ├─ src/lib/query.js        Mesin query (select/insert/upsert/update/delete)
+├─ src/lib/compat.js       Deteksi migrasi opsional yang sudah dijalankan → `GET /api/health` → `features`
 ├─ src/lib/periods.js      Generator periode 1 tahun
-├─ src/routes/             auth.js, db.js
-└─ scripts/                build-sql, init-db, generate-periods, set-password, data seed
+├─ src/routes/             auth.js, db.js, arsip.js, fieldFiles.js
+└─ scripts/                build-sql, init-db, generate-periods, set-password, data seed, run-migration.mjs
 
 database/                  SQL siap-impor (dibangun oleh `npm run db:build`)
 ```

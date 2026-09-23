@@ -24,11 +24,13 @@ Base URL: `http://localhost:4000/api` (ubah lewat `NEXT_PUBLIC_API_URL` di front
 Cek server & koneksi database. Tanpa autentikasi.
 
 ```json
-{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "arsip": true, "dashboard": true, "fieldFiles": true } }
+{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "arsip": true, "fieldFiles": true } }
 ```
 
-`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06). Bila belum,
-fiturnya nonaktif dan aplikasi tetap berjalan.
+`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09).
+Bila belum, fiturnya nonaktif dan aplikasi tetap berjalan. `kumulatifBulanan` = kolom `jenis_data.kumulatif_bulanan`
+(migrasi_07), `dokumenResmi` = tabel `dokumen_resmi` (migrasi_08), `opsiBersyarat` = kolom
+`field_definitions.opsi_bersyarat` (migrasi_09).
 
 ## `POST /api/auth/login`
 
@@ -199,6 +201,12 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 | `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat) | semua |
 | `daily_activity`, `dokumen_upload` | — | own | own | semua |
 | `dashboard_widgets` | — | semua (baca) | — | baca/tulis (menu Kelola Dashboard; butuh migrasi_05) |
+| `dokumen_resmi` | — | ✔ (lewat API; menu **disembunyikan** untuk UPT) | — | baca/tulis (menu Dokumen & Arsip; butuh migrasi_08) |
 | `field_files` | — | own | — (lewat `/api/field-files`) | baca semua |
 | `audit_log` | — | — | hanya aksi `import_kolom_tidak_dikenal` (kolom `oleh` dicap server) | baca + `import_kolom_tidak_dikenal`, `impor_historis` |
 | `profiles` | — | self | — | baca, ubah, hapus (buat akun lewat `/auth/users`) |
+
+> **Pembatas menu vs pembatas server.** Sebagian besar tabel di atas dibatasi di **server** (`be/src/schema.js`/`query.js`) —
+> itulah pembatas yang sesungguhnya. `dokumen_resmi` adalah pengecualian: server mengizinkan semua akun login
+> **membaca**-nya, tapi menu **Dokumen & Arsip** disembunyikan dari sidebar untuk akun UPT dan rute `/dokumen-arsip`
+> mengalihkan UPT ke Dashboard (`fe/src/components/AdminOnly.jsx`) — pembatas ini di **frontend**, bukan server.

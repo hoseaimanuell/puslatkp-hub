@@ -56,16 +56,27 @@ Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut
 | `database/migrasi_05_pengaturan_dashboard.sql` | Membuat tabel `dashboard_widgets` (menu Kelola Dashboard). Tabel kosong = tampilan bawaan. Jalankan setelah migrasi_04, lalu restart be |
 | `database/migrasi_06_kolom_berkas.sql` | Menambah tipe kolom `file` (Kelola Jenis Data) + tabel `field_files`. Jalankan setelah migrasi_05, lalu restart be |
 | `database/migrasi_02_tempat_sampah.sql` | Menambah kolom tempat sampah (`deleted_*`) pada 4 tabel data + memperbarui view publik. Jalankan **setelah** migrasi_01 |
+| `database/migrasi_07_kumulatif_bulanan.sql` | Menambah `jenis_data.kumulatif_bulanan` (toggle "Data kumulatif" di Kelola Jenis Data). Jalankan setelah migrasi_06, lalu restart be |
+| `database/migrasi_08_dokumen_resmi.sql` | Membuat tabel `dokumen_resmi` (menu Dokumen & Panduan) dan menyemai 3 dokumen bawaan. Jalankan setelah migrasi_07, lalu restart be |
+| `database/migrasi_09_opsi_bersyarat.sql` | Menambah `field_definitions.opsi_bersyarat` (kolom Pilihan dengan opsi tergantung kolom lain). Jalankan setelah migrasi_08, lalu restart be |
 
-Instalasi baru dari `puslatkp1a.sql` terbaru sudah memuat keduanya. Jalankan setiap berkas **sekali saja**
-(menjalankan ulang migrasi_02 menghasilkan galat "Duplicate column" yang tidak berbahaya). Backend tetap berjalan sebelum
-migrasi_02 dijalankan — tempat sampah otomatis nonaktif dan penghapusan bersifat permanen sampai migrasi dijalankan. Cek hasil: di phpMyAdmin buka tabel `rekap_nilai` →
-*Structure* → *Relation view*; kolom `upt_key` harus berstatus `ON DELETE CASCADE`.
+> ⚠️ **`database/puslatkp1a.sql` saat ini BELUM memuat migrasi_07/08/09** (`be/scripts/ddl.sql` dan
+> `seed-data.js` belum disinkronkan ulang setelah fitur-fitur itu ditambahkan — lihat catatan di
+> [04-database.md](04-database.md#data-awal-seed) dan bagian *Batasan yang diketahui* di bawah). Instalasi **baru**
+> tetap perlu menjalankan migrasi_07 → 08 → 09 secara manual setelah mengimpor `puslatkp1a.sql`, sama seperti
+> database lama. Migrasi_01–06 sudah termuat.
+
+Jalankan setiap berkas **sekali saja** (menjalankan ulang sebagian besar menghasilkan galat "Duplicate column"/"Table
+already exists" yang tidak berbahaya). Backend tetap berjalan sebelum migrasi_02 dijalankan — tempat sampah otomatis
+nonaktif dan penghapusan bersifat permanen sampai migrasi dijalankan. Cek hasil: di phpMyAdmin buka tabel
+`rekap_nilai` → *Structure* → *Relation view*; kolom `upt_key` harus berstatus `ON DELETE CASCADE`.
 
 Alternatif tanpa phpMyAdmin (dari folder `be`, kredensial diambil dari `be/.env`):
 
 ```bash
-node scripts/run-migration.mjs migrasi_06_kolom_berkas.sql
+node scripts/run-migration.mjs migrasi_07_kumulatif_bulanan.sql
+node scripts/run-migration.mjs migrasi_08_dokumen_resmi.sql
+node scripts/run-migration.mjs migrasi_09_opsi_bersyarat.sql
 ```
 
 ## Mengubah skema database
@@ -114,8 +125,10 @@ Pada pengembangan ini (MySQL 8.0.30, Node 22, Next.js 16.3.5):
   `UPDATE`/`DELETE` tanpa filter.
 * Frontend: `next build` sukses (semua route), build `standalone` sukses, dan alur login → dashboard →
   input mingguan → input bulanan (+ rekap) diverifikasi di browser terhadap data MySQL nyata.
-* Dashboard: kartu & kotak anggaran terhitung dari isian UPT (total = RM + PNBP/BLU + SBSN), status "Menunggu"
-  bila belum ada isian, dan akun UPT hanya melihat UPT-nya sendiri.
+* Dashboard: kartu & kotak anggaran terhitung dari isian UPT (Total Realisasi Anggaran dari *Masyarakat + Aparatur +
+  Data Belanja Modal*, **bukan** dijumlah dari RM/PNBP-BLU/SBSN — lihat [06-panduan-pengguna.md](06-panduan-pengguna.md#dashboard)),
+  angka bersifat kumulatif dari minggu ke-1 tahun berjalan, status "Menunggu" bila belum ada isian, dan akun UPT
+  hanya melihat UPT-nya sendiri.
 * Hapus UPT: akun, `rekap_nilai`, `data_entries`, `daily_activity` UPT tersebut ikut terhapus; UPT lain tidak
   bisa menghapus UPT (403); token akun yang dihapus langsung tidak berlaku.
 
@@ -123,15 +136,31 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 
 ## Batasan yang diketahui
 
-* **Halaman Documents**: dokumen tambahan tersimpan di Local Storage per browser (perilaku bawaan versi lama).
-* **Berkas unggahan** disimpan base64 di database (LONGTEXT). Daftar berkas memuat isi berkas; untuk volume besar
-  pisahkan ke penyimpanan berkas.
+* **`be/scripts/ddl.sql` dan `seed-data.js` belum disinkronkan** dengan seluruh perubahan skema/data yang dibuat
+  langsung lewat menu Admin atau migrasi_07/08/09 di lingkungan pengembangan ini (18 UPT, struktur kolom "Data
+  Aparatur"/"Data Instruktur dan WI" yang sudah direstrukturisasi, dsb.). Menjalankan `npm run db:build` sekarang
+  akan menghasilkan `puslatkp1a.sql` yang **masih baseline lama** (10 UPT, 9 jenis data). Lihat
+  [04-database.md](04-database.md#data-awal-seed) dan bagian *Mengubah skema database* di atas sebelum
+  menjalankan `db:build` untuk instalasi baru.
+* **`Rekap Triwulan & Tahun`** ("Total Realisasi Anggaran") masih dijumlahkan dari RM + PNBP/BLU + SBSN (belum
+  disamakan dengan perbaikan yang sudah diterapkan di **Dashboard**, yang totalnya dari Masyarakat + Aparatur +
+  Data Belanja Modal). Berpotensi memberi angka yang berbeda antara dua halaman itu untuk periode yang sama.
+* **Kolom `opsi_bersyarat`** (dropdown dengan opsi tergantung kolom lain) belum punya editor di UI Kelola Jenis
+  Data — dikonfigurasi lewat `POST /api/db/query` langsung (lihat [04-database.md](04-database.md#field_definitions--form-builder)).
+* **Berkas unggahan** (kolom bertipe `file`, Arsip Historis) disimpan di disk (`STORAGE_DIR`); **berkas mode lama**
+  (`dokumen_upload`, jenis data `upload_file`) masih disimpan base64 di database (LONGTEXT). Daftar berkas memuat
+  isi berkas; untuk volume besar pisahkan ke penyimpanan berkas.
 * **Halaman `views/admin/RekapEksporSemuaUPT.jsx`** ikut dimigrasikan tetapi tidak dipakai oleh menu mana pun (sudah demikian di versi lama).
 * **Impor Excel** dikirim per batch 100 baris (tiap batch atomik). Bila gagal di tengah, batch sebelumnya sudah tersimpan;
   mengimpor ulang berkas yang sama aman (NIK yang sama diperbarui). Baris tanpa NIK akan terduplikasi bila diimpor ulang.
 * **Data by name / rekap bulanan admin** masih memuat seluruh baris bulan itu ke browser (aman sampai ±puluhan ribu baris);
   untuk volume lebih besar perlu agregasi & paginasi di server.
 * **Ganti password** belum ada di UI (gunakan `npm run user:password`).
+* **Pembatasan jenis data per organisasi** (mis. "hanya organisasi tertentu yang mengisi jenis data tertentu")
+  belum ada — semua akun UPT saat ini bisa mengisi semua Jenis Data yang levelnya sesuai.
+* **Impor Data Historis**: belum ada pilihan "Perbarui/Tambah" vs "Ganti Semua" saat mengunggah ulang berkas untuk
+  jenis data & periode yang sama — perilaku saat ini selalu memperbarui baris ber-NIK yang sama (lihat bagian
+  [Impor Data Historis](06-panduan-pengguna.md#impor-data-historis)).
 * **UPT yang sudah tidak ada** belum dapat dinonaktifkan dari UI (hanya dihapus, yang ikut menghapus datanya). Biarkan tetap di daftar.
 * Token disimpan di `localStorage` (umum untuk SPA); bila kebijakan Anda mengharuskan cookie `HttpOnly`,
   ini perlu penyesuaian di `be/src/routes/auth.js` dan `fe/src/lib/db.js`.
@@ -144,6 +173,9 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 | Data UPT bertanda merah "Terlambat" | Disimpan setelah deadline. Normal; tidak dapat diubah kecuali data dihapus & diisi ulang oleh Admin |
 | "Arsip Historis belum aktif" (409) | Jalankan `database/migrasi_04_terlambat_dan_arsip.sql` lalu restart be |
 | "Kolom bertipe Berkas belum aktif" (409) | Jalankan `database/migrasi_06_kolom_berkas.sql` lalu restart be |
+| Toggle "Data kumulatif" tidak muncul di Kelola Jenis Data | Jalankan `database/migrasi_07_kumulatif_bulanan.sql` lalu restart be (cek `GET /api/health` → `features.kumulatifBulanan`) |
+| Menu **Dokumen & Panduan** kosong / "Tabel tidak dikenal: dokumen_resmi" | Jalankan `database/migrasi_08_dokumen_resmi.sql` lalu restart be |
+| Kolom pilihan bersyarat tidak berfungsi (opsi tidak berubah) | Jalankan `database/migrasi_09_opsi_bersyarat.sql` lalu restart be; pastikan juga `field_definitions.opsi_bersyarat` sudah diisi untuk kolom tersebut |
 | "Berkas fisik tidak ditemukan di server" | Folder `be/storage`/`STORAGE_DIR` tidak ikut dipulihkan dari backup |
 | "Kolom tidak dikenal: …" | Kolom baru belum didaftarkan di `be/src/schema.js` |
 | Jam/tanggal bergeser satu hari | Sesi MySQL dipaksa UTC; `DATE` dikirim sebagai teks tanpa konversi zona waktu, `DATETIME` sebagai ISO UTC |
