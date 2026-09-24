@@ -27,12 +27,13 @@ Cek server & koneksi database. Tanpa autentikasi.
 { "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "periodeKirim": true, "arsip": true, "fieldFiles": true } }
 ```
 
-`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 11).
+`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 11 / 12).
 Bila belum, fiturnya nonaktif dan aplikasi tetap berjalan. `kumulatifBulanan` = kolom `jenis_data.kumulatif_bulanan`
 (migrasi_07), `dokumenResmi` = tabel `dokumen_resmi` (migrasi_08), `opsiBersyarat` = kolom
 `field_definitions.opsi_bersyarat` (migrasi_09), `permintaanHapus` = tabel `permintaan_hapus` (migrasi_10),
-`periodeKirim` = tabel `periode_kirim` + kolom `permintaan_hapus.period_id` (migrasi_11) — bila `false`, akun UPT
-tetap menghapus/mengedit data secara langsung seperti sebelumnya (tidak diblokir diam-diam).
+`periodeKirim` = tabel `periode_kirim` + kolom `permintaan_hapus.period_id` (migrasi_11) + kolom
+`periode_kirim.status` (migrasi_12, alur draft→disetujui) — bila `false`, akun UPT tetap menghapus/mengedit data
+secara langsung seperti sebelumnya (tidak diblokir diam-diam).
 
 ## `POST /api/auth/login`
 
@@ -228,31 +229,38 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 | `v_publik_rekap` (view) | ✔ baca | ✔ | — | ✔ |
 | `periods`, `field_definitions` | — | semua | — | baca/tulis |
 | `upt_list` | — | **own** (hanya UPT-nya) | — | baca/tulis (semua UPT) |
-| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat); **hapus own** → permintaan (butuh migrasi_10; lihat di bawah) | semua |
+| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat); **ditolak (403)** bila periodenya sudah `disetujui` (butuh migrasi_12); **hapus own** → permintaan bila periode `disetujui`, bebas bila belum/`draft` (butuh migrasi_10; lihat di bawah) | semua |
 | `daily_activity` | — | own | own | semua |
-| `dokumen_upload` | — | own | own; **hapus own** → permintaan (butuh migrasi_10) | semua |
+| `dokumen_upload` | — | own | own; sama seperti di atas — ditolak/digerbang mengikuti status `periode_kirim` | semua |
 | `dashboard_widgets` | — | semua (baca) | — | baca/tulis (menu Kelola Dashboard; butuh migrasi_05) |
 | `dokumen_resmi` | — | ✔ (lewat API; menu **disembunyikan** untuk UPT) | — | baca/tulis (menu Dokumen & Arsip; butuh migrasi_08) |
 | `permintaan_hapus` | — | own (baca saja) | — (dibuat server saat UPT hapus data/buka kunci periode) | baca semua; setujui/tolak lewat `/api/permintaan-hapus/:id/...` (butuh migrasi_10) |
-| `periode_kirim` | — | own (baca saja) | own (kirim/kunci = upsert); **buka kunci** → permintaan (butuh migrasi_11; lihat di bawah) | semua (tidak pernah terkunci) |
+| `periode_kirim` | — | own (baca saja) | own (kirim = upsert, status dipaksa `draft`; **kirim ulang saat sudah `disetujui`** ditolak 403); **batalkan draft** → langsung; **buka kunci setelah `disetujui`** → permintaan (butuh migrasi_11+12; lihat di bawah) | own (`/api/periode-kirim/:id/setujui` = `draft`→`disetujui`) |
 | `field_files` | — | own | — (lewat `/api/field-files`) | baca semua |
 | `audit_log` | — | — | hanya aksi `import_kolom_tidak_dikenal` (kolom `oleh` dicap server) | baca + `import_kolom_tidak_dikenal`, `impor_historis` |
 | `profiles` | — | self | — | baca, ubah, hapus (buat akun lewat `/auth/users`) |
 
 > **Hapus akun UPT (migrasi_10).** Tombol Hapus/Kosongkan pada `rekap_nilai`, `data_entries`, `dokumen_upload` milik
 > akun UPT tidak langsung menghapus — server membuat baris `permintaan_hapus`, dan data baru benar-benar terhapus
-> setelah Admin menyetujuinya (menu **Permintaan Hapus & Buka Kunci**). Mengedit/mengosongkan isian biasa saat
+> setelah Admin menyetujuinya (menu **Permintaan**, bagian "Hapus & Buka Kunci"). Mengedit/mengosongkan isian biasa saat
 > masih dalam sesi input (tanpa lewat tombol Hapus) tetap langsung tersimpan seperti biasa — lihat `spec.liveEdit`
 > di `be/src/lib/query.js`. Tanpa migrasi_10, akun UPT kembali menghapus langsung seperti sebelumnya (tidak
 > diblokir diam-diam — lihat `features.permintaanHapus` di atas).
 
-> **Kirim & Kunci Data (migrasi_11).** Akun UPT dapat menekan "Kirim & Kunci" pada suatu periode (minggu/bulan) di
-> Input Mingguan/Bulanan — ini mengunci **semua** jenis data periode itu sekaligus (bukan cuma satu jenis data),
-> menyembunyikan form input dan tombol hapus/tambah/edit untuk periode tersebut. Membuka kunci lagi memerlukan
-> tombol "Ajukan Buka Kunci", yang — sama seperti hapus data — membuat baris `permintaan_hapus` (`tabel:
-> 'periode_kirim'`) dan baru benar-benar membuka kunci setelah Admin menyetujuinya. Admin tidak pernah terkunci.
-> Tanpa migrasi_11, tombol Kirim & Kunci tidak muncul dan periode tidak pernah terkunci (tidak diblokir
-> diam-diam — lihat `features.periodeKirim` di atas).
+> **Kirim Data — draft menunggu persetujuan (migrasi_11 + migrasi_12).** Akun UPT dapat menekan "Kirim" pada suatu
+> periode (minggu/bulan) di Input Mingguan/Bulanan — ini membuat baris `periode_kirim` berstatus **`draft`** untuk
+> **semua** jenis data periode itu sekaligus (bukan cuma satu jenis data). Selagi `draft`, data **masih bebas
+> diedit/dihapus** oleh UPT — belum ada yang terkunci — dan UPT bisa membatalkannya sendiri kapan saja (delete
+> langsung, tanpa persetujuan). Baru setelah Admin menekan **Setujui** (`POST /api/periode-kirim/:id/setujui`,
+> admin-only) statusnya berubah jadi **`disetujui`**, dan barulah periode itu benar-benar terkunci: form input
+> disembunyikan di UI, dan di server setiap insert/upsert/update pada `rekap_nilai`/`data_entries`/`dokumen_upload`
+> untuk periode itu **ditolak (403)**, sementara hapus **digerbang jadi permintaan** (`permintaan_hapus`). Membuka
+> kunci lagi memerlukan tombol "Ajukan Buka Kunci", yang membuat baris `permintaan_hapus` (`tabel: 'periode_kirim'`)
+> dan baru benar-benar membuka kunci setelah Admin menyetujuinya. `forceOnWrite`/`periodLockCheck` di
+> `be/src/schema.js` juga mencegah UPT "kirim ulang" (upsert) periode yang sudah `disetujui` untuk diam-diam
+> menurunkan statusnya balik ke `draft`. Admin tidak pernah terkunci. Tanpa migrasi_11, tombol Kirim tidak muncul
+> dan periode tidak pernah terkunci; tanpa migrasi_12 (kolom `status` belum ada), fitur ini nonaktif total dan
+> semua baris `periode_kirim` lama diperlakukan seperti sebelum revisi ini (lihat `features.periodeKirim` di atas).
 
 > **Pembatas menu vs pembatas server.** Sebagian besar tabel di atas dibatasi di **server** (`be/src/schema.js`/`query.js`) —
 > itulah pembatas yang sesungguhnya. `dokumen_resmi` adalah pengecualian: server mengizinkan semua akun login

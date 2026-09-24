@@ -43,28 +43,34 @@ Bila tetap dibutuhkan untuk uji coba lokal, buat lewat menu *Kelola Akun UPT* (U
 | | Admin | UPT | Publik |
 | :-- | :-- | :-- | :-- |
 | Melihat data | Semua UPT | Hanya UPT sendiri | Agregat jenis data publik |
-| Input/ubah data | Semua UPT, kapan saja | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**), tapi terkunci total begitu "Kirim & Kunci" ditekan | — |
-| Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | **Perlu persetujuan Admin** (menu Permintaan Hapus & Buka Kunci) | — |
-| Buka kunci periode yang sudah "Kirim & Kunci" | Langsung (tidak pernah terkunci) | **Perlu persetujuan Admin** ("Ajukan Buka Kunci") | — |
+| Input/ubah data | Semua UPT, kapan saja | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**); masih bebas selagi periode berstatus **draft** (menunggu disetujui), terkunci total begitu Admin **menyetujui**nya | — |
+| Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | Bebas selagi periode **draft**; **perlu persetujuan Admin** begitu periode **disetujui** (menu Permintaan) | — |
+| Menyetujui data yang dikirim UPT (draft → disetujui) | ✔ ("Setujui" di menu Permintaan) | — (UPT hanya bisa mengirim/membatalkan draft sendiri) | — |
+| Buka kunci periode yang sudah **disetujui** | Langsung (tidak pernah terkunci) | **Perlu persetujuan Admin** ("Ajukan Buka Kunci") | — |
 | Kelola akun UPT & daftar UPT | ✔ | — | — |
 | Kelola Jenis Data & kolom | ✔ | — | — |
 | Rekap & ekspor semua UPT | ✔ | — | — |
 
 Detail per tabel: [03-api-reference.md](03-api-reference.md#matriks-hak-akses-per-tabel).
 
-**Hapus data akun UPT perlu persetujuan Admin.** Tombol Hapus/Kosongkan/Hapus Duplikat pada data mingguan, bulanan,
-dan berkas unggahan milik akun UPT tidak lagi langsung menghapus — sistem membuat **permintaan hapus** yang harus
-disetujui Admin (menu **Permintaan Hapus & Buka Kunci**) sebelum data benar-benar terhapus (dan masuk Tempat
-Sampah seperti biasa). Mengedit atau mengosongkan isian saat masih dalam sesi input mingguan/bulanan (tanpa
-menekan tombol Hapus) tetap tersimpan langsung seperti biasa — pembatas ini hanya berlaku untuk aksi hapus yang
-disengaja.
+**Hapus data akun UPT perlu persetujuan Admin — kecuali periodenya masih draft.** Tombol Hapus/Kosongkan/Hapus
+Duplikat pada data mingguan, bulanan, dan berkas unggahan milik akun UPT langsung menghapus selagi periode terkait
+belum dikirim atau masih **draft** (menunggu disetujui). Begitu Admin **menyetujui** periode itu, hapus tidak lagi
+langsung — sistem membuat **permintaan hapus** yang harus disetujui Admin (menu **Permintaan**) sebelum data
+benar-benar terhapus (dan masuk Tempat Sampah seperti biasa). Mengedit atau mengosongkan isian saat masih dalam
+sesi input mingguan/bulanan (tanpa menekan tombol Hapus) tetap tersimpan langsung seperti biasa selama periodenya
+belum disetujui — pembatas ini hanya berlaku untuk aksi hapus yang disengaja.
 
-**Kirim & Kunci Data — buka kunci juga perlu persetujuan Admin.** Akun UPT dapat menekan **"Kirim & Kunci"** pada
-suatu periode (minggu/bulan) di Input Mingguan/Bulanan setelah yakin datanya benar. Ini mengunci **semua** jenis
-data periode itu sekaligus — form input, tombol hapus, dan tombol tambah/edit disembunyikan, UPT hanya bisa
-melihat. Untuk mengedit lagi, UPT menekan **"Ajukan Buka Kunci"**, yang masuk ke menu Permintaan Hapus & Buka
-Kunci yang sama seperti permintaan hapus — setelah Admin menyetujui, kunci dibuka dan UPT bisa mengedit sampai
-menekan "Kirim" lagi. Admin sendiri tidak pernah terkunci, kapan pun.
+**Kirim Data — draft menunggu persetujuan, baru terkunci setelah disetujui Admin.** Akun UPT dapat menekan
+**"Kirim"** pada suatu periode (minggu/bulan) di Input Mingguan/Bulanan setelah yakin datanya benar. Ini
+mengirimkan **semua** jenis data periode itu sekaligus sebagai **draft** — UPT masih bisa mengedit/menghapus data
+seperti biasa, dan bisa membatalkan pengiriman sendiri ("Batalkan Kirim") tanpa perlu izin Admin. Admin meninjau
+draft yang masuk di menu **Permintaan** (bagian "Persetujuan Data") dan menekan **Setujui**. Begitu disetujui,
+periode itu baru benar-benar terkunci — form input, tombol hapus, dan tombol tambah/edit disembunyikan, UPT hanya
+bisa melihat, dan server juga menolak permintaan tulis langsung ke data periode itu (bukan cuma disembunyikan di
+tampilan). Untuk mengedit lagi setelah terkunci, UPT menekan **"Ajukan Buka Kunci"**, yang masuk ke menu
+**Permintaan** yang sama seperti permintaan hapus — setelah Admin menyetujui, kunci dibuka dan UPT bisa mengedit
+sampai menekan "Kirim" lagi. Admin sendiri tidak pernah terkunci, kapan pun.
 
 ## Mengelola akun
 

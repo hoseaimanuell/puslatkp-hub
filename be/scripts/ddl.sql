@@ -332,21 +332,27 @@ CREATE TABLE IF NOT EXISTS permintaan_hapus (
 
 -- 16. Kirim & Kunci Data (UPT mengunci semua jenis data satu periode sekaligus; buka kunci lagi lewat baris di atas)
 CREATE TABLE IF NOT EXISTS periode_kirim (
-  id                CHAR(36)     NOT NULL,
-  upt_key           VARCHAR(64)  NOT NULL,
-  period_id         CHAR(36)     NOT NULL,
-  terkirim_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  terkirim_by       CHAR(36)     NULL,
-  terkirim_by_label VARCHAR(190) NULL,
-  deleted_at        DATETIME     NULL COMMENT 'Tempat sampah: NULL = masih terkunci. Baris terhapus = kunci dibuka (lewat persetujuan Admin)',
-  deleted_by        CHAR(36)     NULL,
-  deleted_batch     CHAR(36)     NULL,
+  id                 CHAR(36)     NOT NULL,
+  upt_key            VARCHAR(64)  NOT NULL,
+  period_id          CHAR(36)     NOT NULL,
+  status              VARCHAR(10)  NOT NULL DEFAULT 'draft' COMMENT 'draft | disetujui',
+  terkirim_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  terkirim_by        CHAR(36)     NULL,
+  terkirim_by_label  VARCHAR(190) NULL,
+  disetujui_at       DATETIME     NULL,
+  disetujui_by       CHAR(36)     NULL,
+  disetujui_by_label VARCHAR(190) NULL,
+  deleted_at         DATETIME     NULL COMMENT 'Tempat sampah: NULL = masih terkunci/menunggu. Baris terhapus = kunci dibuka atau draft dibatalkan',
+  deleted_by         CHAR(36)     NULL,
+  deleted_batch      CHAR(36)     NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_periode_kirim (upt_key, period_id),
   KEY idx_periode_kirim_trash (deleted_at, deleted_batch),
-  CONSTRAINT fk_pk_upt    FOREIGN KEY (upt_key)     REFERENCES upt_list(`key`) ON DELETE CASCADE,
-  CONSTRAINT fk_pk_period FOREIGN KEY (period_id)   REFERENCES periods(id)     ON DELETE CASCADE,
-  CONSTRAINT fk_pk_by     FOREIGN KEY (terkirim_by) REFERENCES profiles(id)    ON DELETE SET NULL
+  KEY idx_periode_kirim_status (status),
+  CONSTRAINT fk_pk_upt        FOREIGN KEY (upt_key)      REFERENCES upt_list(`key`) ON DELETE CASCADE,
+  CONSTRAINT fk_pk_period     FOREIGN KEY (period_id)    REFERENCES periods(id)     ON DELETE CASCADE,
+  CONSTRAINT fk_pk_by         FOREIGN KEY (terkirim_by)  REFERENCES profiles(id)    ON DELETE SET NULL,
+  CONSTRAINT fk_pk_disetujui_by FOREIGN KEY (disetujui_by) REFERENCES profiles(id)  ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 17. View publik (agregat saja, tanpa data pribadi)

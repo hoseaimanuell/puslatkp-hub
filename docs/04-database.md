@@ -160,10 +160,14 @@ daftar dokumen tersimpan di `localStorage` **browser** — dokumen yang ditambah
 Admin sendiri, tidak pernah tersinkron ke akun/perangkat lain. Isi berkas 3 dokumen bawaan disemai otomatis oleh
 migrasi ini.
 
-### `permintaan_hapus` — Permintaan Hapus & Buka Kunci (persetujuan Admin)
-**Migrasi 10** (kolom `period_id`/`jenis_data_id` ditambahkan **migrasi 11**). Sejak migrasi 10, tombol
-Hapus/Kosongkan akun UPT pada `rekap_nilai`, `data_entries`, `dokumen_upload`, dan (sejak migrasi 11)
-**"Ajukan Buka Kunci"** pada `periode_kirim` tidak langsung menghapus — server membuat satu baris di sini (`tabel`,
+### `permintaan_hapus` — menu Permintaan, bagian "Hapus & Buka Kunci" (persetujuan Admin)
+**Migrasi 10** (kolom `period_id`/`jenis_data_id` ditambahkan **migrasi 11**). Ditampilkan di menu **Permintaan**
+bersama daftar draft `periode_kirim` yang menunggu disetujui (lihat di atas) — dua hal berbeda yang muncul di
+halaman yang sama: baris di sini untuk hapus/buka kunci, baris `periode_kirim` untuk persetujuan kirim data. Sejak
+migrasi 10, tombol Hapus/Kosongkan akun UPT pada `rekap_nilai`, `data_entries`, `dokumen_upload` (hanya bila
+periode terkait sudah `disetujui`; selagi `draft` boleh dihapus bebas — lihat bagian `periode_kirim` di atas), dan
+(sejak migrasi 11) **"Ajukan Buka Kunci"** pada `periode_kirim` yang sudah `disetujui`, tidak langsung menghapus —
+server membuat satu baris di sini (`tabel`,
 `upt_key`, `period_id`/`jenis_data_id` diisi dari baris yang diajukan untuk pencarian cepat, `filter_json` berisi
 kondisi WHERE yang **sudah dilengkapi `upt_key` secara eksplisit** supaya aman dieksekusi ulang oleh Admin,
 `ringkasan`, `jumlah_baris`, `alasan` opsional dari UPT, `status`: `pending`/`disetujui`/`ditolak`, `catatan_admin`,
@@ -175,17 +179,31 @@ tombol Hapus/Kosongkan/Hapus Duplikat/Ajukan Buka Kunci yang eksplisit yang dige
 hanya miliknya sendiri; tulis lewat endpoint ini saja (bukan `/api/db/query` generik), karena menyetujui berarti
 benar-benar menjalankan aksinya.
 
-### `periode_kirim` — Kirim & Kunci Data (persetujuan Admin untuk buka kunci)
-**Migrasi 11.** Akun UPT bisa menekan **"Kirim & Kunci"** pada suatu periode (minggu atau bulan) di Input
-Mingguan/Bulanan — ini membuat/menyimpan-ulang satu baris di sini (`upt_key`, `period_id`, `terkirim_at`,
-`terkirim_by`/`terkirim_by_label`). **Satu baris mengunci SEMUA jenis data pada periode itu sekaligus** (bukan
-per jenis data) — begitu terkunci, form input, tombol Hapus/Kosongkan, dan tombol Tambah/Edit/Upload untuk
-periode itu disembunyikan bagi UPT (lihat `locked` di `fe/src/views/InputData/PeriodeTabs.jsx`, sudah lama ada
-di kode tapi sebelumnya selalu `false`). Membuka kunci = UPT menghapus baris ini (`delete()`), yang otomatis
-menjadi permintaan di `permintaan_hapus` (tabel bertanda `soft: true` + `deleteRequiresApproval: true`, sama
-seperti tabel data lainnya) — setelah Admin menyetujui, baris ini soft-delete (masuk Tempat Sampah) dan UPT bisa
-mengedit periode itu lagi sampai menekan "Kirim" ulang. **Admin selalu bisa mengedit, tidak pernah terkunci.**
-Baca/tulis: UPT hanya miliknya sendiri (dan hanya lewat upsert/delete, bukan update biasa).
+### `periode_kirim` — Kirim Data (draft → disetujui, persetujuan Admin)
+**Migrasi 11**, kolom `status`/`disetujui_at`/`disetujui_by`/`disetujui_by_label` ditambahkan **migrasi 12**. Akun
+UPT bisa menekan **"Kirim"** pada suatu periode (minggu atau bulan) di Input Mingguan/Bulanan — ini
+membuat/menyimpan-ulang satu baris di sini (`upt_key`, `period_id`, `status` dipaksa server selalu `'draft'` saat
+UPT yang menulis — lihat `forceOnWrite` di `be/src/schema.js`, `terkirim_at`, `terkirim_by`/`terkirim_by_label`).
+**Satu baris berlaku untuk SEMUA jenis data pada periode itu sekaligus** (bukan per jenis data).
+
+Selagi `status = 'draft'`, periode itu **belum terkunci** — UPT masih bebas mengedit/menghapus data dan bisa
+membatalkan pengiriman sendiri (`delete()` langsung, tanpa gerbang, karena `approvalGate` hanya menggerbang baris
+berstatus `'disetujui'`). Admin meninjau lewat menu **Permintaan** (bagian "Persetujuan Data") dan menekan
+**Setujui** (`POST /api/periode-kirim/:id/setujui`, admin-only) — ini mengubah status jadi `'disetujui'` dan
+mencatat `disetujui_at`/`disetujui_by`/`disetujui_by_label`. Baru sekaranglah periode itu benar-benar terkunci:
+form input, tombol Hapus/Kosongkan, dan tombol Tambah/Edit/Upload untuk periode itu disembunyikan bagi UPT (lihat
+`locked` di `fe/src/views/InputData/PeriodeTabs.jsx`), **dan** server menolak (403) setiap insert/upsert/update ke
+`rekap_nilai`/`data_entries`/`dokumen_upload` pada periode itu (`periodLockCheck` di `be/src/lib/query.js`) —
+bukan cuma disembunyikan di UI. `periode_kirim` sendiri juga dipasangi `periodLockCheck`, jadi UPT tidak bisa
+"kirim ulang" (upsert) periode yang sudah `disetujui` untuk diam-diam menurunkannya balik ke `draft`.
+
+Membuka kunci periode yang sudah `disetujui` = UPT menghapus baris ini (`delete()`), yang karena `approvalGate`
+otomatis menjadi permintaan di `permintaan_hapus` (tabel bertanda `soft: true` + `deleteRequiresApproval: true`,
+sama seperti tabel data lainnya) — setelah Admin menyetujui, baris ini soft-delete (masuk Tempat Sampah) dan UPT
+bisa mengedit periode itu lagi sampai menekan "Kirim" ulang. **Admin selalu bisa mengedit, tidak pernah terkunci.**
+Baca/tulis: UPT hanya miliknya sendiri (dan hanya lewat upsert/delete, bukan update biasa); Admin lewat endpoint
+`/api/periode-kirim/:id/setujui` khusus untuk menyetujui (tidak ada endpoint tolak — UPT membatalkan draft-nya
+sendiri).
 
 ### `dashboard_widgets` — Pengaturan Dashboard
 Satu baris = satu kartu/grafik (`tipe`, `judul`, `grup`, `gaya`, `ikon`, `warna`, `satuan`, `urutan`, `aktif`). Sumber angka ada di kolom JSON
