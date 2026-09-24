@@ -692,7 +692,6 @@ export default function KelolaJenisData() {
                       checked={fieldForm.opsi_bersyarat_enabled}
                       onChange={e => setFieldForm(f => ({ ...f, opsi_bersyarat_enabled: e.target.checked }))}
                       className="w-4 h-4 rounded text-blue-600"
-                      disabled={!driverCandidates.length}
                     />
                     <span className="text-xs font-medium text-blue-900 dark:text-blue-200">
                       Opsi tergantung kolom lain (bersyarat)
