@@ -164,4 +164,8 @@ export const db = {
       return api(routes[name], { body })
     },
   },
+  auth: {
+    /** Admin: atur ulang password akun. Password lama tidak bisa dibaca kembali (hash satu arah). */
+    resetPassword: (userId, password) => api(`/auth/users/${userId}/password`, { method: 'PATCH', body: { password } }),
+  },
 }

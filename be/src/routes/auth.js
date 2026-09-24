@@ -57,4 +57,15 @@ router.post('/users', requireAdmin, async (req, res) => {
   res.status(201).json({ success: true, user: { id, email: cleanEmail, role: 'upt', upt_key, nama_lengkap: String(nama_lengkap).trim() } })
 })
 
+// PATCH /api/auth/users/:id/password  (Admin) — atur ulang password akun (password lama tidak bisa dibaca kembali, hanya hash yang tersimpan)
+router.patch('/users/:id/password', requireAdmin, async (req, res) => {
+  const { password } = req.body || {}
+  if (!password || String(password).length < 8) throw new HttpError(400, 'Password minimal 8 karakter')
+  const [[row]] = await pool.query('SELECT id FROM profiles WHERE id = ?', [req.params.id])
+  if (!row) throw new HttpError(404, 'Akun tidak ditemukan')
+  const hash = await bcrypt.hash(String(password), 10)
+  await pool.query('UPDATE profiles SET password_hash = ? WHERE id = ?', [hash, req.params.id])
+  res.json({ success: true })
+})
+
 export default router

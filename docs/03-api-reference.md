@@ -63,6 +63,18 @@ Membuat akun UPT. Body:
 Validasi: format email, password ≥ 8 karakter, nama wajib, `upt_key` harus ada & aktif, email belum terdaftar
 (409). Respons 201: `{ "success": true, "user": { … } }`.
 
+## `PATCH /api/auth/users/:id/password` *(Admin)*
+
+Atur ulang password akun mana pun (dicocokkan lewat `profiles.id`, bukan email) — dipakai tombol **Reset Password**
+di menu Kelola Akun UPT. Password lama tidak pernah dibaca kembali; endpoint ini hanya menimpanya dengan hash bcrypt
+baru. Body:
+
+```json
+{ "password": "min8karakter" }
+```
+
+Validasi: password ≥ 8 karakter, akun harus ada (404 bila tidak). Respons: `{ "success": true }`.
+
 ## `POST /api/db/query`
 
 Endpoint data tunggal. Klien tidak menulis SQL – ia mengirim **spesifikasi** yang divalidasi server.

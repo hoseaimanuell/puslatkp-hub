@@ -61,13 +61,15 @@ karakter), nama lengkap, dan UPT. Akun langsung aktif.
 
 **Menghapus akun** – tombol tempat sampah pada daftar akun (akun sendiri tidak dapat dihapus).
 
-**Mengganti password** (belum ada menu di UI) – dari folder `be/`:
+**Melihat/mengganti password akun UPT** – password tersimpan sebagai hash bcrypt satu arah, jadi password yang sudah
+ada **tidak bisa ditampilkan ulang** (baik lewat UI maupun database) — ini bukan keterbatasan, melainkan desain
+keamanan standar. Untuk memberikan password baru ke UPT: tombol **ikon kunci** (Reset Password) pada baris akun di
+menu **Kelola Akun UPT** → password baru dibuat otomatis (bisa diketik ulang manual) → klik **Reset Password** →
+password baru ditampilkan **satu kali** dengan tombol salin, lalu berikan ke UPT terkait. Halaman tidak menyimpan
+atau menampilkannya lagi setelah modal ditutup.
 
-```bash
-npm run user:password -- bppp.jakarta@kkp.go.id PasswordBaruYangKuat1!
-```
-
-Perintah ini langsung menulis hash bcrypt baru ke tabel `profiles`.
+Cara lama lewat command line (`npm run user:password -- email password`, dari folder `be/`) tetap berfungsi dan
+berguna untuk akun Admin sendiri (menu Reset Password di UI hanya untuk akun ber-peran UPT).
 
 ## Autentikasi
 

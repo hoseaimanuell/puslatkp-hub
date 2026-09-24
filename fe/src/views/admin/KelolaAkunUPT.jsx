@@ -6,7 +6,14 @@ import { useState, useEffect } from 'react'
 import { db } from '../../lib/db'
 import InfoCard from '../../components/InfoCard'
 import Modal from '../../components/Modal'
-import { Plus, Trash2, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { Plus, Trash2, Loader2, CheckCircle2, XCircle, KeyRound, Copy, RefreshCw } from 'lucide-react'
+
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  let out = ''
+  for (let i = 0; i < 12; i++) out += chars[Math.floor(Math.random() * chars.length)]
+  return out
+}
 
 import PageHeader from '../../components/PageHeader'
 
@@ -19,6 +26,11 @@ export default function KelolaAkunUPT() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null) // { type: 'success' | 'error', message }
+  const [resetTarget, setResetTarget] = useState(null) // { id, nama_lengkap, email }
+  const [resetPassword, setResetPassword] = useState('')
+  const [resetSaving, setResetSaving] = useState(false)
+  const [resetError, setResetError] = useState('')
+  const [resetDone, setResetDone] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -72,6 +84,40 @@ export default function KelolaAkunUPT() {
       showToast(err.message || 'Gagal membuat akun', 'error')
     }
     setSaving(false)
+  }
+
+  function openReset(user) {
+    setResetTarget(user)
+    setResetPassword(generatePassword())
+    setResetError('')
+    setResetDone(false)
+  }
+
+  function closeReset() {
+    setResetTarget(null)
+    setResetPassword('')
+    setResetError('')
+    setResetDone(false)
+  }
+
+  async function handleResetPassword(e) {
+    e.preventDefault()
+    if (resetPassword.length < 8) { setResetError('Password minimal 8 karakter'); return }
+    setResetSaving(true)
+    setResetError('')
+    const { error } = await db.auth.resetPassword(resetTarget.id, resetPassword)
+    setResetSaving(false)
+    if (error) { setResetError(error.message || 'Gagal mengatur ulang password'); return }
+    setResetDone(true)
+  }
+
+  async function copyResetPassword() {
+    try {
+      await navigator.clipboard.writeText(resetPassword)
+      showToast('Password disalin ke clipboard')
+    } catch {
+      showToast('Gagal menyalin, salin manual dari kolom di atas', 'error')
+    }
   }
 
   async function handleAddUPT() {
@@ -192,6 +238,13 @@ export default function KelolaAkunUPT() {
                     </td>
                     <td className="py-3 px-3">
                       <button
+                        onClick={() => openReset(user)}
+                        className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                        title="Reset password"
+                      >
+                        <KeyRound size={14} />
+                      </button>
+                      <button
                         onClick={() => {
                           if (confirm(`Hapus akun ${user.nama_lengkap}? (akun tidak dapat login lagi)`)) {
                             db.from('profiles').delete().eq('id', user.id).then(({ error }) => {
@@ -202,6 +255,7 @@ export default function KelolaAkunUPT() {
                           }
                         }}
                         className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                        title="Hapus akun"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -263,6 +317,64 @@ export default function KelolaAkunUPT() {
             Akun baru akan langsung aktif dan pengguna dapat langsung login menggunakan email & password yang didaftarkan.
           </div>
         </form>
+      </Modal>
+
+      {/* Reset Password Modal */}
+      <Modal
+        open={!!resetTarget}
+        onClose={closeReset}
+        title={`Reset Password — ${resetTarget?.nama_lengkap || ''}`}
+        footer={
+          resetDone ? (
+            <button onClick={closeReset} className="btn-primary">Selesai</button>
+          ) : (
+            <>
+              <button onClick={closeReset} className="btn-secondary">Batal</button>
+              <button form="reset-password-form" type="submit" className="btn-primary" disabled={resetSaving}>
+                {resetSaving ? 'Menyimpan...' : 'Reset Password'}
+              </button>
+            </>
+          )
+        }
+      >
+        <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-400 mb-4">
+          Password akun UPT tersimpan sebagai hash dan tidak bisa ditampilkan ulang. Gunakan ini untuk mengatur
+          password <strong>baru</strong> bagi <strong>{resetTarget?.email}</strong>, lalu berikan ke UPT terkait.
+        </div>
+
+        {resetDone ? (
+          <div className="space-y-3">
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 mb-2">
+                Password berhasil diubah. Salin sekarang — halaman ini tidak akan menampilkannya lagi.
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 form-input font-mono text-sm bg-white dark:bg-gray-900">{resetPassword}</code>
+                <button type="button" onClick={copyResetPassword} className="btn-secondary text-xs px-2.5" title="Salin">
+                  <Copy size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <form id="reset-password-form" onSubmit={handleResetPassword} className="space-y-4">
+            {resetError && (
+              <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm rounded-lg p-3">
+                {resetError}
+              </div>
+            )}
+            <div>
+              <label className="form-label">Password Baru <span className="text-rose-500">*</span></label>
+              <div className="flex items-center gap-2">
+                <input type="text" value={resetPassword} onChange={e => setResetPassword(e.target.value)}
+                  className="form-input font-mono" required minLength={8} placeholder="Min. 8 karakter" />
+                <button type="button" onClick={() => setResetPassword(generatePassword())} className="btn-secondary text-xs px-2.5" title="Buat password acak">
+                  <RefreshCw size={14} />
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   )
