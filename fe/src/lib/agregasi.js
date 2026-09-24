@@ -22,7 +22,7 @@ export const AGREGASI_SHORT = { sum: 'Σ jumlah', last: 'nilai terakhir', avg: '
 /** Tebakan bila kolom `agregasi` belum ada di database (sebelum migrasi_03): sama dengan aturan di migrasi. */
 export function defaultAgregasi(fieldKey = '') {
   if (/^(pagu|realisasi)/.test(fieldKey)) return 'last'
-  if (['jumlah_instruktur_wi', 'instruktur_berdasarkan_keahlian', 'widyaiswara_berdasarkan_keahlian', 'volume'].includes(fieldKey)) return 'last'
+  if (['jumlah', 'berdasarkan_keahlian', 'volume'].includes(fieldKey)) return 'last'
   return 'sum'
 }
 

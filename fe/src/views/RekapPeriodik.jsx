@@ -25,7 +25,7 @@ const DANA = 'data_capaian_anggaran_per_sumber_dana'
 const METRICS = [
   { id: 'masy', label: 'Masyarakat Dilatih', jd: 'masyarakat', fields: ['jumlah_peserta'] },
   { id: 'apar', label: 'Aparatur Dilatih', jd: 'aparatur', fields: ['jumlah_peserta'] },
-  { id: 'sdm', label: 'SDM Pelatih (Instruktur & WI)', jd: 'data_instruktur_dan_wi', fields: ['jumlah_instruktur_wi'] },
+  { id: 'sdm', label: 'SDM Pelatih (Instruktur & WI)', jd: 'data_instruktur_dan_wi', fields: ['jumlah'] },
   { id: 'rm', label: 'Realisasi RM', jd: DANA, fields: ['realisasi_rm'], rp: true },
   { id: 'pnbp', label: 'Realisasi PNBP/BLU', jd: DANA, fields: ['realisasi_pnbp_blu'], rp: true },
   { id: 'sbsn', label: 'Realisasi SBSN', jd: DANA, fields: ['realisasi_sbsn'], rp: true },

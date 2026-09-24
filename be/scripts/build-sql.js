@@ -74,35 +74,40 @@ master += section('AKUN AWAL (password di-hash bcrypt; lihat docs/05-akun-dan-ke
 master += insert('profiles', ['id', 'email', 'password_hash', 'role', 'upt_key', 'nama_lengkap', 'created_at'], users)
 
 // Jenis data mingguan bertipe daftar pelatihan: boleh lebih dari 1 baris per minggu
-const MULTI_BARIS = new Set(['masyarakat', 'aparatur', 'data_belanja_modal'])
+const MULTI_BARIS = new Set(['masyarakat', 'aparatur', 'data_belanja_modal', 'data_instruktur_dan_wi'])
 
 // Pagu/realisasi/jumlah SDM bersifat KUMULATIF (stok) -> rekap memakai nilai terakhir, bukan dijumlahkan
 const agregasiDefault = f =>
   f.level === 'minggu' && f.tipe === 'angka' &&
-  (/^(pagu|realisasi)/.test(f.field_key) || ['jumlah_instruktur_wi', 'instruktur_berdasarkan_keahlian', 'widyaiswara_berdasarkan_keahlian', 'volume'].includes(f.field_key))
+  (/^(pagu|realisasi)/.test(f.field_key) || ['jumlah', 'berdasarkan_keahlian', 'volume'].includes(f.field_key))
     ? 'last'
     : 'sum'
 
 const jenisData = [...seed.DEFAULT_JENIS_DATA]
   .sort((a, b) => (a.pasangan_mingguan_id ? 1 : 0) - (b.pasangan_mingguan_id ? 1 : 0)) // induk dulu, agar FK terpenuhi
-  .map(j => ({ ...j, mode_bulanan: j.mode_bulanan ?? null, multi_baris: MULTI_BARIS.has(j.key) }))
+  .map(j => ({ ...j, mode_bulanan: j.mode_bulanan ?? null, multi_baris: MULTI_BARIS.has(j.key), kumulatif_bulanan: false }))
 master += section('DATA MASTER — 9 JENIS DATA')
 master += insert('jenis_data',
-  ['id', 'key', 'judul', 'deskripsi', 'level_utama', 'mode_bulanan', 'butuh_input_bulanan', 'pasangan_mingguan_id', 'publik_boleh_lihat', 'multi_baris', 'aktif'],
+  ['id', 'key', 'judul', 'deskripsi', 'level_utama', 'mode_bulanan', 'butuh_input_bulanan', 'pasangan_mingguan_id', 'publik_boleh_lihat', 'multi_baris', 'kumulatif_bulanan', 'aktif'],
   jenisData)
 
 const fields = seed.DEFAULT_FIELDS.map(f => ({
   ...f,
   id: uid(f.id),
   opsi_pilihan: f.opsi_pilihan ?? null,
+  opsi_bersyarat: f.opsi_bersyarat ?? null,
   wajib: !!f.wajib,
   is_identitas: !!f.is_identitas,
   agregasi: agregasiDefault(f),
 }))
 master += section('DATA MASTER — DEFINISI KOLOM (FORM BUILDER)')
 master += insert('field_definitions',
-  ['id', 'jenis_data_id', 'level', 'field_key', 'label', 'tipe', 'opsi_pilihan', 'agregasi', 'wajib', 'is_identitas', 'urutan', 'aktif'],
+  ['id', 'jenis_data_id', 'level', 'field_key', 'label', 'tipe', 'opsi_pilihan', 'opsi_bersyarat', 'agregasi', 'wajib', 'is_identitas', 'urutan', 'aktif'],
   fields)
+
+const docs = seed.DEFAULT_DOCS.map(d => ({ ...d, id: uid(d.id) }))
+master += section('DATA MASTER — DOKUMEN & PANDUAN BAWAAN')
+master += insert('dokumen_resmi', ['id', 'judul', 'deskripsi', 'kategori', 'format', 'isi', 'file_name', 'mime'], docs)
 
 const periods = generatePeriods(2026, { idFor: periodId })
 master += section('DATA MASTER — PERIODE 2026 (1 tahun + 4 triwulan + 12 bulan + 48 minggu)')

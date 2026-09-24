@@ -36,7 +36,7 @@ const anggaranSrc = f => [{ jd: JD_MASYARAKAT, field: f }, { jd: JD_APARATUR, fi
 export const DEFAULT_WIDGETS = [
   { tipe: 'kartu', judul: 'Masyarakat Dilatih', grup: 'Progress & Status', gaya: 'berwarna', ikon: 'Users', warna: 'bg-blue-600', satuan: 'angka', konfigurasi: { items: [{ jd: JD_MASYARAKAT, field: 'jumlah_peserta' }] } },
   { tipe: 'kartu', judul: 'Aparatur Dilatih', grup: 'Progress & Status', gaya: 'berwarna', ikon: 'Landmark', warna: 'bg-emerald-500', satuan: 'angka', konfigurasi: { items: [{ jd: JD_APARATUR, field: 'jumlah_peserta' }] } },
-  { tipe: 'kartu', judul: 'SDM Pelatih (Instruktur & Widyaiswara)', grup: 'Progress & Status', gaya: 'berwarna', ikon: 'GraduationCap', warna: 'bg-amber-500', satuan: 'angka', konfigurasi: { items: [{ jd: JD_INSTRUKTUR, field: 'jumlah_instruktur_wi' }] } },
+  { tipe: 'kartu', judul: 'SDM Pelatih (Instruktur & Widyaiswara)', grup: 'Progress & Status', gaya: 'berwarna', ikon: 'GraduationCap', warna: 'bg-amber-500', satuan: 'angka', konfigurasi: { items: [{ jd: JD_INSTRUKTUR, field: 'jumlah' }] } },
   { tipe: 'kartu', judul: 'RM', grup: 'Realisasi Anggaran', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_rm'), pembanding: dana('pagu_rm'), pembandingLabel: 'Pagu' } },
   { tipe: 'kartu', judul: 'PNBP/BLU', grup: 'Realisasi Anggaran', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_pnbp_blu'), pembanding: dana('pagu_pnbp_blu'), pembandingLabel: 'Pagu' } },
   { tipe: 'kartu', judul: 'SBSN', grup: 'Realisasi Anggaran', gaya: 'putih', satuan: 'rupiah', konfigurasi: { items: dana('realisasi_sbsn'), pembanding: dana('pagu_sbsn'), pembandingLabel: 'Pagu' } },

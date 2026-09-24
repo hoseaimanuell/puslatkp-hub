@@ -18,25 +18,21 @@
 | UPT | BPPP Pontianak | `bppp.pontianak@kkp.go.id` | `Pontianak2026!` |
 | UPT | BPPP Makassar | `bppp.makassar@kkp.go.id` | `Makassar2026!` |
 | UPT | BPPP Sorong | `bppp.sorong@kkp.go.id` | `Sorong2026!` |
+| UPT | BDA Sukamandi | `bda.sukamandi@kkp.go.id` | `BdaSukamandi2026!` |
+| UPT | BPMPKP Buleleng | `bpmpkp.buleleng@kkp.go.id` | `BpmpkpBuleleng2026!` |
+| UPT | BPPPA Denpasar | `bpppa.denpasar@kkp.go.id` | `BpppaDenpasar2026!` |
+| UPT | BPPSDMKP | `bppsdmkp@kkp.go.id` | `Bppsdmkp2026!` |
+| UPT | BRBIH Depok | `brbih.depok@kkp.go.id` | `BrbihDepok2026!` |
+| UPT | BRPBAPPP Maros | `brpbappp.maros@kkp.go.id` | `BrpbapppMaros2026!` |
+| UPT | BRPI | `brpi@kkp.go.id` | `Brpi2026!` |
+| UPT | Pusat Pelatihan KP | `pusat.pelatihan.kp@kkp.go.id` | `PusatPelatihanKp2026!` |
 
-## Akun UPT tambahan (dibuat lewat menu Admin, bukan baseline instalasi)
-
-18 UPT total kini terdaftar di lingkungan ini — 8 organisasi berikut ditambahkan lewat **Kelola Akun UPT** setelah
-instalasi awal (bukan bagian dari `database/puslatkp1a.sql`, lihat catatan di
-[04-database.md](04-database.md#data-awal-seed)). Emailnya dapat diverifikasi lewat `profiles` di database;
-**passwordnya diberikan langsung ke Admin saat akun dibuat dan tidak tersimpan sebagai teks biasa di mana pun**
-(hanya hash bcrypt di `profiles.password_hash`) — bila lupa, reset lewat `npm run user:password` (lihat di bawah).
-
-| UPT | Email |
-| :-- | :-- |
-| BDA Sukamandi | `bda.sukamandi@kkp.go.id` |
-| BPMPKP Buleleng | `bpmpkp.buleleng@kkp.go.id` |
-| BPPPA Denpasar | `bpppa.denpasar@kkp.go.id` |
-| BPPSDMKP | `bppsdmkp@kkp.go.id` |
-| BRBIH Depok | `brbih.depok@kkp.go.id` |
-| BRPBAPPP Maros | `brpbappp.maros@kkp.go.id` |
-| BRPI | `brpi@kkp.go.id` |
-| Pusat Pelatihan KP | `pusat.pelatihan.kp@kkp.go.id` |
+Ke-18 UPT di atas ada di `database/puslatkp1a.sql` sejak `be/scripts/seed-data.js` disinkronkan (lihat
+[04-database.md](04-database.md#data-awal-seed)) — instalasi **baru** langsung mendapat semuanya tanpa langkah
+tambahan. Di lingkungan pengembangan yang sudah lama berjalan (dibuat sebelum sinkronisasi ini), 8 UPT terakhir
+mungkin sudah ada dengan **password berbeda** (dibuat manual lewat Kelola Akun UPT, password diberikan langsung ke
+Admin saat itu dan tidak tersimpan sebagai teks biasa) — gunakan tombol **Reset Password** di menu Kelola Akun UPT
+bila perlu menyamakan dengan tabel di atas.
 
 **Akun alias lama tidak disertakan.** Versi sebelumnya punya `admin@kp.go.id` (password `admin`) dan
 `upt@kp.go.id` (password `upt`). Karena password-nya mudah ditebak, keduanya sengaja tidak dimasukkan ke database.

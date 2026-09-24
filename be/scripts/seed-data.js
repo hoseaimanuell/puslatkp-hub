@@ -10,6 +10,14 @@ export const DEFAULT_UPTS = [
   { key: 'upt_pontianak', label: 'BPPP Pontianak', aktif: true },
   { key: 'upt_makassar', label: 'BPPP Makassar', aktif: true },
   { key: 'upt_sorong', label: 'BPPP Sorong', aktif: true },
+  { key: 'upt_bda_sukamandi', label: 'BDA Sukamandi', aktif: true },
+  { key: 'upt_bpmpkp_buleleng', label: 'BPMPKP Buleleng', aktif: true },
+  { key: 'upt_bpppa_denpasar', label: 'BPPPA Denpasar', aktif: true },
+  { key: 'upt_bppsdmkp', label: 'BPPSDMKP', aktif: true },
+  { key: 'upt_brbih_depok', label: 'BRBIH Depok', aktif: true },
+  { key: 'upt_brpbappp_maros', label: 'BRPBAPPP Maros', aktif: true },
+  { key: 'upt_brpi', label: 'BRPI', aktif: true },
+  { key: 'upt_pusat_pelatihan_kp', label: 'Pusat Pelatihan KP', aktif: true },
 ]
 
 export const DEFAULT_PROFILES = [
@@ -133,6 +141,80 @@ export const DEFAULT_PROFILES = [
     nama_lengkap: 'BPPP Jakarta (Alias)',
     email: 'upt@kp.go.id',
     password: 'upt',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+
+  // ── 8 Akun UPT tambahan ──
+  {
+    id: 'usr-upt-bda-sukamandi',
+    role: 'upt',
+    upt_key: 'upt_bda_sukamandi',
+    nama_lengkap: 'BDA Sukamandi',
+    email: 'bda.sukamandi@kkp.go.id',
+    password: 'BdaSukamandi2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-bpmpkp-buleleng',
+    role: 'upt',
+    upt_key: 'upt_bpmpkp_buleleng',
+    nama_lengkap: 'BPMPKP Buleleng',
+    email: 'bpmpkp.buleleng@kkp.go.id',
+    password: 'BpmpkpBuleleng2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-bpppa-denpasar',
+    role: 'upt',
+    upt_key: 'upt_bpppa_denpasar',
+    nama_lengkap: 'BPPPA Denpasar',
+    email: 'bpppa.denpasar@kkp.go.id',
+    password: 'BpppaDenpasar2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-bppsdmkp',
+    role: 'upt',
+    upt_key: 'upt_bppsdmkp',
+    nama_lengkap: 'BPPSDMKP',
+    email: 'bppsdmkp@kkp.go.id',
+    password: 'Bppsdmkp2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-brbih-depok',
+    role: 'upt',
+    upt_key: 'upt_brbih_depok',
+    nama_lengkap: 'BRBIH Depok',
+    email: 'brbih.depok@kkp.go.id',
+    password: 'BrbihDepok2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-brpbappp-maros',
+    role: 'upt',
+    upt_key: 'upt_brpbappp_maros',
+    nama_lengkap: 'BRPBAPPP Maros',
+    email: 'brpbappp.maros@kkp.go.id',
+    password: 'BrpbapppMaros2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-brpi',
+    role: 'upt',
+    upt_key: 'upt_brpi',
+    nama_lengkap: 'BRPI',
+    email: 'brpi@kkp.go.id',
+    password: 'Brpi2026!',
+    created_at: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'usr-upt-pusat-pelatihan-kp',
+    role: 'upt',
+    upt_key: 'upt_pusat_pelatihan_kp',
+    nama_lengkap: 'Pusat Pelatihan KP',
+    email: 'pusat.pelatihan.kp@kkp.go.id',
+    password: 'PusatPelatihanKp2026!',
     created_at: '2026-01-01T00:00:00.000Z',
   },
 ]
@@ -323,12 +405,16 @@ export const DEFAULT_FIELDS = [
   { id: 'f-4-14', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'jenis_diklat', label: 'Jenis Diklat', tipe: 'pilihan', opsi_pilihan: ['Reguler', 'Full Online', 'Blended'], wajib: false, urutan: 14, aktif: true },
   { id: 'f-4-15', jenis_data_id: JD_APARATUR_BULAN_ID, level: 'bulan', field_key: 'tanggal_pelatihan', label: 'Tanggal Pelatihan', tipe: 'tanggal', wajib: false, urutan: 15, aktif: true },
 
-  // 5. Data Instruktur dan WI (Minggu)
-  { id: 'f-5-1', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jumlah_instruktur_wi', label: 'Jumlah Instruktur dan Widyaiswara', tipe: 'angka', wajib: true, urutan: 1, aktif: true },
-  { id: 'f-5-2', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jenjang_jabatan_instruktur', label: 'Jenjang Jabatan Instruktur', tipe: 'pilihan', opsi_pilihan: ['Penyelia', 'Pertama', 'Muda', 'Madya'], wajib: false, urutan: 2, aktif: true },
-  { id: 'f-5-3', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jenjang_jabatan_widyaiswara', label: 'Jenjang Jabatan Widyaiswara', tipe: 'pilihan', opsi_pilihan: ['Pertama', 'Muda', 'Madya', 'Utama'], wajib: false, urutan: 3, aktif: true },
-  { id: 'f-5-4', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'instruktur_berdasarkan_keahlian', label: 'Instruktur Berdasarkan Keahlian', tipe: 'angka', wajib: false, urutan: 4, aktif: true },
-  { id: 'f-5-5', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'widyaiswara_berdasarkan_keahlian', label: 'Widyaiswara Berdasarkan Keahlian', tipe: 'angka', wajib: false, urutan: 5, aktif: true },
+  // 5. Data Instruktur dan WI (Minggu) — 1 baris = 1 jenis (Instruktur atau Widyaiswara), Jenjang Jabatan
+  // bersyarat tergantung pilihan Jenis (lihat opsi_bersyarat, migrasi_09)
+  { id: 'f-5-1', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jenis_instruktur_wi', label: 'Jenis', tipe: 'pilihan', opsi_pilihan: ['Instruktur', 'Widyaiswara'], wajib: true, urutan: 1, aktif: true },
+  { id: 'f-5-2', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jumlah', label: 'Jumlah', tipe: 'angka', wajib: true, urutan: 2, aktif: true },
+  {
+    id: 'f-5-3', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'jenjang_jabatan', label: 'Jenjang Jabatan', tipe: 'pilihan',
+    opsi_bersyarat: { depends_on: 'jenis_instruktur_wi', options: { Instruktur: ['Penyelia', 'Pertama', 'Muda', 'Madya'], Widyaiswara: ['Pertama', 'Muda', 'Madya', 'Utama'] } },
+    wajib: false, urutan: 3, aktif: true,
+  },
+  { id: 'f-5-4', jenis_data_id: JD_INSTRUKTUR_MINGGU_ID, level: 'minggu', field_key: 'berdasarkan_keahlian', label: 'Berdasarkan Keahlian', tipe: 'angka', wajib: false, urutan: 4, aktif: true },
 
   // 6. Data Instruktur dan Widyaiswara (Bulan)
   { id: 'f-6-1', jenis_data_id: JD_INSTRUKTUR_BULAN_ID, level: 'bulan', field_key: 'nama', label: 'Nama Lengkap', tipe: 'teks', wajib: true, urutan: 1, aktif: true },
@@ -392,5 +478,39 @@ export const DEFAULT_ACTIVITIES = [
     hambatan: false,
     interaksi: 'Dinas KPKP DKI Jakarta',
     feedback: 'Antusiasme peserta sangat tinggi',
+  },
+]
+
+// Dokumen bawaan menu "Dokumen & Panduan" (dulu hardcode di frontend, dipindah ke tabel dokumen_resmi migrasi_08)
+export const DEFAULT_DOCS = [
+  {
+    id: 'doc-1',
+    judul: 'Petunjuk Teknis Pelaporan Kinerja & Aktivitas Harian UPT',
+    deskripsi: 'Buku panduan pengisian daily activity, batas waktu pelaporan, dan rekonsiliasi data mingguan.',
+    kategori: 'Pedoman',
+    format: 'TXT',
+    isi: 'PETUNJUK TEKNIS PELAPORAN KINERJA & AKTIVITAS HARIAN UPT\nPUSLATKP - KEMENTERIAN KELAUTAN DAN PERIKANAN\n\n1. Ketentuan Umum:\n- Seluruh UPT wajib melaporkan aktivitas harian dan rekap mingguan.\n- Batas waktu input data mingguan adalah setiap akhir periode berjalan.\n- Rekonsiliasi bulanan mencocokkan total peserta 4 minggu dengan rincian data peserta by name.\n\n2. Format & Prosedur:\n- Gunakan template excel resmi untuk unggah massal.\n- Laporkan kendala dan output nyata kegiatan pada modul Daily Activity.',
+    file_name: 'Juknis_Pelaporan_Kinerja_UPT_PUSLATKP.txt',
+    mime: 'text/plain;charset=utf-8;',
+  },
+  {
+    id: 'doc-2',
+    judul: 'Kepmen KKP tentang Standar Pelatihan Kelautan dan Perikanan',
+    deskripsi: 'Dasar regulasi dan acuan standar kompetensi pelatihan aparatur dan masyarakat kelautan perikanan.',
+    kategori: 'Regulasi',
+    format: 'TXT',
+    isi: 'SALINAN KEPUTUSAN MENTERI KELAUTAN DAN PERIKANAN REPUBLIK INDONESIA\nTENTANG STANDAR PELATIHAN KELAUTAN DAN PERIKANAN\n\nMenimbang: Perlunya standardisasi mutu kompetensi sumber daya manusia kelautan dan perikanan...\nMengingat: Undang-Undang Kelautan dan Perikanan Republik Indonesia...\n\nMenetapkan:\nStandar Kurikulum, Silabus, Sarana Prasarana, dan Tenaga Pendidik / Instruktur / Widyaiswara pada Balai Pelatihan Kelautan dan Perikanan.',
+    file_name: 'Kepmen_Standar_Pelatihan_Kelautan_Perikanan.txt',
+    mime: 'text/plain;charset=utf-8;',
+  },
+  {
+    id: 'doc-3',
+    judul: 'Standar Operasional Prosedur (SOP) Validasi Selisih Data',
+    deskripsi: 'Protokol penyesuaian saat terdeteksi selisih angka antara level Bulanan dan Mingguan.',
+    kategori: 'SOP',
+    format: 'TXT',
+    isi: 'STANDAR OPERASIONAL PROSEDUR (SOP) VALIDASI DATA & REKONSILIASI SELISIH\n\nLangkah-langkah Penanganan:\n1. Buka modul Input Data pada jenis data yang bersangkutan.\n2. Cek banner status validasi pada tab Bulan.\n3. Periksa selisih jumlah baris nama peserta dengan angka total mingguan.\n4. Lakukan penyesuaian data baris atau perbarui nilai form mingguan sebelum periode dikunci oleh admin.',
+    file_name: 'SOP_Validasi_Selisih_Data_PUSLATKP.txt',
+    mime: 'text/plain;charset=utf-8;',
   },
 ]

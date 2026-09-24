@@ -61,11 +61,10 @@ Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut
 | `database/migrasi_09_opsi_bersyarat.sql` | Menambah `field_definitions.opsi_bersyarat` (kolom Pilihan dengan opsi tergantung kolom lain). Jalankan setelah migrasi_08, lalu restart be |
 | `database/migrasi_10_permintaan_hapus.sql` | Membuat tabel `permintaan_hapus` (menu Permintaan Hapus) — akun UPT tidak lagi langsung menghapus data, perlu persetujuan Admin. Jalankan setelah migrasi_09, lalu restart be |
 
-> ⚠️ **`database/puslatkp1a.sql` saat ini BELUM memuat migrasi_07/08/09/10** (`be/scripts/ddl.sql` dan
-> `seed-data.js` belum disinkronkan ulang setelah fitur-fitur itu ditambahkan — lihat catatan di
-> [04-database.md](04-database.md#data-awal-seed) dan bagian *Batasan yang diketahui* di bawah). Instalasi **baru**
-> tetap perlu menjalankan migrasi_07 → 08 → 09 → 10 secara manual setelah mengimpor `puslatkp1a.sql`, sama seperti
-> database lama. Migrasi_01–06 sudah termuat.
+> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–10 secara penuh** (`be/scripts/ddl.sql` dan `seed-data.js`
+> disinkronkan ulang — lihat catatan di [04-database.md](04-database.md#data-awal-seed)). **Instalasi baru cukup
+> mengimpor `puslatkp1a.sql` sekali saja**, tanpa perlu menjalankan berkas `migrasi_*.sql` satu per satu. Tabel di
+> atas hanya untuk **database lama** yang sudah terlanjur diimpor sebelum tanggal sinkronisasi ini.
 
 Jalankan setiap berkas **sekali saja** (menjalankan ulang sebagian besar menghasilkan galat "Duplicate column"/"Table
 already exists" yang tidak berbahaya). Backend tetap berjalan sebelum migrasi_02 dijalankan — tempat sampah otomatis
@@ -138,12 +137,13 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 
 ## Batasan yang diketahui
 
-* **`be/scripts/ddl.sql` dan `seed-data.js` belum disinkronkan** dengan seluruh perubahan skema/data yang dibuat
-  langsung lewat menu Admin atau migrasi_07/08/09 di lingkungan pengembangan ini (18 UPT, struktur kolom "Data
-  Aparatur"/"Data Instruktur dan WI" yang sudah direstrukturisasi, dsb.). Menjalankan `npm run db:build` sekarang
-  akan menghasilkan `puslatkp1a.sql` yang **masih baseline lama** (10 UPT, 9 jenis data). Lihat
-  [04-database.md](04-database.md#data-awal-seed) dan bagian *Mengubah skema database* di atas sebelum
-  menjalankan `db:build` untuk instalasi baru.
+* **Jenis data uji coba di lingkungan pengembangan ini tidak ikut disemai.** Saat menyinkronkan `seed-data.js`
+  (lihat di atas), ditemukan beberapa jenis data hasil eksperimen langsung lewat menu Kelola Jenis Data di database
+  pengembangan ini yang tampak seperti data uji, bukan desain permanen: jenis data berkunci `zzz`, `data_masyarakat_2`
+  (kosong, tanpa kolom), `data_aparatur_2` (duplikat "Data Aparatur"), dan jenis data asli `data_aparatur` yang
+  judulnya berubah jadi "Data Instruktur dan WI" dengan kolom yang disederhanakan. **Semua itu sengaja TIDAK
+  dimasukkan** ke `seed-data.js`/`puslatkp1a.sql` — bila ternyata salah satu memang permanen, beri tahu agar
+  ditambahkan dengan benar.
 * **`Rekap Triwulan & Tahun`** ("Total Realisasi Anggaran") masih dijumlahkan dari RM + PNBP/BLU + SBSN (belum
   disamakan dengan perbaikan yang sudah diterapkan di **Dashboard**, yang totalnya dari Masyarakat + Aparatur +
   Data Belanja Modal). Berpotensi memberi angka yang berbeda antara dua halaman itu untuk periode yang sama.

@@ -19,11 +19,10 @@
 2. Buka phpMyAdmin (`http://localhost/phpmyadmin`, login `root`, password kosong bila default).
 3. Klik **New** → *Database name*: `Puslatkp1a`, *Collation*: `utf8mb4_unicode_ci` → **Create**.
 4. Pilih database `Puslatkp1a` → tab **Import** → *Choose file* → `database/puslatkp1a.sql` → **Go**.
-   Hasilnya: 10 tabel + 1 view, 10 UPT, 9 Jenis Data beserta 87 definisi kolom, 65 periode 2026, dan 11 akun.
-   Ini baseline instalasi baru — belum termasuk migrasi_07/08/09/10 (jalankan setelahnya, lihat
-   [07-pemeliharaan.md](07-pemeliharaan.md#peningkatan-dari-versi-sebelumnya-migrasi-database)) maupun
-   UPT/Jenis Data tambahan yang mungkin sudah dibuat di instalasi lain lewat menu Admin (lihat
-   [04-database.md](04-database.md#data-awal-seed)).
+   Hasilnya: 16 tabel + 1 view (skema lengkap, sudah termasuk migrasi_01–10 — **tidak perlu** menjalankan berkas
+   `migrasi_*.sql` terpisah untuk instalasi baru), 18 UPT, 9 Jenis Data beserta 86 definisi kolom, 3 Dokumen & Panduan
+   bawaan, 65 periode 2026, dan 19 akun. Ganti seluruh password bawaan sebelum dipakai sungguhan — lihat
+   [05-akun-dan-keamanan.md](05-akun-dan-keamanan.md).
 5. *(Opsional, untuk demo)* Import juga `database/puslatkp1a_contoh_data.sql` (500 data peserta contoh + rekap
    mingguan September 2026 + 2 daily activity).
 

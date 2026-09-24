@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS jenis_data (
   pasangan_mingguan_id CHAR(36)     NULL,
   publik_boleh_lihat   TINYINT(1)   NOT NULL DEFAULT 0,
   multi_baris          TINYINT(1)   NOT NULL DEFAULT 0 COMMENT 'Mingguan: boleh >1 pelatihan/baris per minggu',
+  kumulatif_bulanan    TINYINT(1)   NOT NULL DEFAULT 0 COMMENT 'Bulanan "Per nama": UPT unggah roster penuh tiap bulan, bulan terbaru menggantikan bulan sebelumnya',
   aktif                TINYINT(1)   NOT NULL DEFAULT 1,
   dibuat_oleh          CHAR(36)     NULL,
   created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -82,6 +83,7 @@ CREATE TABLE IF NOT EXISTS field_definitions (
   label         VARCHAR(255) NOT NULL,
   tipe          ENUM('angka','teks','teks_panjang','tanggal','pilihan','file') NOT NULL DEFAULT 'teks',
   opsi_pilihan  JSON         NULL,
+  opsi_bersyarat JSON        NULL COMMENT 'Kolom pilihan: opsi tergantung nilai kolom lain — {depends_on, options: {nilai: [opsi...]}}',
   agregasi      ENUM('sum','last','avg','max') NOT NULL DEFAULT 'sum' COMMENT 'Cara rekap bulan/triwulan/tahun dari data mingguan (last = nilai kumulatif terakhir)',
   wajib         TINYINT(1)   NOT NULL DEFAULT 0,
   is_identitas  TINYINT(1)   NOT NULL DEFAULT 0,
@@ -283,7 +285,49 @@ CREATE TABLE IF NOT EXISTS field_files (
   CONSTRAINT fk_ff_by  FOREIGN KEY (uploaded_by)   REFERENCES profiles(id)     ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 14. View publik (agregat saja, tanpa data pribadi)
+-- 14. Repositori Dokumen & Panduan (tab pertama menu Dokumen & Arsip, khusus Admin)
+CREATE TABLE IF NOT EXISTS dokumen_resmi (
+  id                CHAR(36)     NOT NULL,
+  judul             VARCHAR(255) NOT NULL,
+  deskripsi         VARCHAR(500) NULL,
+  kategori          VARCHAR(50)  NOT NULL DEFAULT 'Pedoman',
+  format            VARCHAR(10)  NOT NULL DEFAULT 'TXT',
+  isi               LONGTEXT     NULL,
+  file_name         VARCHAR(255) NULL,
+  mime              VARCHAR(100) NULL,
+  created_by        CHAR(36)     NULL,
+  created_by_label  VARCHAR(190) NULL,
+  created_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_dokres_by FOREIGN KEY (created_by) REFERENCES profiles(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 15. Permintaan Hapus (akun UPT tidak menghapus langsung, perlu persetujuan Admin)
+CREATE TABLE IF NOT EXISTS permintaan_hapus (
+  id                  CHAR(36)     NOT NULL,
+  tabel               VARCHAR(30)  NOT NULL COMMENT 'rekap_nilai | data_entries | dokumen_upload',
+  upt_key             VARCHAR(50)  NOT NULL,
+  filter_json         JSON         NOT NULL COMMENT 'Filter WHERE (sudah termasuk upt_key) untuk dieksekusi ulang saat disetujui',
+  ringkasan           VARCHAR(500) NULL,
+  jumlah_baris        INT          NOT NULL DEFAULT 0,
+  alasan              VARCHAR(500) NULL COMMENT 'Alasan opsional dari UPT saat mengajukan',
+  status              VARCHAR(10)  NOT NULL DEFAULT 'pending' COMMENT 'pending | disetujui | ditolak',
+  catatan_admin       VARCHAR(1000) NULL,
+  requested_by        CHAR(36)     NULL,
+  requested_by_label  VARCHAR(190) NULL,
+  reviewed_by         CHAR(36)     NULL,
+  reviewed_by_label   VARCHAR(190) NULL,
+  reviewed_at         DATETIME     NULL,
+  created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_permintaan_status (status),
+  KEY idx_permintaan_upt (upt_key),
+  CONSTRAINT fk_permintaan_upt FOREIGN KEY (upt_key) REFERENCES upt_list(`key`) ON DELETE CASCADE,
+  CONSTRAINT fk_permintaan_requested_by FOREIGN KEY (requested_by) REFERENCES profiles(id) ON DELETE SET NULL,
+  CONSTRAINT fk_permintaan_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES profiles(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 16. View publik (agregat saja, tanpa data pribadi)
 CREATE OR REPLACE VIEW v_publik_rekap AS
 SELECT
   de.jenis_data_id,

@@ -195,19 +195,19 @@ Jumlah baris `data_entries` per jenis data & periode, **hanya** untuk jenis data
 
 | Isi | Jumlah |
 | :-- | :-- |
-| UPT (BPPP Jakarta, Medan, Banyuwangi, Tegal, Bitung, Ambon, Padang, Pontianak, Makassar, Sorong) | 10 |
-| Akun (1 admin + 10 UPT) | 11 |
+| UPT (10 BPPP + BDA Sukamandi, BPMPKP Buleleng, BPPPA Denpasar, BPPSDMKP, BRBIH Depok, BRPBAPPP Maros, BRPI, Pusat Pelatihan KP) | 18 |
+| Akun (1 admin + 18 UPT) | 19 |
 | Jenis Data | 9 |
-| Definisi kolom | 87 |
+| Definisi kolom | 86 |
+| Dokumen & Panduan bawaan | 3 |
 | Periode 2026 | 65 |
 
-> **Baseline instalasi baru saja** (isi `database/puslatkp1a.sql`, dari `be/scripts/seed-data.js` + `ddl.sql`).
-> UPT/akun/Jenis Data/kolom baru yang ditambahkan lewat menu Admin (**Kelola Akun UPT**, **Kelola Jenis Data**,
-> termasuk wizard **Buat dari Excel**) hanya tersimpan di database yang berjalan — **belum otomatis ikut ke dalam
-> `puslatkp1a.sql`**. Bila instalasi ini sudah dipakai untuk kerja nyata, jumlah sebenarnya bisa lebih besar (lihat
-> [05-akun-dan-keamanan.md](05-akun-dan-keamanan.md) untuk daftar UPT/akun yang sudah dibuat menyusul baseline).
-> Untuk membuat `puslatkp1a.sql` ikut memuat penambahan itu, perbarui `be/scripts/seed-data.js`/`ddl.sql` lalu
-> jalankan `npm run db:build` (lihat [07-pemeliharaan.md](07-pemeliharaan.md#mengubah-skema-database)).
+> **Baseline instalasi baru** (isi `database/puslatkp1a.sql`, dari `be/scripts/seed-data.js` + `ddl.sql`, mencakup
+> migrasi_01–10 secara penuh — lihat [07-pemeliharaan.md](07-pemeliharaan.md#peningkatan-dari-versi-sebelumnya-migrasi-database)).
+> UPT/akun/Jenis Data/kolom **tambahan** yang dibuat lewat menu Admin setelah instalasi (**Kelola Akun UPT**,
+> **Kelola Jenis Data**, termasuk wizard **Buat dari Excel**) hanya tersimpan di database yang berjalan — tidak
+> otomatis ikut ke dalam `puslatkp1a.sql`. Untuk memasukkannya ke baseline, perbarui `be/scripts/seed-data.js`/`ddl.sql`
+> lalu jalankan `npm run db:build` (lihat [07-pemeliharaan.md](07-pemeliharaan.md#mengubah-skema-database)).
 
 ## Backup & restore
 
