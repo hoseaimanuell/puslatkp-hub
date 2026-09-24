@@ -3,7 +3,7 @@
  * Sidebar collapsible: 256px (terbuka) / 64px (tertutup)
  * Role-aware: menu Admin hanya untuk Admin
  */
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   LayoutDashboard, Zap, ClipboardList, Database,
   Users, Settings, BarChart2, FileText,
@@ -11,25 +11,49 @@ import {
   Building2, Globe, CalendarDays, Trash2, CalendarRange, Upload, LayoutGrid, SlidersHorizontal, Inbox
 } from 'lucide-react'
 import { useAuth } from '../AuthContext'
+import { db, getFeatures } from '../lib/db'
 
 const LOGO_MARK = 'P'
+const PERMINTAAN_POLL_MS = 60000 // cek permintaan hapus baru tiap 1 menit
 
 export default function Sidebar({ activePage, onNavigate, collapsed, onToggle }) {
   const { isAdmin, profile } = useAuth()
   const [advOpen, setAdvOpen] = useState(false)
+  const [permintaanPending, setPermintaanPending] = useState(0)
   const ADVANCED = [[CalendarRange, 'Kelola Periode', 'kelola-periode'], [Upload, 'Impor Data Historis', 'impor-historis'], [Trash2, 'Tempat Sampah', 'tempat-sampah']]
   // Terbuka otomatis bila halaman aktif ada di dalamnya
   const advOpenEffective = advOpen || ADVANCED.some(([, , page]) => page === activePage)
+
+  const loadPermintaanCount = useCallback(async () => {
+    if (!isAdmin) return
+    const feat = await getFeatures()
+    if (!feat.permintaanHapus) return
+    const { count } = await db.from('permintaan_hapus').select('*', { head: true }).eq('status', 'pending')
+    setPermintaanPending(count || 0)
+  }, [isAdmin])
+
+  // Muat ulang tiap kali pindah halaman (mis. baru saja menyetujui/menolak di Permintaan Hapus) + polling berkala
+  useEffect(() => {
+    loadPermintaanCount()
+  }, [activePage, loadPermintaanCount])
+
+  useEffect(() => {
+    const t = setInterval(loadPermintaanCount, PERMINTAAN_POLL_MS)
+    return () => clearInterval(t)
+  }, [loadPermintaanCount])
 
   const NavItem = ({ icon: Icon, label, page, badge }) => {
     const active = activePage === page
     return (
       <button
         onClick={() => onNavigate(page)}
-        className={`sidebar-nav-item w-full ${active ? 'active' : ''}`}
-        title={collapsed ? label : undefined}
+        className={`sidebar-nav-item w-full relative ${active ? 'active' : ''}`}
+        title={collapsed ? (badge ? `${label} (${badge})` : label) : undefined}
       >
         <Icon size={18} className="flex-shrink-0" />
+        {collapsed && badge && (
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500" />
+        )}
         {!collapsed && (
           <>
             <span className="flex-1 text-left">{label}</span>
@@ -84,7 +108,7 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
             <SectionLabel label="Administrasi" />
             <NavItem icon={FileText} label="Dokumen & Arsip" page="dokumen-arsip" />
             <NavItem icon={Users} label="Kelola Akun UPT" page="kelola-upt" />
-            <NavItem icon={Inbox} label="Permintaan Hapus" page="permintaan-hapus" />
+            <NavItem icon={Inbox} label="Permintaan Hapus" page="permintaan-hapus" badge={permintaanPending > 0 ? permintaanPending : null} />
             <NavItem icon={Settings} label="Kelola Jenis Data" page="kelola-jenis-data" />
             <NavItem icon={LayoutGrid} label="Kelola Dashboard" page="kelola-dashboard" />
 

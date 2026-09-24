@@ -81,6 +81,11 @@ function SortableField({ field, onToggle, onEdit, onDelete }) {
             Opsi: {field.opsi_pilihan.join(', ')}
           </p>
         )}
+        {field.tipe === 'pilihan' && field.opsi_bersyarat && (
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 truncate">
+            Opsi tergantung kolom "{field.opsi_bersyarat.depends_on}": {Object.entries(field.opsi_bersyarat.options || {}).map(([k, v]) => `${k} → ${(v || []).join('/')}`).join('; ')}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center gap-1">
@@ -156,6 +161,9 @@ export default function KelolaJenisData() {
     is_identitas: false,
     opsi_text: '',
     agregasi: 'sum',
+    opsi_bersyarat_enabled: false,
+    depends_on: '',
+    bersyarat_map: {},
   })
 
   const [saving, setSaving] = useState(false)
@@ -267,8 +275,24 @@ export default function KelolaJenisData() {
     setSaving(true)
 
     try {
-      const opsi = fieldForm.opsi_text
+      const useBersyarat = fieldForm.tipe === 'pilihan' && fieldForm.opsi_bersyarat_enabled
+      if (useBersyarat && !fieldForm.depends_on) {
+        showToast('Pilih kolom yang menentukan opsi bersyarat.', 'error')
+        setSaving(false)
+        return
+      }
+
+      const opsi = !useBersyarat && fieldForm.opsi_text
         ? fieldForm.opsi_text.split(',').map(s => s.trim()).filter(Boolean)
+        : null
+
+      const opsiBersyarat = useBersyarat
+        ? {
+            depends_on: fieldForm.depends_on,
+            options: Object.fromEntries(
+              Object.entries(fieldForm.bersyarat_map || {}).map(([k, v]) => [k, String(v || '').split(',').map(s => s.trim()).filter(Boolean)]),
+            ),
+          }
         : null
 
       const payload = {
@@ -280,6 +304,7 @@ export default function KelolaJenisData() {
         wajib: fieldForm.wajib,
         is_identitas: fieldForm.is_identitas,
         opsi_pilihan: opsi,
+        opsi_bersyarat: opsiBersyarat,
         agregasi: fieldForm.tipe === 'angka' ? fieldForm.agregasi : 'sum',
       }
 
@@ -413,6 +438,11 @@ export default function KelolaJenisData() {
       is_identitas: !!field.is_identitas,
       opsi_text: (field.opsi_pilihan || []).join(', '),
       agregasi: field.agregasi || defaultAgregasi(field.field_key),
+      opsi_bersyarat_enabled: !!field.opsi_bersyarat,
+      depends_on: field.opsi_bersyarat?.depends_on || '',
+      bersyarat_map: field.opsi_bersyarat
+        ? Object.fromEntries(Object.entries(field.opsi_bersyarat.options || {}).map(([k, v]) => [k, (v || []).join(', ')]))
+        : {},
     })
     setAddFieldModal(true)
   }
@@ -427,6 +457,9 @@ export default function KelolaJenisData() {
       is_identitas: false,
       opsi_text: '',
       agregasi: 'sum',
+      opsi_bersyarat_enabled: false,
+      depends_on: '',
+      bersyarat_map: {},
     })
     setAddFieldModal(true)
   }
@@ -647,43 +680,102 @@ export default function KelolaJenisData() {
               </div>
             )}
 
-            {/* Jika tipe pilihan: sediakan input opsi & quick preset */}
-            {fieldForm.tipe === 'pilihan' && (
-              <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800 space-y-3">
-                <div>
-                  <label className="form-label text-blue-900 dark:text-blue-200">
-                    Daftar Opsi Pilihan (Ketik bebas, pisahkan dengan koma)
+            {/* Jika tipe pilihan: sediakan input opsi & quick preset, atau opsi bersyarat tergantung kolom lain */}
+            {fieldForm.tipe === 'pilihan' && (() => {
+              const driverCandidates = fields.filter(f => f.tipe === 'pilihan' && f.opsi_pilihan?.length && f.id !== editingField?.id)
+              const driverField = driverCandidates.find(f => f.field_key === fieldForm.depends_on)
+              return (
+                <div className="p-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800 space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={fieldForm.opsi_bersyarat_enabled}
+                      onChange={e => setFieldForm(f => ({ ...f, opsi_bersyarat_enabled: e.target.checked }))}
+                      className="w-4 h-4 rounded text-blue-600"
+                      disabled={!driverCandidates.length}
+                    />
+                    <span className="text-xs font-medium text-blue-900 dark:text-blue-200">
+                      Opsi tergantung kolom lain (bersyarat)
+                    </span>
                   </label>
-                  <textarea
-                    rows={2}
-                    value={fieldForm.opsi_text}
-                    onChange={e => setFieldForm(f => ({ ...f, opsi_text: e.target.value }))}
-                    className="form-input text-xs"
-                    placeholder="mis. Opsi 1, Opsi 2, Opsi 3"
-                    required
-                  />
-                </div>
+                  {!driverCandidates.length && (
+                    <p className="text-[11px] text-gray-500">
+                      Belum ada kolom bertipe Pilihan (dengan opsi tetap) lain di level ini untuk dijadikan acuan.
+                    </p>
+                  )}
 
-                <div>
-                  <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1">
-                    <Sparkles size={12} className="text-amber-500" />
-                    Atau klik preset pilihan siap pakai:
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {QUICK_PRESETS.map(p => (
-                      <button
-                        key={p.label}
-                        type="button"
-                        onClick={() => setFieldForm(f => ({ ...f, opsi_text: p.opsi }))}
-                        className="text-[11px] px-2.5 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-400 rounded-lg transition-colors text-gray-700 dark:text-gray-200"
-                      >
-                        + {p.label}
-                      </button>
-                    ))}
-                  </div>
+                  {fieldForm.opsi_bersyarat_enabled ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="form-label text-blue-900 dark:text-blue-200">Tergantung kolom</label>
+                        <select
+                          value={fieldForm.depends_on}
+                          onChange={e => setFieldForm(f => ({ ...f, depends_on: e.target.value, bersyarat_map: {} }))}
+                          className="form-select text-xs"
+                        >
+                          <option value="">— pilih kolom —</option>
+                          {driverCandidates.map(f => <option key={f.id} value={f.field_key}>{f.label}</option>)}
+                        </select>
+                      </div>
+                      {driverField && (
+                        <div className="space-y-2">
+                          <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                            Opsi kolom ini untuk tiap nilai "{driverField.label}" (pisahkan dengan koma):
+                          </p>
+                          {driverField.opsi_pilihan.map(val => (
+                            <div key={val}>
+                              <label className="text-[11px] text-gray-600 dark:text-gray-300">{val}</label>
+                              <input
+                                type="text"
+                                value={fieldForm.bersyarat_map[val] || ''}
+                                onChange={e => setFieldForm(f => ({ ...f, bersyarat_map: { ...f.bersyarat_map, [val]: e.target.value } }))}
+                                className="form-input text-xs"
+                                placeholder={`Opsi bila "${driverField.label}" = ${val}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="form-label text-blue-900 dark:text-blue-200">
+                          Daftar Opsi Pilihan (Ketik bebas, pisahkan dengan koma)
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={fieldForm.opsi_text}
+                          onChange={e => setFieldForm(f => ({ ...f, opsi_text: e.target.value }))}
+                          className="form-input text-xs"
+                          placeholder="mis. Opsi 1, Opsi 2, Opsi 3"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1">
+                          <Sparkles size={12} className="text-amber-500" />
+                          Atau klik preset pilihan siap pakai:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {QUICK_PRESETS.map(p => (
+                            <button
+                              key={p.label}
+                              type="button"
+                              onClick={() => setFieldForm(f => ({ ...f, opsi_text: p.opsi }))}
+                              className="text-[11px] px-2.5 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-400 rounded-lg transition-colors text-gray-700 dark:text-gray-200"
+                            >
+                              + {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             <div className="grid grid-cols-2 gap-4 pt-1">
               <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">

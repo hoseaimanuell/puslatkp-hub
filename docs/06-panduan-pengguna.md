@@ -348,8 +348,10 @@ Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun hal
   [Input Bulanan](#input-bulanan).
 * **Opsi bersyarat** untuk kolom bertipe *Pilihan*: opsinya bisa dibuat berbeda tergantung nilai kolom pilihan
   lain di baris yang sama (mis. "Jenjang Jabatan" berbeda untuk Instruktur vs Widyaiswara pada *Data Instruktur
-  dan WI*). Belum ada editor visual untuk ini di UI — perlu dikonfigurasi lewat `POST /api/db/query` langsung ke
-  kolom `field_definitions.opsi_bersyarat` (lihat [04-database.md](04-database.md#field_definitions--form-builder)).
+  dan WI*). Saat menambah/mengubah kolom bertipe Pilihan, centang **"Opsi tergantung kolom lain (bersyarat)"**,
+  pilih kolom *Pilihan* lain di level yang sama sebagai acuan (kolom acuan harus sudah punya opsi tetap sendiri),
+  lalu isi opsi untuk **setiap** nilai kolom acuan itu. Tombol ini nonaktif bila belum ada kolom Pilihan lain yang
+  bisa dijadikan acuan — buat kolom acuannya (opsi tetap biasa) terlebih dahulu.
 * Perubahan langsung berlaku bagi semua pengguna **tanpa deploy ulang** — form input dan template Excel mengikuti
   definisi terbaru.
 * Menghapus Jenis Data menghapus juga kolom, nilai rekap, data rincian, dan berkas terkait (ada konfirmasi).

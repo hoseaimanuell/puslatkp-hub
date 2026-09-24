@@ -147,8 +147,6 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 * **`Rekap Triwulan & Tahun`** ("Total Realisasi Anggaran") masih dijumlahkan dari RM + PNBP/BLU + SBSN (belum
   disamakan dengan perbaikan yang sudah diterapkan di **Dashboard**, yang totalnya dari Masyarakat + Aparatur +
   Data Belanja Modal). Berpotensi memberi angka yang berbeda antara dua halaman itu untuk periode yang sama.
-* **Kolom `opsi_bersyarat`** (dropdown dengan opsi tergantung kolom lain) belum punya editor di UI Kelola Jenis
-  Data — dikonfigurasi lewat `POST /api/db/query` langsung (lihat [04-database.md](04-database.md#field_definitions--form-builder)).
 * **Berkas unggahan** (kolom bertipe `file`, Arsip Historis) disimpan di disk (`STORAGE_DIR`); **berkas mode lama**
   (`dokumen_upload`, jenis data `upload_file`) masih disimpan base64 di database (LONGTEXT). Daftar berkas memuat
   isi berkas; untuk volume besar pisahkan ke penyimpanan berkas.
