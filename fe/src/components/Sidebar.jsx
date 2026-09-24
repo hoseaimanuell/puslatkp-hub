@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Zap, ClipboardList, Database,
   Users, Settings, BarChart2, FileText,
   ChevronRight, ChevronLeft, ChevronDown,
-  Building2, Globe, CalendarDays, Trash2, CalendarRange, Upload, LayoutGrid, SlidersHorizontal
+  Building2, Globe, CalendarDays, Trash2, CalendarRange, Upload, LayoutGrid, SlidersHorizontal, Inbox
 } from 'lucide-react'
 import { useAuth } from '../AuthContext'
 
@@ -84,6 +84,7 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
             <SectionLabel label="Administrasi" />
             <NavItem icon={FileText} label="Dokumen & Arsip" page="dokumen-arsip" />
             <NavItem icon={Users} label="Kelola Akun UPT" page="kelola-upt" />
+            <NavItem icon={Inbox} label="Permintaan Hapus" page="permintaan-hapus" />
             <NavItem icon={Settings} label="Kelola Jenis Data" page="kelola-jenis-data" />
             <NavItem icon={LayoutGrid} label="Kelola Dashboard" page="kelola-dashboard" />
 

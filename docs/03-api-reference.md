@@ -24,13 +24,14 @@ Base URL: `http://localhost:4000/api` (ubah lewat `NEXT_PUBLIC_API_URL` di front
 Cek server & koneksi database. Tanpa autentikasi.
 
 ```json
-{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "arsip": true, "fieldFiles": true } }
+{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "arsip": true, "fieldFiles": true } }
 ```
 
-`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09).
+`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10).
 Bila belum, fiturnya nonaktif dan aplikasi tetap berjalan. `kumulatifBulanan` = kolom `jenis_data.kumulatif_bulanan`
 (migrasi_07), `dokumenResmi` = tabel `dokumen_resmi` (migrasi_08), `opsiBersyarat` = kolom
-`field_definitions.opsi_bersyarat` (migrasi_09).
+`field_definitions.opsi_bersyarat` (migrasi_09), `permintaanHapus` = tabel `permintaan_hapus` (migrasi_10) — bila
+`false`, akun UPT tetap menghapus data secara langsung seperti sebelumnya (tidak diblokir diam-diam).
 
 ## `POST /api/auth/login`
 
@@ -74,6 +75,22 @@ baru. Body:
 ```
 
 Validasi: password ≥ 8 karakter, akun harus ada (404 bila tidak). Respons: `{ "success": true }`.
+
+## `POST /api/permintaan-hapus/:id/setujui` *(Admin)*
+
+Menyetujui satu permintaan hapus (lihat tabel `permintaan_hapus` di [04-database.md](04-database.md)) — benar-benar
+menjalankan penghapusannya (masuk Tempat Sampah seperti biasa, bisa dipulihkan 30 hari). Permintaan harus berstatus
+`pending` (409 bila sudah diproses, 404 bila tidak ada). Respons: `{ "success": true, "dihapus": <jumlah baris> }`.
+
+## `POST /api/permintaan-hapus/:id/tolak` *(Admin)*
+
+Menolak satu permintaan hapus — data **tidak disentuh**. Body opsional:
+
+```json
+{ "catatan_admin": "alasan penolakan (opsional, terlihat oleh UPT)" }
+```
+
+Respons: `{ "success": true }`.
 
 ## `POST /api/db/query`
 
@@ -210,13 +227,22 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 | `v_publik_rekap` (view) | ✔ baca | ✔ | — | ✔ |
 | `periods`, `field_definitions` | — | semua | — | baca/tulis |
 | `upt_list` | — | **own** (hanya UPT-nya) | — | baca/tulis (semua UPT) |
-| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat) | semua |
-| `daily_activity`, `dokumen_upload` | — | own | own | semua |
+| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat); **hapus own** → permintaan (butuh migrasi_10; lihat di bawah) | semua |
+| `daily_activity` | — | own | own | semua |
+| `dokumen_upload` | — | own | own; **hapus own** → permintaan (butuh migrasi_10) | semua |
 | `dashboard_widgets` | — | semua (baca) | — | baca/tulis (menu Kelola Dashboard; butuh migrasi_05) |
 | `dokumen_resmi` | — | ✔ (lewat API; menu **disembunyikan** untuk UPT) | — | baca/tulis (menu Dokumen & Arsip; butuh migrasi_08) |
+| `permintaan_hapus` | — | own (baca saja) | — (dibuat server saat UPT hapus data di atas) | baca semua; setujui/tolak lewat `/api/permintaan-hapus/:id/...` (butuh migrasi_10) |
 | `field_files` | — | own | — (lewat `/api/field-files`) | baca semua |
 | `audit_log` | — | — | hanya aksi `import_kolom_tidak_dikenal` (kolom `oleh` dicap server) | baca + `import_kolom_tidak_dikenal`, `impor_historis` |
 | `profiles` | — | self | — | baca, ubah, hapus (buat akun lewat `/auth/users`) |
+
+> **Hapus akun UPT (migrasi_10).** Tombol Hapus/Kosongkan pada `rekap_nilai`, `data_entries`, `dokumen_upload` milik
+> akun UPT tidak langsung menghapus — server membuat baris `permintaan_hapus`, dan data baru benar-benar terhapus
+> setelah Admin menyetujuinya (menu **Permintaan Hapus**). Mengedit/mengosongkan isian biasa saat masih dalam sesi
+> input (tanpa lewat tombol Hapus) tetap langsung tersimpan seperti biasa — lihat `spec.liveEdit` di
+> `be/src/lib/query.js`. Tanpa migrasi_10, akun UPT kembali menghapus langsung seperti sebelumnya (tidak diblokir
+> diam-diam — lihat `features.permintaanHapus` di atas).
 
 > **Pembatas menu vs pembatas server.** Sebagian besar tabel di atas dibatasi di **server** (`be/src/schema.js`/`query.js`) —
 > itulah pembatas yang sesungguhnya. `dokumen_resmi` adalah pengecualian: server mengizinkan semua akun login

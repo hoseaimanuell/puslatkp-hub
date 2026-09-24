@@ -26,6 +26,8 @@ import {
 import BulanAgregatView from './BulanAgregatView'
 import BulanUploadView from './BulanUploadView'
 
+const PENDING_MSG = 'Permintaan hapus terkirim ke Admin. Data baru benar-benar terhapus setelah Admin menyetujuinya di menu Permintaan Hapus.'
+
 export function isBulananJenisData(jd) {
   if (!jd) return false
   // level_utama (NOT NULL di database) adalah penentu utama: 'bulan' = Input Bulanan, 'minggu' = Input Mingguan
@@ -395,7 +397,9 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
     }
     const removed = Object.keys(savedSnap).map(Number).filter(n => !keep.has(n))
 
-    const scoped = () => db.from('rekap_nilai').delete()
+    // .liveEdit(): mengosongkan kolom/menghapus baris saat MENGEDIT form minggu ini tetap langsung tersimpan,
+    // tidak dialihkan jadi permintaan hapus (beda dengan tombol "Hapus"/"Kosongkan Data" yang eksplisit).
+    const scoped = () => db.from('rekap_nilai').delete().liveEdit()
       .eq('jenis_data_id', jenisData.id).eq('upt_key', currentUptKey).eq('period_id', activePeriod.id)
     const onConflict = features.multiBaris ? 'jenis_data_id,upt_key,period_id,baris_ke,field_key' : 'jenis_data_id,upt_key,period_id,field_key'
 
@@ -448,8 +452,9 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
 
   async function deleteEntry(id) {
     if (!confirm('Hapus baris data ini?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.')) return
-    const { error } = await db.from('data_entries').delete().eq('id', id)
+    const { error, pending } = await db.from('data_entries').delete().eq('id', id)
     if (error) alert('Gagal menghapus: ' + error.message)
+    else if (pending) alert(PENDING_MSG)
     loadData()
   }
 
@@ -482,8 +487,9 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
 
   async function deleteDuplicates() {
     if (!confirm(`Hapus ${duplicateEntryIds.length} baris duplikat?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.`)) return
-    const { error } = await db.from('data_entries').delete().in('id', duplicateEntryIds)
+    const { error, pending } = await db.from('data_entries').delete().in('id', duplicateEntryIds)
     if (error) { alert('Gagal menghapus: ' + error.message); return }
+    if (pending) alert(PENDING_MSG)
     loadData()
   }
 
@@ -494,9 +500,10 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
 
   async function confirmClear() {
     const { kind } = clearDialog
-    const { error } = await clearQuery(kind, db.from(CLEAR_TABLE[kind]).delete())
+    const { error, pending } = await clearQuery(kind, db.from(CLEAR_TABLE[kind]).delete())
     if (error) return { error }
     setClearDialog(null)
+    if (pending) alert(PENDING_MSG)
     await loadData()
     return {}
   }

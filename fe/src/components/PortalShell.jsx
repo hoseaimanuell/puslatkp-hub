@@ -24,6 +24,7 @@ const PAGE_TITLES = {
   'kelola-dashboard': 'Kelola Dashboard',
   'tempat-sampah': 'Tempat Sampah & Catatan Penghapusan',
   'dokumen-arsip': 'Dokumen & Arsip',
+  'permintaan-hapus': 'Permintaan Hapus',
 }
 
 export default function PortalShell({ children }) {

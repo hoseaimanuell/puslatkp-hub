@@ -48,11 +48,18 @@ Bila tetap dibutuhkan untuk uji coba lokal, buat lewat menu *Kelola Akun UPT* (U
 | :-- | :-- | :-- | :-- |
 | Melihat data | Semua UPT | Hanya UPT sendiri | Agregat jenis data publik |
 | Input/ubah data | Semua UPT, kapan saja | UPT sendiri, **sebelum deadline** periode | — |
+| Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | **Perlu persetujuan Admin** (menu Permintaan Hapus) | — |
 | Kelola akun UPT & daftar UPT | ✔ | — | — |
 | Kelola Jenis Data & kolom | ✔ | — | — |
 | Rekap & ekspor semua UPT | ✔ | — | — |
 
 Detail per tabel: [03-api-reference.md](03-api-reference.md#matriks-hak-akses-per-tabel).
+
+**Hapus data akun UPT perlu persetujuan Admin.** Tombol Hapus/Kosongkan/Hapus Duplikat pada data mingguan, bulanan,
+dan berkas unggahan milik akun UPT tidak lagi langsung menghapus — sistem membuat **permintaan hapus** yang harus
+disetujui Admin (menu **Permintaan Hapus**) sebelum data benar-benar terhapus (dan masuk Tempat Sampah seperti
+biasa). Mengedit atau mengosongkan isian saat masih dalam sesi input mingguan/bulanan (tanpa menekan tombol Hapus)
+tetap tersimpan langsung seperti biasa — pembatas ini hanya berlaku untuk aksi hapus yang disengaja.
 
 ## Mengelola akun
 

@@ -61,7 +61,7 @@ function authorize(def, user, kind) {
 }
 
 /** Susun WHERE dari filter klien + pembatas hak akses (pengganti RLS). */
-function buildWhere(def, spec, user, forWrite) {
+export function buildWhere(def, spec, user, forWrite) {
   const parts = []
   const params = []
   const filters = spec.filters || []
@@ -238,28 +238,81 @@ async function doUpdate(def, spec, user) {
   return { data: null, count: res.affectedRows }
 }
 
+/** Tempat sampah: sembunyikan baris (bukan hapus permanen), satu aksi = satu batch, dan catat ke log. */
+export async function executeSoftDelete(def, tableName, where, params, user) {
+  const cols = ['id', ...def.ctx].map(c => `t.${q(c)}`).join(', ')
+  const [rows] = await pool.query(`SELECT ${cols} FROM ${q(tableName)} AS t${where}`, params)
+  if (!rows.length) return { data: null, count: 0 }
+  const batch = randomUUID()
+  await pool.query(
+    `UPDATE ${q(tableName)} AS t SET t.deleted_at = NOW(), t.deleted_by = ?, t.deleted_batch = ?${where}`,
+    [user.id, batch, ...params],
+  )
+  await logAudit(user, rows.length > 1 ? 'hapus_massal' : 'hapus', {
+    tabel: tableName, jumlah: rows.length, batch, ...(await describeRows(rows)),
+  })
+  return { data: null, count: rows.length }
+}
+
+const REQUEST_TABLE_LABEL = { rekap_nilai: 'baris data mingguan/bulanan', data_entries: 'baris data rincian (nama)', dokumen_upload: 'berkas dokumen' }
+
+/** Ringkasan singkat untuk ditampilkan ke Admin di menu Permintaan Hapus, dari kolom konteks yang sudah dibaca. */
+async function summarizeDeleteRequest(tableName, rows, count) {
+  const parts = []
+  const jdId = rows[0]?.jenis_data_id
+  const periodId = rows[0]?.period_id
+  if (jdId) {
+    const [[jd]] = await pool.query('SELECT judul FROM jenis_data WHERE id = ?', [jdId])
+    if (jd) parts.push(jd.judul)
+  }
+  if (periodId) {
+    const [[p]] = await pool.query('SELECT label FROM periods WHERE id = ?', [periodId])
+    if (p) parts.push(p.label)
+  }
+  parts.push(`${count} ${REQUEST_TABLE_LABEL[tableName] || 'baris data'}`)
+  return parts.join(' · ').slice(0, 500)
+}
+
+/**
+ * Akun UPT (bukan Admin) pada tabel ber-`deleteRequiresApproval`: bukan langsung menghapus, tapi membuat baris
+ * `permintaan_hapus`. Filter yang disimpan SUDAH dilengkapi `upt_key` secara eksplisit (buildWhere menambahkannya
+ * otomatis untuk non-admin, tapi tidak untuk Admin) supaya saat Admin menyetujui nanti, penghapusan tetap terbatas
+ * pada data UPT pemohon meskipun dijalankan oleh akun Admin.
+ */
+async function createDeleteRequest(def, spec, user) {
+  const { sql: where, params } = buildWhere(def, spec, user, true)
+  const cols = ['id', ...def.ctx].map(c => `t.${q(c)}`).join(', ')
+  const [rows] = await pool.query(`SELECT ${cols} FROM ${q(spec.table)} AS t${where}`, params)
+  if (!rows.length) return { data: null, count: 0 }
+
+  const filters = [...(spec.filters || []), { col: 'upt_key', op: 'eq', val: user.upt_key }]
+  const ringkasan = await summarizeDeleteRequest(spec.table, rows, rows.length)
+  const id = randomUUID()
+  const alasan = spec.alasan ? String(spec.alasan).trim().slice(0, 500) || null : null
+  await pool.query(
+    `INSERT INTO permintaan_hapus (id, tabel, upt_key, filter_json, ringkasan, jumlah_baris, alasan, requested_by, requested_by_label)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, spec.table, user.upt_key, JSON.stringify(filters), ringkasan, rows.length, alasan, user.id, user.email],
+  )
+  await logAudit(user, 'ajukan_hapus', { tabel: spec.table, jumlah: rows.length, permintaan_id: id, ringkasan })
+  return { data: null, count: 0, pending: true, requestId: id }
+}
+
 async function doDelete(def, spec, user) {
   if (def.insertOnly) throw new HttpError(403, 'Data ini tidak dapat dihapus.')
   if (spec.table === 'profiles' && (spec.filters || []).some(f => f.col === 'id' && f.op === 'eq' && f.val === user.id)) {
     throw bad('Anda tidak dapat menghapus akun Anda sendiri.')
   }
+
+  // UPT: tabel ber-`deleteRequiresApproval` tidak dihapus langsung, kecuali penghapusan implisit saat masih
+  // mengedit form (spec.liveEdit) — mis. mengosongkan satu kolom lalu menyimpan minggu yang sama.
+  if (def.deleteRequiresApproval && user.role !== 'admin' && !spec.liveEdit) {
+    return createDeleteRequest(def, spec, user)
+  }
+
   const { sql: where, params } = buildWhere(def, spec, user, true)
 
-  // Tempat sampah: sembunyikan baris (bukan hapus permanen), satu aksi = satu batch, dan catat ke log
-  if (def.soft) {
-    const cols = ['id', ...def.ctx].map(c => `t.${q(c)}`).join(', ')
-    const [rows] = await pool.query(`SELECT ${cols} FROM ${q(spec.table)} AS t${where}`, params)
-    if (!rows.length) return { data: null, count: 0 }
-    const batch = randomUUID()
-    await pool.query(
-      `UPDATE ${q(spec.table)} AS t SET t.deleted_at = NOW(), t.deleted_by = ?, t.deleted_batch = ?${where}`,
-      [user.id, batch, ...params],
-    )
-    await logAudit(user, rows.length > 1 ? 'hapus_massal' : 'hapus', {
-      tabel: spec.table, jumlah: rows.length, batch, ...(await describeRows(rows)),
-    })
-    return { data: null, count: rows.length }
-  }
+  if (def.soft) return executeSoftDelete(def, spec.table, where, params, user)
 
   // Menghapus UPT ikut menghapus datanya (FK CASCADE): catat ringkasan sebelum dihapus
   let uptSummary = null

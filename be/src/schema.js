@@ -42,6 +42,7 @@ export const TABLES = {
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'baris_ke', 'field_key'],
     stamp: { updated_by: 'id' },
+    deleteRequiresApproval: true,
   }),
   data_entries: table({
     cols: ['id', 'jenis_data_id', 'upt_key', 'period_id', 'nama', 'nik', 'data_json', 'data_ekstra', 'created_at', 'created_by', 'terlambat'],
@@ -49,6 +50,7 @@ export const TABLES = {
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'nik'],
     stamp: { created_by: 'id' },
+    deleteRequiresApproval: true,
   }),
   daily_activity: table({
     cols: ['id', 'upt_key', 'tanggal', 'status', 'uraian', 'pic', 'deskripsi', 'lingkup', 'output', 'foto_url', 'dokumen_url', 'hambatan', 'hambatan_keterangan', 'interaksi', 'feedback', 'created_at', 'updated_at'],
@@ -61,6 +63,19 @@ export const TABLES = {
     bool: ['terlambat'],
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'],
+    deleteRequiresApproval: true,
+  }),
+  permintaan_hapus: table({
+    // Dibuat otomatis oleh server saat akun UPT menekan hapus/kosongkan pada tabel ber-`deleteRequiresApproval`
+    // (lihat be/src/lib/query.js: createDeleteRequest). Disetujui/ditolak lewat POST /api/permintaan-hapus/:id/...
+    // (bukan endpoint generik ini) karena menyetujui berarti benar-benar menjalankan penghapusan aslinya.
+    cols: [
+      'id', 'tabel', 'upt_key', 'filter_json', 'ringkasan', 'jumlah_baris', 'alasan', 'status', 'catatan_admin',
+      'requested_by', 'requested_by_label', 'reviewed_by', 'reviewed_by_label', 'reviewed_at', 'created_at',
+    ],
+    json: ['filter_json'],
+    scope: 'upt', // UPT hanya melihat permintaan miliknya sendiri; Admin melihat semua
+    read: 'auth', write: 'none',
   }),
   dashboard_widgets: table({
     cols: ['id', 'tipe', 'judul', 'grup', 'gaya', 'ikon', 'warna', 'satuan', 'konfigurasi', 'urutan', 'aktif', 'created_at'],

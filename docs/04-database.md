@@ -160,6 +160,18 @@ daftar dokumen tersimpan di `localStorage` **browser** — dokumen yang ditambah
 Admin sendiri, tidak pernah tersinkron ke akun/perangkat lain. Isi berkas 3 dokumen bawaan disemai otomatis oleh
 migrasi ini.
 
+### `permintaan_hapus` — Permintaan Hapus (persetujuan Admin)
+**Migrasi 10.** Sejak migrasi ini, tombol Hapus/Kosongkan akun UPT pada `rekap_nilai`, `data_entries`, dan
+`dokumen_upload` tidak langsung menghapus — server membuat satu baris di sini (`tabel`, `upt_key`, `filter_json`
+berisi kondisi WHERE yang **sudah dilengkapi `upt_key` secara eksplisit** supaya aman dieksekusi ulang oleh Admin,
+`ringkasan`, `jumlah_baris`, `alasan` opsional dari UPT, `status`: `pending`/`disetujui`/`ditolak`, `catatan_admin`,
+`requested_by`/`reviewed_by` → `profiles.id`). Menyetujui (`POST /api/permintaan-hapus/:id/setujui`) menjalankan
+penghapusan aslinya (masuk Tempat Sampah seperti biasa); menolak tidak menyentuh data. Mengedit/mengosongkan isian
+biasa saat masih dalam sesi input **tidak** melalui jalur ini (ditandai `liveEdit` di request, dieksekusi langsung)
+— hanya tombol Hapus/Kosongkan/Hapus Duplikat yang eksplisit yang digerbang. Baca: Admin semua, UPT hanya miliknya
+sendiri; tulis lewat endpoint ini saja (bukan `/api/db/query` generik), karena menyetujui berarti benar-benar
+menjalankan penghapusan.
+
 ### `dashboard_widgets` — Pengaturan Dashboard
 Satu baris = satu kartu/grafik (`tipe`, `judul`, `grup`, `gaya`, `ikon`, `warna`, `satuan`, `urutan`, `aktif`). Sumber angka ada di kolom JSON
 `konfigurasi` (`items`/`pembanding`/`series` berisi pasangan `{jd: kunci jenis data, field: field_key}`). Tabel kosong = tampilan bawaan

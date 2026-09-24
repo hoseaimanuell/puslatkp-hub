@@ -8,6 +8,7 @@ import { friendlyError, HttpError } from './lib/query.js'
 import authRoutes from './routes/auth.js'
 import dbRoutes from './routes/db.js'
 import trashRoutes from './routes/trash.js'
+import permintaanHapusRoutes from './routes/permintaan-hapus.js'
 import periodRoutes from './routes/periods.js'
 import arsipRoutes, { detectArsip, arsipEnabled, sweepArsipFiles } from './routes/arsip.js'
 import fieldFilesRoutes, { detectFieldFiles, fieldFilesEnabled, sweepFieldFiles } from './routes/fieldFiles.js'
@@ -34,6 +35,7 @@ app.get('/api/health', async (_req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/db', dbRoutes)
 app.use('/api/trash', trashRoutes)
+app.use('/api/permintaan-hapus', permintaanHapusRoutes)
 app.use('/api/periods', periodRoutes)
 app.use('/api/arsip', arsipRoutes)
 app.use('/api/field-files', fieldFilesRoutes)

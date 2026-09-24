@@ -44,7 +44,7 @@ export default function HapusMassalDialog({ open, onClose, onConfirm, title, cou
             className="btn-primary text-sm !bg-rose-600 hover:!bg-rose-700 disabled:opacity-40"
           >
             {busy ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
-            Hapus {count} Data
+            {isAdmin ? `Hapus ${count} Data` : `Ajukan Hapus ${count} Data`}
           </button>
         </div>
       }
@@ -53,9 +53,17 @@ export default function HapusMassalDialog({ open, onClose, onConfirm, title, cou
         <div className="flex gap-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300">
           <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
           <p>
-            Akan menghapus <strong>{count} data</strong>. Data dipindahkan ke <strong>Tempat Sampah</strong> selama 30 hari
-            {isAdmin ? ' dan dapat Anda pulihkan dari menu Tempat Sampah.' : '; hanya Admin yang dapat memulihkannya.'}
-            {' '}Penghapusan ini dicatat di log.
+            {isAdmin ? (
+              <>
+                Akan menghapus <strong>{count} data</strong>. Data dipindahkan ke <strong>Tempat Sampah</strong> selama
+                30 hari dan dapat Anda pulihkan dari menu Tempat Sampah. Penghapusan ini dicatat di log.
+              </>
+            ) : (
+              <>
+                Akan mengajukan <strong>permintaan hapus {count} data</strong> ke Admin. Data <strong>tidak langsung
+                terhapus</strong> — baru benar-benar terhapus (masuk Tempat Sampah) setelah Admin menyetujuinya.
+              </>
+            )}
           </p>
         </div>
 

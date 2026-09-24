@@ -84,7 +84,7 @@ fe/src/
 │  └─ (portal)/            Grup route yang memakai sidebar + topbar (PortalShell)
 │     └─ dashboard | dokumen-arsip (Admin, dibungkus AdminOnly) | input-mingguan | input-bulanan
 │        | rekap-triwulan-tahun | kelola-upt | kelola-jenis-data | kelola-dashboard | kelola-periode
-│        | impor-historis | tempat-sampah
+│        | impor-historis | tempat-sampah | permintaan-hapus (Admin, dibungkus AdminOnly)
 ├─ components/             Sidebar, TopBar, PortalShell, AdminOnly, DataTable, DynamicForm, Modal, ...
 ├─ views/                  Halaman (isi tiap route) – tampilan asli tidak berubah
 │  └─ admin/BuatJenisDataExcel.jsx   Wizard "Buat dari Excel" (Kelola Jenis Data): tebak kolom & tipe dari
@@ -101,7 +101,7 @@ be/
 ├─ src/lib/query.js        Mesin query (select/insert/upsert/update/delete)
 ├─ src/lib/compat.js       Deteksi migrasi opsional yang sudah dijalankan → `GET /api/health` → `features`
 ├─ src/lib/periods.js      Generator periode 1 tahun
-├─ src/routes/             auth.js, db.js, arsip.js, fieldFiles.js
+├─ src/routes/             auth.js, db.js, arsip.js, fieldFiles.js, trash.js, permintaan-hapus.js
 └─ scripts/                build-sql, init-db, generate-periods, set-password, data seed, run-migration.mjs
 
 database/                  SQL siap-impor (dibangun oleh `npm run db:build`)

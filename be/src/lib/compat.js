@@ -17,7 +17,7 @@ const OPTIONAL = [
   { table: 'field_definitions', col: 'opsi_bersyarat', feature: 'opsiBersyarat' },
 ]
 
-export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true }
+export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true }
 
 /** Tabel opsional (migrasi_05/06/08). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {
@@ -37,6 +37,14 @@ export async function detectOptionalTables() {
     features.dokumenResmi = false
     delete TABLES.dokumen_resmi
     console.warn('PERINGATAN: tabel dokumen_resmi belum ada. Jalankan database/migrasi_08_dokumen_resmi.sql agar menu Dokumen & Panduan tersimpan di database.')
+  }
+  const [ph] = await pool.query("SHOW TABLES LIKE 'permintaan_hapus'")
+  if (!ph.length) {
+    features.permintaanHapus = false
+    delete TABLES.permintaan_hapus
+    // Tanpa tabel ini, hapus/kosongkan akun UPT kembali langsung mengeksekusi (perilaku lama) — tidak diblokir diam-diam.
+    for (const t of ['rekap_nilai', 'data_entries', 'dokumen_upload']) delete TABLES[t].deleteRequiresApproval
+    console.warn('PERINGATAN: tabel permintaan_hapus belum ada. Jalankan database/migrasi_10_permintaan_hapus.sql agar hapus data UPT perlu persetujuan Admin.')
   }
 }
 

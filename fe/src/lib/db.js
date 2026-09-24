@@ -67,11 +67,18 @@ class QueryBuilder {
   order(column, { ascending = true } = {}) { this.spec.order.push({ column, ascending }); return this }
   limit(n) { this.spec.limit = n; return this }
   single() { this.spec.single = true; return this }
+  /** Tandai delete() ini sebagai bagian dari mengedit form (bukan aksi "Hapus" yang disengaja) — dieksekusi
+   *  langsung seperti biasa, tidak dialihkan jadi permintaan hapus akun UPT. Lihat be/src/lib/query.js. */
+  liveEdit() { this.spec.liveEdit = true; return this }
+  /** Alasan opsional (akun UPT) saat delete() ini berubah menjadi permintaan hapus. */
+  alasan(text) { this.spec.alasan = text; return this }
 
   // Membuat builder bisa di-`await`
   then(resolve, reject) {
     return api('/db/query', { body: this.spec })
-      .then(({ data, error }) => (error ? { data: null, error, count: null } : { data: data.data ?? null, error: data.error ?? null, count: data.count ?? null }))
+      .then(({ data, error }) => (error
+        ? { data: null, error, count: null }
+        : { data: data.data ?? null, error: data.error ?? null, count: data.count ?? null, pending: data.pending, requestId: data.requestId }))
       .then(resolve, reject)
   }
 }
@@ -148,7 +155,7 @@ export function getFeatures() {
   if (!featuresPromise) {
     featuresPromise = api('/health', { method: 'GET' }).then(({ data }) => {
       if (!data) featuresPromise = null
-      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false }
+      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false }
     })
   }
   return featuresPromise
@@ -167,5 +174,10 @@ export const db = {
   auth: {
     /** Admin: atur ulang password akun. Password lama tidak bisa dibaca kembali (hash satu arah). */
     resetPassword: (userId, password) => api(`/auth/users/${userId}/password`, { method: 'PATCH', body: { password } }),
+  },
+  permintaanHapus: {
+    /** Admin: setujui (benar-benar menghapus, masuk Tempat Sampah) atau tolak permintaan hapus akun UPT. */
+    setujui: id => api(`/permintaan-hapus/${id}/setujui`, { method: 'POST' }),
+    tolak: (id, catatan_admin) => api(`/permintaan-hapus/${id}/tolak`, { method: 'POST', body: { catatan_admin } }),
   },
 }

@@ -36,6 +36,8 @@ function formatRp(n) {
   return `Rp ${Number(n || 0).toLocaleString('id-ID')}`
 }
 
+const PENDING_MSG = 'Permintaan hapus terkirim ke Admin. Data baru benar-benar terhapus setelah Admin menyetujuinya di menu Permintaan Hapus.'
+
 export default function RekapBulanan({ onNavigate }) {
   const { isAdmin, uptKey, profile } = useAuth()
 
@@ -1093,10 +1095,11 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
 
   async function handleDelete() {
     const { ids } = deleteDialog
-    const { error } = await db.from('data_entries').delete().in('id', ids)
+    const { error, pending } = await db.from('data_entries').delete().in('id', ids)
     if (error) return { error }
     setDeleteDialog(null)
     setCurrentPage(1)
+    if (pending) alert(PENDING_MSG)
     await onChanged?.()
     return {}
   }

@@ -59,11 +59,12 @@ Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut
 | `database/migrasi_07_kumulatif_bulanan.sql` | Menambah `jenis_data.kumulatif_bulanan` (toggle "Data kumulatif" di Kelola Jenis Data). Jalankan setelah migrasi_06, lalu restart be |
 | `database/migrasi_08_dokumen_resmi.sql` | Membuat tabel `dokumen_resmi` (menu Dokumen & Panduan) dan menyemai 3 dokumen bawaan. Jalankan setelah migrasi_07, lalu restart be |
 | `database/migrasi_09_opsi_bersyarat.sql` | Menambah `field_definitions.opsi_bersyarat` (kolom Pilihan dengan opsi tergantung kolom lain). Jalankan setelah migrasi_08, lalu restart be |
+| `database/migrasi_10_permintaan_hapus.sql` | Membuat tabel `permintaan_hapus` (menu Permintaan Hapus) — akun UPT tidak lagi langsung menghapus data, perlu persetujuan Admin. Jalankan setelah migrasi_09, lalu restart be |
 
-> ⚠️ **`database/puslatkp1a.sql` saat ini BELUM memuat migrasi_07/08/09** (`be/scripts/ddl.sql` dan
+> ⚠️ **`database/puslatkp1a.sql` saat ini BELUM memuat migrasi_07/08/09/10** (`be/scripts/ddl.sql` dan
 > `seed-data.js` belum disinkronkan ulang setelah fitur-fitur itu ditambahkan — lihat catatan di
 > [04-database.md](04-database.md#data-awal-seed) dan bagian *Batasan yang diketahui* di bawah). Instalasi **baru**
-> tetap perlu menjalankan migrasi_07 → 08 → 09 secara manual setelah mengimpor `puslatkp1a.sql`, sama seperti
+> tetap perlu menjalankan migrasi_07 → 08 → 09 → 10 secara manual setelah mengimpor `puslatkp1a.sql`, sama seperti
 > database lama. Migrasi_01–06 sudah termuat.
 
 Jalankan setiap berkas **sekali saja** (menjalankan ulang sebagian besar menghasilkan galat "Duplicate column"/"Table
@@ -77,6 +78,7 @@ Alternatif tanpa phpMyAdmin (dari folder `be`, kredensial diambil dari `be/.env`
 node scripts/run-migration.mjs migrasi_07_kumulatif_bulanan.sql
 node scripts/run-migration.mjs migrasi_08_dokumen_resmi.sql
 node scripts/run-migration.mjs migrasi_09_opsi_bersyarat.sql
+node scripts/run-migration.mjs migrasi_10_permintaan_hapus.sql
 ```
 
 ## Mengubah skema database
@@ -176,6 +178,8 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 | Toggle "Data kumulatif" tidak muncul di Kelola Jenis Data | Jalankan `database/migrasi_07_kumulatif_bulanan.sql` lalu restart be (cek `GET /api/health` → `features.kumulatifBulanan`) |
 | Menu **Dokumen & Panduan** kosong / "Tabel tidak dikenal: dokumen_resmi" | Jalankan `database/migrasi_08_dokumen_resmi.sql` lalu restart be |
 | Kolom pilihan bersyarat tidak berfungsi (opsi tidak berubah) | Jalankan `database/migrasi_09_opsi_bersyarat.sql` lalu restart be; pastikan juga `field_definitions.opsi_bersyarat` sudah diisi untuk kolom tersebut |
+| Akun UPT masih bisa menghapus data langsung (tidak masuk Permintaan Hapus) | Jalankan `database/migrasi_10_permintaan_hapus.sql` lalu restart be (cek `GET /api/health` → `features.permintaanHapus`) |
+| Menu **Permintaan Hapus** kosong / "Tabel tidak dikenal: permintaan_hapus" | Jalankan `database/migrasi_10_permintaan_hapus.sql` lalu restart be |
 | "Berkas fisik tidak ditemukan di server" | Folder `be/storage`/`STORAGE_DIR` tidak ikut dipulihkan dari backup |
 | "Kolom tidak dikenal: …" | Kolom baru belum didaftarkan di `be/src/schema.js` |
 | Jam/tanggal bergeser satu hari | Sesi MySQL dipaksa UTC; `DATE` dikirim sebagai teks tanpa konversi zona waktu, `DATETIME` sebagai ISO UTC |

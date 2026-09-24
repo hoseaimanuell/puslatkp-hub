@@ -154,12 +154,13 @@ export default function BulanUploadView({
     if (!confirm(`Hapus berkas "${title}"?\n\nBerkas masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.`)) return
 
     try {
-      const { error } = await db
+      const { error, pending } = await db
         .from('dokumen_upload')
         .delete()
         .eq('id', id)
 
       if (error) throw error
+      if (pending) alert('Permintaan hapus berkas terkirim ke Admin. Berkas baru benar-benar terhapus setelah Admin menyetujuinya di menu Permintaan Hapus.')
       await loadDocuments()
     } catch (err) {
       alert('Gagal menghapus berkas: ' + err.message)

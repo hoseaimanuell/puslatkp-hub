@@ -28,7 +28,8 @@ memfilter/menginput/menghapus.
 | **Input Bulanan** | `/input-bulanan` | Semua | Rekap bulanan (akumulasi 4 minggu / data by name) + popup **Input Bulanan** |
 | **Rekap Triwulan & Tahun** | `/rekap-triwulan-tahun` | Semua | Hasil rekap **triwulan** dan **tahunan** (baca saja) |
 | **Dokumen & Arsip** | `/dokumen-arsip` | **Admin** | Dua tab: **Dokumen & Panduan** (pedoman, SOP, template Excel — tersimpan di database) dan **Arsip Data Historis** (berkas Excel/PDF tahun lalu) |
-| Kelola Akun UPT | `/kelola-upt` | Admin | Buat/hapus akun UPT, tambah/hapus UPT |
+| Kelola Akun UPT | `/kelola-upt` | Admin | Buat/hapus akun UPT, reset password, tambah/hapus UPT |
+| **Permintaan Hapus** | `/permintaan-hapus` | Admin | Setujui/tolak permintaan hapus data dari akun UPT |
 | Kelola Jenis Data | `/kelola-jenis-data` | Admin | Form Builder: jenis data & kolom, termasuk wizard **Buat dari Excel** |
 | **Kelola Dashboard** | `/kelola-dashboard` | Admin | Mengatur kartu & grafik Dashboard tanpa coding |
 | **Pengaturan Lanjutan** (menu lipat) | — | Admin | Jarang dipakai: **Kelola Periode** (`/kelola-periode`), **Impor Data Historis** (`/impor-historis`), **Tempat Sampah** (`/tempat-sampah`) |
@@ -197,8 +198,8 @@ tidak lagi ikut terhitung.
 
 ## Koreksi & Penghapusan Data
 
-Data yang salah dapat **dikoreksi** atau **dihapus**. Penghapusan tidak langsung permanen: data masuk **Tempat Sampah**
-selama **30 hari**, dan setiap penghapusan **tercatat** (siapa, kapan, apa).
+Data yang salah dapat **dikoreksi** atau **dihapus**. Mengoreksi (mengubah nilai lalu Simpan) selalu langsung
+berlaku — hanya **menghapus** yang diatur di bawah ini.
 
 | Kebutuhan | Cara |
 | :-- | :-- |
@@ -209,14 +210,21 @@ selama **30 hari**, dan setiap penghapusan **tercatat** (siapa, kapan, apa).
 | Menghapus **lintas semua UPT sekaligus** (Admin) | Pilih **Semua UPT** di pemilih UPT (Input Mingguan/Bulanan, popup maupun tampilan Data by Name), lalu tombol Kosongkan/Hapus Semua mencakup semua UPT. Wajib mengetik **HAPUS** |
 | Menghapus **data duplikat** (baris identik akibat impor dobel) | **Input Bulanan** → tampilan Data by Name / popup → tombol **Hapus Duplikat** (muncul otomatis bila terdeteksi) |
 
-Aturan siapa yang boleh:
+**Aturan siapa yang boleh:**
 
-* **Akun UPT** boleh menghapus/mengosongkan **data UPT-nya sendiri**, kapan saja (termasuk setelah deadline).
-* **Admin** boleh menghapus kapan saja, memilih UPT terlebih dulu.
+* **Akun UPT tidak bisa langsung menghapus** data mingguan/bulanan/berkas miliknya sendiri. Menekan tombol
+  Hapus/Kosongkan/Hapus Duplikat di atas **mengajukan permintaan** ke Admin ("Akan mengajukan permintaan hapus …
+  ke Admin. Data tidak langsung terhapus") — data tetap utuh sampai disetujui. Mengedit/mengosongkan isian biasa
+  sambil masih mengisi form minggu/bulan berjalan (bukan lewat tombol Hapus) **tidak** kena aturan ini — tetap
+  tersimpan langsung seperti biasa.
+* **Admin** menghapus langsung, kapan saja, tanpa perlu persetujuan siapa pun (baik data UPT tertentu maupun
+  "Semua UPT" sekaligus). Admin juga yang menyetujui/menolak permintaan dari UPT, lewat menu **Permintaan Hapus**
+  (lihat [Menu Admin](#menu-admin) di bawah).
 * **Memulihkan** data dari Tempat Sampah hanya dapat dilakukan **Admin**.
 
-Bila setelah menghapus Anda menyimpan data yang sama lagi (mis. mengisi ulang kolom mingguan atau memasukkan NIK
-yang sama), data yang baru otomatis menggantikan salinan di tempat sampah.
+Setelah disetujui (atau dihapus langsung oleh Admin), data masuk **Tempat Sampah** selama **30 hari** dan tercatat
+di log — bukan langsung permanen. Bila setelah dihapus Anda menyimpan data yang sama lagi (mis. mengisi ulang
+kolom mingguan atau memasukkan NIK yang sama), data yang baru otomatis menggantikan salinan di tempat sampah.
 
 ## Menu Admin
 
@@ -227,6 +235,15 @@ yang sama), data yang baru otomatis menggantikan salinan di tempat sampah.
 * **Hapus UPT** – ⚠️ menghapus UPT ikut menghapus **permanen** seluruh datanya: akun pengguna, rekap mingguan,
   data rincian bulanan, berkas unggahan, dan daily activity milik UPT itu. Dashboard, grafik, dan rekap otomatis
   tidak lagi memuatnya. Aksi ini meminta konfirmasi dan **tidak dapat dibatalkan** (lakukan backup lebih dulu).
+
+### Permintaan Hapus
+Daftar permintaan hapus dari akun UPT (lihat [Koreksi & Penghapusan Data](#koreksi--penghapusan-data) di atas),
+dikelompokkan **Menunggu Persetujuan** dan **Riwayat**. Tiap permintaan menampilkan UPT pengaju, jenis data,
+periode, jumlah baris, dan alasan (bila diisi UPT). Dua aksi:
+
+* **Setujui** – benar-benar menjalankan penghapusannya (masuk Tempat Sampah 30 hari seperti penghapusan biasa,
+  dapat dipulihkan).
+* **Tolak** – data tidak disentuh; boleh menambahkan catatan alasan penolakan (terlihat UPT di riwayat).
 
 ### Kelola Periode
 Periode (1 tahun = 65: 1 tahun, 4 triwulan, 12 bulan, 48 minggu) **tahun berjalan dan tahun depan dibuat otomatis** oleh
