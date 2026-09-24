@@ -4,7 +4,7 @@
  * - level_utama === 'bulan': Hanya tab Bulan (rincian per-orang) + Banner 4 Minggu Pasangan + Validasi non-blocking
  * - level_utama === 'minggu': Tab Minggu (input form) + Tab Triwulan & Tahun (Auto-agregasi SUM otomatis)
  */
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { db, getFeatures } from '../../lib/db'
 import { weekValues, applyAgregasi, agregasiOf, AGREGASI_SHORT } from '../../lib/agregasi'
 import { useAuth } from '../../AuthContext'
@@ -21,7 +21,7 @@ import { readExcelFile, exportDataEntries, exportRekapNilai, generateTemplateExc
 import {
   Upload, Plus, Download, CheckCircle2, AlertTriangle, AlertCircle,
   Trash2, Eye, Edit, Search, X, FileSpreadsheet, Loader2,
-  TrendingUp, Calendar, Calculator, Check, ArrowRight, Layers, Copy
+  TrendingUp, Calendar, Calculator, Check, ArrowRight, Layers, Copy, Lock, Send
 } from 'lucide-react'
 import BulanAgregatView from './BulanAgregatView'
 import BulanUploadView from './BulanUploadView'
@@ -52,7 +52,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
   const [barisList, setBarisList] = useState([{ baris_ke: 1, values: {} }])
   const [savedSnap, setSavedSnap] = useState({})
   const [lateRekap, setLateRekap] = useState(false)
-  const [features, setFeatures] = useState({ multiBaris: false, agregasi: false })
+  const [features, setFeatures] = useState({ multiBaris: false, agregasi: false, periodeKirim: false })
   useEffect(() => { getFeatures().then(setFeatures) }, [])
   const multiBaris = features.multiBaris && !!jenisData.multi_baris
   const [entries, setEntries] = useState([])
@@ -123,8 +123,44 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
   }, [searchEntries, activePeriod?.id, currentUptKey])
 
   // Deadline TIDAK mengunci: UPT tetap boleh mengisi, tetapi datanya ditandai "Terlambat" (merah).
-  const locked = false
   const pastDeadline = !!activePeriod && !isAdmin && isPeriodLocked(activePeriod.deadline)
+
+  // "Kirim & Kunci Data": UPT mengunci SEMUA jenis data pada periode ini sekaligus (bukan cuma jenisData saat
+  // ini) setelah yakin datanya benar. Membuka kunci lagi perlu persetujuan Admin — memakai jalur yang sama
+  // seperti Permintaan Hapus (delete() pada baris kuncinya otomatis jadi permintaan, lihat be/src/lib/query.js).
+  const [periodeLock, setPeriodeLock] = useState(undefined) // undefined = belum dimuat, null = tidak terkunci
+  const [pendingUnlock, setPendingUnlock] = useState(null)
+  const canLock = !isAdmin && !isAllUpt && features.periodeKirim && !!currentUptKey
+
+  const loadLockStatus = useCallback(async () => {
+    if (!canLock || !activePeriod?.id) { setPeriodeLock(null); setPendingUnlock(null); return }
+    const [{ data: lockRows }, { data: reqRows }] = await Promise.all([
+      db.from('periode_kirim').select('*').eq('upt_key', currentUptKey).eq('period_id', activePeriod.id),
+      db.from('permintaan_hapus').select('*').eq('upt_key', currentUptKey).eq('period_id', activePeriod.id).eq('tabel', 'periode_kirim').eq('status', 'pending'),
+    ])
+    setPeriodeLock(lockRows?.[0] || null)
+    setPendingUnlock(reqRows?.[0] || null)
+  }, [canLock, currentUptKey, activePeriod?.id])
+
+  useEffect(() => { loadLockStatus() }, [loadLockStatus])
+
+  const locked = !isAdmin && !!periodeLock
+
+  async function kirimData() {
+    const levelLabel = activeLevel === 'minggu' ? 'minggu' : 'bulan'
+    if (!confirm(`Kirim & kunci data ${levelLabel} ini?\n\nSemua jenis data ${levelLabel === 'minggu' ? 'mingguan' : 'bulanan'} untuk periode ini (bukan hanya "${jenisData.judul}") akan terkunci dan tidak bisa diedit lagi tanpa persetujuan Admin.`)) return
+    const { error } = await db.from('periode_kirim').upsert({ period_id: activePeriod.id }, { onConflict: 'upt_key,period_id' })
+    if (error) { alert('Gagal mengirim: ' + error.message); return }
+    loadLockStatus()
+  }
+
+  async function ajukanBukaKunci() {
+    if (!confirm('Ajukan buka kunci periode ini ke Admin?\n\nData tetap terkunci sampai Admin menyetujui.')) return
+    const { error, pending } = await db.from('periode_kirim').delete().eq('upt_key', currentUptKey).eq('period_id', activePeriod.id)
+    if (error) { alert('Gagal mengajukan: ' + error.message); return }
+    if (pending) alert('Permintaan buka kunci terkirim ke Admin.')
+    loadLockStatus()
+  }
 
   // Cari pasangan Jenis Data jika ada
   const partnerJd = isMonthOnly && jenisData.pasangan_mingguan_id
@@ -630,6 +666,43 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
             <p className="text-xs text-rose-600 dark:text-rose-400">Deadline periode ini {formatTanggal(activePeriod.deadline)}. Data yang Anda simpan sekarang akan ditandai <strong>Terlambat</strong> (merah) dan terlihat oleh Admin.</p>
           </div>
         </div>
+      )}
+
+      {/* Kirim & Kunci Data */}
+      {canLock && periodeLock !== undefined && (
+        locked ? (
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex-shrink-0">
+                <Lock size={16} />
+              </span>
+              <div>
+                <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
+                  Data {activeLevel === 'minggu' ? 'minggu' : 'bulan'} ini sudah dikirim & terkunci
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  Berlaku untuk semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini, bukan hanya &quot;{jenisData.judul}&quot;.
+                  {pendingUnlock ? ' Menunggu persetujuan Admin untuk membuka kunci.' : ' Perlu persetujuan Admin untuk mengedit lagi.'}
+                </p>
+              </div>
+            </div>
+            {!pendingUnlock && (
+              <button type="button" onClick={ajukanBukaKunci} className="btn-secondary text-xs whitespace-nowrap">
+                Ajukan Buka Kunci
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              Sudah yakin datanya benar? Kirim untuk mengunci semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini —
+              setelah dikirim, perlu persetujuan Admin untuk mengedit lagi.
+            </p>
+            <button type="button" onClick={kirimData} className="btn-primary text-xs whitespace-nowrap">
+              <Send size={13} /> Kirim &amp; Kunci
+            </button>
+          </div>
+        )
       )}
 
       {/* BANNER 4 MINGGU & VALIDASI PASANGAN (Sesuai Koreksi Bagian C) */}

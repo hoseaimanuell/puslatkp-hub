@@ -17,7 +17,7 @@ const OPTIONAL = [
   { table: 'field_definitions', col: 'opsi_bersyarat', feature: 'opsiBersyarat' },
 ]
 
-export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true }
+export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, periodeKirim: true }
 
 /** Tabel opsional (migrasi_05/06/08). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {
@@ -41,10 +41,26 @@ export async function detectOptionalTables() {
   const [ph] = await pool.query("SHOW TABLES LIKE 'permintaan_hapus'")
   if (!ph.length) {
     features.permintaanHapus = false
+    features.periodeKirim = false // fitur Kirim & Kunci juga butuh permintaan_hapus (untuk pengajuan buka kunci)
     delete TABLES.permintaan_hapus
+    delete TABLES.periode_kirim
     // Tanpa tabel ini, hapus/kosongkan akun UPT kembali langsung mengeksekusi (perilaku lama) — tidak diblokir diam-diam.
     for (const t of ['rekap_nilai', 'data_entries', 'dokumen_upload']) delete TABLES[t].deleteRequiresApproval
     console.warn('PERINGATAN: tabel permintaan_hapus belum ada. Jalankan database/migrasi_10_permintaan_hapus.sql agar hapus data UPT perlu persetujuan Admin.')
+  } else {
+    const [pk] = await pool.query("SHOW TABLES LIKE 'periode_kirim'")
+    const [pidCol] = await pool.query("SHOW COLUMNS FROM permintaan_hapus LIKE 'period_id'")
+    if (!pk.length || !pidCol.length) {
+      features.periodeKirim = false
+      delete TABLES.periode_kirim
+      if (!pidCol.length) {
+        for (const c of ['period_id', 'jenis_data_id']) {
+          TABLES.permintaan_hapus.cols = TABLES.permintaan_hapus.cols.filter(x => x !== c)
+          TABLES.permintaan_hapus.writable = TABLES.permintaan_hapus.writable.filter(x => x !== c)
+        }
+      }
+      console.warn('PERINGATAN: tabel periode_kirim (atau kolomnya di permintaan_hapus) belum ada. Jalankan database/migrasi_11_periode_kirim.sql agar fitur Kirim & Kunci Data aktif.')
+    }
   }
 }
 

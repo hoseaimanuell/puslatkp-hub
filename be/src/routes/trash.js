@@ -15,6 +15,7 @@ const TABLE_LABEL = {
   data_entries: 'Data Bulanan (rincian nama)',
   dokumen_upload: 'Berkas Unggahan',
   daily_activity: 'Daily Activity',
+  periode_kirim: 'Kunci Periode (dibuka)',
 }
 
 const ensureEnabled = () => {

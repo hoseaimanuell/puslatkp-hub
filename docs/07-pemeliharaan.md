@@ -59,9 +59,10 @@ Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut
 | `database/migrasi_07_kumulatif_bulanan.sql` | Menambah `jenis_data.kumulatif_bulanan` (toggle "Data kumulatif" di Kelola Jenis Data). Jalankan setelah migrasi_06, lalu restart be |
 | `database/migrasi_08_dokumen_resmi.sql` | Membuat tabel `dokumen_resmi` (menu Dokumen & Panduan) dan menyemai 3 dokumen bawaan. Jalankan setelah migrasi_07, lalu restart be |
 | `database/migrasi_09_opsi_bersyarat.sql` | Menambah `field_definitions.opsi_bersyarat` (kolom Pilihan dengan opsi tergantung kolom lain). Jalankan setelah migrasi_08, lalu restart be |
-| `database/migrasi_10_permintaan_hapus.sql` | Membuat tabel `permintaan_hapus` (menu Permintaan Hapus) — akun UPT tidak lagi langsung menghapus data, perlu persetujuan Admin. Jalankan setelah migrasi_09, lalu restart be |
+| `database/migrasi_10_permintaan_hapus.sql` | Membuat tabel `permintaan_hapus` (menu Permintaan Hapus & Buka Kunci) — akun UPT tidak lagi langsung menghapus data, perlu persetujuan Admin. Jalankan setelah migrasi_09, lalu restart be |
+| `database/migrasi_11_periode_kirim.sql` | Membuat tabel `periode_kirim` (fitur "Kirim & Kunci Data") dan menambah kolom `permintaan_hapus.period_id`/`jenis_data_id`. Akun UPT bisa mengunci periode, buka kunci perlu persetujuan Admin. Jalankan setelah migrasi_10, lalu restart be |
 
-> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–10 secara penuh** (`be/scripts/ddl.sql` dan `seed-data.js`
+> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–11 secara penuh** (`be/scripts/ddl.sql` dan `seed-data.js`
 > disinkronkan ulang — lihat catatan di [04-database.md](04-database.md#data-awal-seed)). **Instalasi baru cukup
 > mengimpor `puslatkp1a.sql` sekali saja**, tanpa perlu menjalankan berkas `migrasi_*.sql` satu per satu. Tabel di
 > atas hanya untuk **database lama** yang sudah terlanjur diimpor sebelum tanggal sinkronisasi ini.
@@ -78,6 +79,7 @@ node scripts/run-migration.mjs migrasi_07_kumulatif_bulanan.sql
 node scripts/run-migration.mjs migrasi_08_dokumen_resmi.sql
 node scripts/run-migration.mjs migrasi_09_opsi_bersyarat.sql
 node scripts/run-migration.mjs migrasi_10_permintaan_hapus.sql
+node scripts/run-migration.mjs migrasi_11_periode_kirim.sql
 ```
 
 ## Mengubah skema database
@@ -177,7 +179,8 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 | Menu **Dokumen & Panduan** kosong / "Tabel tidak dikenal: dokumen_resmi" | Jalankan `database/migrasi_08_dokumen_resmi.sql` lalu restart be |
 | Kolom pilihan bersyarat tidak berfungsi (opsi tidak berubah) | Jalankan `database/migrasi_09_opsi_bersyarat.sql` lalu restart be; pastikan juga `field_definitions.opsi_bersyarat` sudah diisi untuk kolom tersebut |
 | Akun UPT masih bisa menghapus data langsung (tidak masuk Permintaan Hapus) | Jalankan `database/migrasi_10_permintaan_hapus.sql` lalu restart be (cek `GET /api/health` → `features.permintaanHapus`) |
-| Menu **Permintaan Hapus** kosong / "Tabel tidak dikenal: permintaan_hapus" | Jalankan `database/migrasi_10_permintaan_hapus.sql` lalu restart be |
+| Menu **Permintaan Hapus & Buka Kunci** kosong / "Tabel tidak dikenal: permintaan_hapus" | Jalankan `database/migrasi_10_permintaan_hapus.sql` lalu restart be |
+| Tombol **"Kirim & Kunci"** tidak muncul di Input Mingguan/Bulanan | Jalankan `database/migrasi_11_periode_kirim.sql` lalu restart be (cek `GET /api/health` → `features.periodeKirim`) |
 | "Berkas fisik tidak ditemukan di server" | Folder `be/storage`/`STORAGE_DIR` tidak ikut dipulihkan dari backup |
 | "Kolom tidak dikenal: …" | Kolom baru belum didaftarkan di `be/src/schema.js` |
 | Jam/tanggal bergeser satu hari | Sesi MySQL dipaksa UTC; `DATE` dikirim sebagai teks tanpa konversi zona waktu, `DATETIME` sebagai ISO UTC |

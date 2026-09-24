@@ -38,6 +38,7 @@ const TABLE_LABEL = {
   profiles: 'Akun',
   jenis_data: 'Jenis Data',
   field_definitions: 'Kolom Jenis Data',
+  periode_kirim: 'Kunci Periode (dibuka)',
 }
 
 const fmtTime = iso => (iso ? new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-')

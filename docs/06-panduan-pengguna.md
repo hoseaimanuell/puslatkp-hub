@@ -29,7 +29,7 @@ memfilter/menginput/menghapus.
 | **Rekap Triwulan & Tahun** | `/rekap-triwulan-tahun` | Semua | Hasil rekap **triwulan** dan **tahunan** (baca saja) |
 | **Dokumen & Arsip** | `/dokumen-arsip` | **Admin** | Dua tab: **Dokumen & Panduan** (pedoman, SOP, template Excel — tersimpan di database) dan **Arsip Data Historis** (berkas Excel/PDF tahun lalu) |
 | Kelola Akun UPT | `/kelola-upt` | Admin | Buat/hapus akun UPT, reset password, tambah/hapus UPT |
-| **Permintaan Hapus** | `/permintaan-hapus` | Admin | Setujui/tolak permintaan hapus data dari akun UPT |
+| **Permintaan Hapus & Buka Kunci** | `/permintaan-hapus` | Admin | Setujui/tolak permintaan hapus data dan buka kunci periode dari akun UPT |
 | Kelola Jenis Data | `/kelola-jenis-data` | Admin | Form Builder: jenis data & kolom, termasuk wizard **Buat dari Excel** |
 | **Kelola Dashboard** | `/kelola-dashboard` | Admin | Mengatur kartu & grafik Dashboard tanpa coding |
 | **Pengaturan Lanjutan** (menu lipat) | — | Admin | Jarang dipakai: **Kelola Periode** (`/kelola-periode`), **Impor Data Historis** (`/impor-historis`), **Tempat Sampah** (`/tempat-sampah`) |
@@ -220,13 +220,32 @@ berlaku — hanya **menghapus** yang diatur di bawah ini.
   sambil masih mengisi form minggu/bulan berjalan (bukan lewat tombol Hapus) **tidak** kena aturan ini — tetap
   tersimpan langsung seperti biasa.
 * **Admin** menghapus langsung, kapan saja, tanpa perlu persetujuan siapa pun (baik data UPT tertentu maupun
-  "Semua UPT" sekaligus). Admin juga yang menyetujui/menolak permintaan dari UPT, lewat menu **Permintaan Hapus**
-  (lihat [Menu Admin](#menu-admin) di bawah).
+  "Semua UPT" sekaligus). Admin juga yang menyetujui/menolak permintaan dari UPT, lewat menu **Permintaan Hapus
+  & Buka Kunci** (lihat [Menu Admin](#menu-admin) di bawah).
 * **Memulihkan** data dari Tempat Sampah hanya dapat dilakukan **Admin**.
 
 Setelah disetujui (atau dihapus langsung oleh Admin), data masuk **Tempat Sampah** selama **30 hari** dan tercatat
 di log — bukan langsung permanen. Bila setelah dihapus Anda menyimpan data yang sama lagi (mis. mengisi ulang
 kolom mingguan atau memasukkan NIK yang sama), data yang baru otomatis menggantikan salinan di tempat sampah.
+
+## Kirim & Kunci Data
+
+Selain menghapus, akun UPT juga dapat **mengunci** data suatu periode setelah yakin isiannya sudah benar — supaya
+tidak ada yang mengedit-edit lagi tanpa sepengetahuan Admin.
+
+1. Di **Input Mingguan** atau **Input Bulanan** (popup input), buka periode yang datanya sudah lengkap. Bila belum
+   dikirim, muncul kotak biru **"Sudah yakin datanya benar? Kirim untuk mengunci…"** dengan tombol **Kirim & Kunci**.
+2. Klik **Kirim & Kunci** → **seluruh jenis data mingguan (atau bulanan) pada periode itu langsung terkunci
+   sekaligus** — bukan cuma jenis data yang sedang dibuka. Misalnya mengunci "Minggu ke-2 September" saat membuka
+   "Masyarakat" juga ikut mengunci "Aparatur", "Data Instruktur dan WI", dst. untuk minggu yang sama.
+3. Setelah terkunci: form input, tombol Simpan, Tambah Baris, Upload Excel, dan Hapus untuk periode itu
+   **disembunyikan** — UPT hanya bisa melihat datanya, tidak bisa mengedit.
+4. Untuk mengedit lagi, klik **Ajukan Buka Kunci** pada kotak kuning yang muncul. Ini membuat permintaan ke Admin
+   (sama seperti permintaan hapus) — data tetap terkunci sampai disetujui di menu **Permintaan Hapus & Buka
+   Kunci**. Setelah disetujui, periode itu terbuka lagi dan bisa diedit sampai Anda menekan "Kirim" ulang.
+
+**Admin tidak pernah terkunci** — bisa mengedit data UPT mana pun, periode apa pun, kapan pun, tanpa perlu
+mengirim atau membuka kunci apa-apa.
 
 ## Menu Admin
 
@@ -238,14 +257,17 @@ kolom mingguan atau memasukkan NIK yang sama), data yang baru otomatis mengganti
   data rincian bulanan, berkas unggahan, dan daily activity milik UPT itu. Dashboard, grafik, dan rekap otomatis
   tidak lagi memuatnya. Aksi ini meminta konfirmasi dan **tidak dapat dibatalkan** (lakukan backup lebih dulu).
 
-### Permintaan Hapus
-Daftar permintaan hapus dari akun UPT (lihat [Koreksi & Penghapusan Data](#koreksi--penghapusan-data) di atas),
-dikelompokkan **Menunggu Persetujuan** dan **Riwayat**. Tiap permintaan menampilkan UPT pengaju, jenis data,
-periode, jumlah baris, dan alasan (bila diisi UPT). Dua aksi:
+### Permintaan Hapus & Buka Kunci
+Daftar permintaan dari akun UPT — baik permintaan hapus data (lihat [Koreksi & Penghapusan
+Data](#koreksi--penghapusan-data)) maupun permintaan buka kunci periode (lihat [Kirim & Kunci
+Data](#kirim--kunci-data)) — tampil digabung di sini, dikelompokkan **Menunggu Persetujuan** dan **Riwayat**.
+Tiap permintaan menampilkan UPT pengaju, jenis permintaan (data mingguan/bulanan/berkas, atau "Buka Kunci
+Periode"), periode, jumlah baris, dan alasan (bila diisi UPT). Dua aksi:
 
-* **Setujui** – benar-benar menjalankan penghapusannya (masuk Tempat Sampah 30 hari seperti penghapusan biasa,
-  dapat dipulihkan).
-* **Tolak** – data tidak disentuh; boleh menambahkan catatan alasan penolakan (terlihat UPT di riwayat).
+* **Setujui** – untuk permintaan hapus: benar-benar menjalankan penghapusannya (masuk Tempat Sampah 30 hari
+  seperti penghapusan biasa, dapat dipulihkan). Untuk permintaan buka kunci: kunci periode itu dibuka, UPT bisa
+  mengedit lagi sampai menekan "Kirim" ulang.
+* **Tolak** – data/kunci tidak disentuh; boleh menambahkan catatan alasan penolakan (terlihat UPT di riwayat).
 
 ### Kelola Periode
 Periode (1 tahun = 65: 1 tahun, 4 triwulan, 12 bulan, 48 minggu) **tahun berjalan dan tahun depan dibuat otomatis** oleh

@@ -1,8 +1,11 @@
 /**
  * views/admin/PermintaanHapus.jsx
- * Admin: setujui/tolak permintaan hapus dari akun UPT. Akun UPT tidak lagi bisa menghapus data mingguan/
- * bulanan/berkas unggahan miliknya secara langsung — tombol Hapus/Kosongkan mereka membuat baris di sini,
- * dan data baru benar-benar terhapus (masuk Tempat Sampah seperti biasa) setelah disetujui.
+ * Admin: setujui/tolak permintaan dari akun UPT — dua jenis:
+ * 1. Hapus data mingguan/bulanan/berkas (tombol Hapus/Kosongkan UPT membuat baris di sini; disetujui = data
+ *    benar-benar terhapus, masuk Tempat Sampah seperti biasa).
+ * 2. Buka kunci periode (tabel='periode_kirim') — UPT yang sudah "Kirim & Kunci" data suatu periode mengajukan
+ *    buka kunci lewat tombol yang sama secara teknis (delete() pada baris kuncinya); disetujui = kunci dibuka,
+ *    UPT bisa mengedit periode itu lagi sampai mereka "Kirim" ulang.
  */
 import { useState, useEffect, useCallback } from 'react'
 import { db, getFeatures } from '../../lib/db'
@@ -13,7 +16,10 @@ const TABLE_LABEL = {
   rekap_nilai: 'Data Mingguan/Bulanan',
   data_entries: 'Data Rincian (Nama)',
   dokumen_upload: 'Berkas Unggahan',
+  periode_kirim: 'Buka Kunci Periode',
 }
+
+const isUnlock = item => item.tabel === 'periode_kirim'
 
 const STATUS_BADGE = {
   pending: ['Menunggu', 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'],
@@ -60,23 +66,29 @@ export default function PermintaanHapus() {
   const history = items.filter(i => i.status !== 'pending')
 
   async function approve(item) {
-    if (!confirm(`Setujui penghapusan "${item.ringkasan || TABLE_LABEL[item.tabel]}"?\n\nData akan benar-benar terhapus (masuk Tempat Sampah, dapat dipulihkan 30 hari).`)) return
+    const confirmMsg = isUnlock(item)
+      ? `Buka kunci "${item.ringkasan}"?\n\nUPT bisa mengedit lagi seluruh jenis data periode ini sampai mereka "Kirim" ulang.`
+      : `Setujui penghapusan "${item.ringkasan || TABLE_LABEL[item.tabel]}"?\n\nData akan benar-benar terhapus (masuk Tempat Sampah, dapat dipulihkan 30 hari).`
+    if (!confirm(confirmMsg)) return
     setBusy(item.id)
     const { error, data } = await db.permintaanHapus.setujui(item.id)
     setBusy('')
     setToast(error
       ? { type: 'error', message: error.message }
-      : { type: 'success', message: `Disetujui — ${data?.dihapus ?? item.jumlah_baris} data dihapus.` })
+      : { type: 'success', message: isUnlock(item) ? 'Disetujui — kunci periode dibuka.' : `Disetujui — ${data?.dihapus ?? item.jumlah_baris} data dihapus.` })
     load()
   }
 
   async function reject(item) {
-    const catatan = prompt('Alasan penolakan (opsional, akan terlihat oleh UPT):', '')
+    const catatan = prompt(
+      isUnlock(item) ? 'Alasan menolak buka kunci (opsional, akan terlihat oleh UPT):' : 'Alasan penolakan (opsional, akan terlihat oleh UPT):',
+      '',
+    )
     if (catatan === null) return // batal
     setBusy(item.id)
     const { error } = await db.permintaanHapus.tolak(item.id, catatan)
     setBusy('')
-    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Permintaan ditolak.' })
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: isUnlock(item) ? 'Permintaan buka kunci ditolak — data tetap terkunci.' : 'Permintaan ditolak.' })
     load()
   }
 
@@ -85,8 +97,8 @@ export default function PermintaanHapus() {
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader
-        title="Permintaan Hapus"
-        description="Akun UPT tidak bisa menghapus data mingguan/bulanan/berkas secara langsung — tombol Hapus/Kosongkan mereka mengajukan permintaan di sini, dan baru benar-benar terhapus setelah Anda menyetujuinya."
+        title="Permintaan Hapus & Buka Kunci"
+        description="Akun UPT tidak bisa menghapus data atau mengedit periode yang sudah dikirim/dikunci secara langsung — tombol Hapus/Kosongkan/Ajukan Buka Kunci mereka mengajukan permintaan di sini, dan baru berlaku setelah Anda menyetujuinya."
       />
 
       {toast && (
@@ -110,7 +122,7 @@ export default function PermintaanHapus() {
             {pending.length === 0 ? (
               <div className="text-center py-10 text-gray-400">
                 <Inbox size={32} className="mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Tidak ada permintaan hapus yang menunggu.</p>
+                <p className="text-sm">Tidak ada permintaan yang menunggu.</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100 dark:divide-gray-800">

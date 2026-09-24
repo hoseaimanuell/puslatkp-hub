@@ -70,12 +70,23 @@ export const TABLES = {
     // (lihat be/src/lib/query.js: createDeleteRequest). Disetujui/ditolak lewat POST /api/permintaan-hapus/:id/...
     // (bukan endpoint generik ini) karena menyetujui berarti benar-benar menjalankan penghapusan aslinya.
     cols: [
-      'id', 'tabel', 'upt_key', 'filter_json', 'ringkasan', 'jumlah_baris', 'alasan', 'status', 'catatan_admin',
-      'requested_by', 'requested_by_label', 'reviewed_by', 'reviewed_by_label', 'reviewed_at', 'created_at',
+      'id', 'tabel', 'upt_key', 'period_id', 'jenis_data_id', 'filter_json', 'ringkasan', 'jumlah_baris', 'alasan',
+      'status', 'catatan_admin', 'requested_by', 'requested_by_label', 'reviewed_by', 'reviewed_by_label',
+      'reviewed_at', 'created_at',
     ],
     json: ['filter_json'],
     scope: 'upt', // UPT hanya melihat permintaan miliknya sendiri; Admin melihat semua
     read: 'auth', write: 'none',
+  }),
+  periode_kirim: table({
+    // "Kirim & Kunci Data": UPT mengunci SEMUA jenis data pada satu periode (minggu/bulan) sekaligus. Baris ada
+    // (deleted_at NULL) = terkunci. UPT membuka kunci lewat delete() — karena `deleteRequiresApproval`, ini
+    // otomatis jadi permintaan di `permintaan_hapus` (tabel='periode_kirim') seperti permintaan hapus biasa.
+    cols: ['id', 'upt_key', 'period_id', 'terkirim_at', 'terkirim_by', 'terkirim_by_label'],
+    scope: 'upt', write: 'auth',
+    soft: true, ctx: ['upt_key', 'period_id'], unique: ['upt_key', 'period_id'],
+    stamp: { terkirim_by: 'id', terkirim_by_label: 'email' },
+    deleteRequiresApproval: true,
   }),
   dashboard_widgets: table({
     cols: ['id', 'tipe', 'judul', 'grup', 'gaya', 'ikon', 'warna', 'satuan', 'konfigurasi', 'urutan', 'aktif', 'created_at'],

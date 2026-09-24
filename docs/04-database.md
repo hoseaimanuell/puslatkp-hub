@@ -160,17 +160,32 @@ daftar dokumen tersimpan di `localStorage` **browser** — dokumen yang ditambah
 Admin sendiri, tidak pernah tersinkron ke akun/perangkat lain. Isi berkas 3 dokumen bawaan disemai otomatis oleh
 migrasi ini.
 
-### `permintaan_hapus` — Permintaan Hapus (persetujuan Admin)
-**Migrasi 10.** Sejak migrasi ini, tombol Hapus/Kosongkan akun UPT pada `rekap_nilai`, `data_entries`, dan
-`dokumen_upload` tidak langsung menghapus — server membuat satu baris di sini (`tabel`, `upt_key`, `filter_json`
-berisi kondisi WHERE yang **sudah dilengkapi `upt_key` secara eksplisit** supaya aman dieksekusi ulang oleh Admin,
+### `permintaan_hapus` — Permintaan Hapus & Buka Kunci (persetujuan Admin)
+**Migrasi 10** (kolom `period_id`/`jenis_data_id` ditambahkan **migrasi 11**). Sejak migrasi 10, tombol
+Hapus/Kosongkan akun UPT pada `rekap_nilai`, `data_entries`, `dokumen_upload`, dan (sejak migrasi 11)
+**"Ajukan Buka Kunci"** pada `periode_kirim` tidak langsung menghapus — server membuat satu baris di sini (`tabel`,
+`upt_key`, `period_id`/`jenis_data_id` diisi dari baris yang diajukan untuk pencarian cepat, `filter_json` berisi
+kondisi WHERE yang **sudah dilengkapi `upt_key` secara eksplisit** supaya aman dieksekusi ulang oleh Admin,
 `ringkasan`, `jumlah_baris`, `alasan` opsional dari UPT, `status`: `pending`/`disetujui`/`ditolak`, `catatan_admin`,
 `requested_by`/`reviewed_by` → `profiles.id`). Menyetujui (`POST /api/permintaan-hapus/:id/setujui`) menjalankan
-penghapusan aslinya (masuk Tempat Sampah seperti biasa); menolak tidak menyentuh data. Mengedit/mengosongkan isian
-biasa saat masih dalam sesi input **tidak** melalui jalur ini (ditandai `liveEdit` di request, dieksekusi langsung)
-— hanya tombol Hapus/Kosongkan/Hapus Duplikat yang eksplisit yang digerbang. Baca: Admin semua, UPT hanya miliknya
-sendiri; tulis lewat endpoint ini saja (bukan `/api/db/query` generik), karena menyetujui berarti benar-benar
-menjalankan penghapusan.
+aksi aslinya — penghapusan sungguhan (masuk Tempat Sampah seperti biasa) untuk 3 tabel pertama, atau **membuka
+kunci periode** untuk `periode_kirim`; menolak tidak menyentuh data/kunci. Mengedit/mengosongkan isian biasa saat
+masih dalam sesi input **tidak** melalui jalur ini (ditandai `liveEdit` di request, dieksekusi langsung) — hanya
+tombol Hapus/Kosongkan/Hapus Duplikat/Ajukan Buka Kunci yang eksplisit yang digerbang. Baca: Admin semua, UPT
+hanya miliknya sendiri; tulis lewat endpoint ini saja (bukan `/api/db/query` generik), karena menyetujui berarti
+benar-benar menjalankan aksinya.
+
+### `periode_kirim` — Kirim & Kunci Data (persetujuan Admin untuk buka kunci)
+**Migrasi 11.** Akun UPT bisa menekan **"Kirim & Kunci"** pada suatu periode (minggu atau bulan) di Input
+Mingguan/Bulanan — ini membuat/menyimpan-ulang satu baris di sini (`upt_key`, `period_id`, `terkirim_at`,
+`terkirim_by`/`terkirim_by_label`). **Satu baris mengunci SEMUA jenis data pada periode itu sekaligus** (bukan
+per jenis data) — begitu terkunci, form input, tombol Hapus/Kosongkan, dan tombol Tambah/Edit/Upload untuk
+periode itu disembunyikan bagi UPT (lihat `locked` di `fe/src/views/InputData/PeriodeTabs.jsx`, sudah lama ada
+di kode tapi sebelumnya selalu `false`). Membuka kunci = UPT menghapus baris ini (`delete()`), yang otomatis
+menjadi permintaan di `permintaan_hapus` (tabel bertanda `soft: true` + `deleteRequiresApproval: true`, sama
+seperti tabel data lainnya) — setelah Admin menyetujui, baris ini soft-delete (masuk Tempat Sampah) dan UPT bisa
+mengedit periode itu lagi sampai menekan "Kirim" ulang. **Admin selalu bisa mengedit, tidak pernah terkunci.**
+Baca/tulis: UPT hanya miliknya sendiri (dan hanya lewat upsert/delete, bukan update biasa).
 
 ### `dashboard_widgets` — Pengaturan Dashboard
 Satu baris = satu kartu/grafik (`tipe`, `judul`, `grup`, `gaya`, `ikon`, `warna`, `satuan`, `urutan`, `aktif`). Sumber angka ada di kolom JSON

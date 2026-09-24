@@ -254,7 +254,7 @@ export async function executeSoftDelete(def, tableName, where, params, user) {
   return { data: null, count: rows.length }
 }
 
-const REQUEST_TABLE_LABEL = { rekap_nilai: 'baris data mingguan/bulanan', data_entries: 'baris data rincian (nama)', dokumen_upload: 'berkas dokumen' }
+const REQUEST_TABLE_LABEL = { rekap_nilai: 'baris data mingguan/bulanan', data_entries: 'baris data rincian (nama)', dokumen_upload: 'berkas dokumen', periode_kirim: 'kunci periode (buka kunci)' }
 
 /** Ringkasan singkat untuk ditampilkan ke Admin di menu Permintaan Hapus, dari kolom konteks yang sudah dibaca. */
 async function summarizeDeleteRequest(tableName, rows, count) {
@@ -290,9 +290,9 @@ async function createDeleteRequest(def, spec, user) {
   const id = randomUUID()
   const alasan = spec.alasan ? String(spec.alasan).trim().slice(0, 500) || null : null
   await pool.query(
-    `INSERT INTO permintaan_hapus (id, tabel, upt_key, filter_json, ringkasan, jumlah_baris, alasan, requested_by, requested_by_label)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, spec.table, user.upt_key, JSON.stringify(filters), ringkasan, rows.length, alasan, user.id, user.email],
+    `INSERT INTO permintaan_hapus (id, tabel, upt_key, period_id, jenis_data_id, filter_json, ringkasan, jumlah_baris, alasan, requested_by, requested_by_label)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, spec.table, user.upt_key, rows[0]?.period_id || null, rows[0]?.jenis_data_id || null, JSON.stringify(filters), ringkasan, rows.length, alasan, user.id, user.email],
   )
   await logAudit(user, 'ajukan_hapus', { tabel: spec.table, jumlah: rows.length, permintaan_id: id, ringkasan })
   return { data: null, count: 0, pending: true, requestId: id }
