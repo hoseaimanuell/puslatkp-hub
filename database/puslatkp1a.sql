@@ -375,25 +375,25 @@ ON DUPLICATE KEY UPDATE `label` = VALUES(`label`), `aktif` = VALUES(`aktif`);
 -- AKUN AWAL (password di-hash bcrypt; lihat docs/05-akun-dan-keamanan.md)
 -- ==========================================================
 INSERT IGNORE INTO `profiles` (`id`, `email`, `password_hash`, `role`, `upt_key`, `nama_lengkap`, `created_at`) VALUES
-  ('0d0fcaf3-78a1-4ee0-8446-9a5c81167ffd', 'admin@puslatkp.kkp.go.id', '$2b$10$ewr80z334HwyD4xEWCx.qOC9CgMVE2NyStZ8PpJM8oDYLyzKIWA6e', 'admin', NULL, 'Admin PUSLATKP', '2026-01-01 00:00:00'),
-  ('9802d06b-f2a0-4f6c-82e8-940d7e13a1df', 'bppp.jakarta@kkp.go.id', '$2b$10$wwQ4qRF2FE9ly0P3OdbQZelBj8VGe8L0t7Umdc.in4BUnrroFUh.6', 'upt', 'upt_jakarta', 'BPPP Jakarta', '2026-01-01 00:00:00'),
-  ('d5ae756b-5036-45bd-8f57-a22ae970b179', 'bppp.medan@kkp.go.id', '$2b$10$c8LOXIYdF9FWytuMP2LeJ.7sNozKx2wVrxSJUsrBmXCxYObqRZ3B6', 'upt', 'upt_medan', 'BPPP Medan', '2026-01-01 00:00:00'),
-  ('cb80a328-398c-4339-8e9b-a7c27db00701', 'bppp.banyuwangi@kkp.go.id', '$2b$10$Vt7SbjEgZkOlm4G0NrmgzObHgy74W0JVlwDeg4MLnzAvTBPCHeM2u', 'upt', 'upt_banyuwangi', 'BPPP Banyuwangi', '2026-01-01 00:00:00'),
-  ('1d1c82c1-cc51-4431-8f3b-69487d0fc662', 'bppp.tegal@kkp.go.id', '$2b$10$rJzOMkOE9SFMBpke2U4k9eU26xO139zLTpz6K85P0VEmaaAfmXtf6', 'upt', 'upt_tegal', 'BPPP Tegal', '2026-01-01 00:00:00'),
-  ('66bcf275-7c59-45d7-8cc6-942667bcdfdf', 'bppp.bitung@kkp.go.id', '$2b$10$fmxTBwDk08dtL9TqC7dCsO4nluTjybQ2aBeMvLtUpoOzOX0IGbZzO', 'upt', 'upt_bitung', 'BPPP Bitung', '2026-01-01 00:00:00'),
-  ('e8a1fe30-d2fe-47ee-85fd-429f76d696a7', 'bppp.ambon@kkp.go.id', '$2b$10$km6GVZT9pGepVzIijBnKl.clJIOyqbB3oj49UZ8xBe80iy9zFricm', 'upt', 'upt_ambon', 'BPPP Ambon', '2026-01-01 00:00:00'),
-  ('050b142e-809a-4212-800c-b90b91584fbd', 'bppp.padang@kkp.go.id', '$2b$10$xJOEj7SEes3twFndUK.qLOQMUSagivDRhzWwdAYE4fPuOev10DbrK', 'upt', 'upt_padang', 'BPPP Padang', '2026-01-01 00:00:00'),
-  ('1357883c-c49d-4d5b-8c58-573713f9505d', 'bppp.pontianak@kkp.go.id', '$2b$10$VRh4IYiG3.RbLimAjHial.kiAFr4Ku2q/hq/6bDdQaoDDQuFAaFee', 'upt', 'upt_pontianak', 'BPPP Pontianak', '2026-01-01 00:00:00'),
-  ('9a8aa809-b18e-48cb-86d8-fb903f4fa692', 'bppp.makassar@kkp.go.id', '$2b$10$nuod6TtqZb3SmZahjCKVR.2/RtEsqkPfjiSwBeIaWTWTWXY3fn5Gq', 'upt', 'upt_makassar', 'BPPP Makassar', '2026-01-01 00:00:00'),
-  ('f380f850-fc65-4d66-817b-8f55abf1f172', 'bppp.sorong@kkp.go.id', '$2b$10$QKdvFWIV1uZyNu/CLwfu2u6HyhpjYrq3OaGCujrixJLakzrfCGf/6', 'upt', 'upt_sorong', 'BPPP Sorong', '2026-01-01 00:00:00'),
-  ('ee1b6e4a-f626-433a-8d0b-9600433ff6eb', 'bda.sukamandi@kkp.go.id', '$2b$10$IWK8lrMg6LYlQ1DTRPyTLOi2KC/v1lBgnVro.JRTaCBi5gN6A1OS6', 'upt', 'upt_bda_sukamandi', 'BDA Sukamandi', '2026-01-01 00:00:00'),
-  ('c0b8d846-19dd-43d9-8219-5bf006939c45', 'bpmpkp.buleleng@kkp.go.id', '$2b$10$0xPLnm3KdywlFVOSnh2Yx.oKfec3dvkOaDsQ3FxtMeXVYauztUkbS', 'upt', 'upt_bpmpkp_buleleng', 'BPMPKP Buleleng', '2026-01-01 00:00:00'),
-  ('2510dd49-e930-4261-8651-be4c75569456', 'bpppa.denpasar@kkp.go.id', '$2b$10$VsL1QG1njAlTTl.qg4zZHelKWeUEHXVdywcVJWEKbUISn7N7Skp0u', 'upt', 'upt_bpppa_denpasar', 'BPPPA Denpasar', '2026-01-01 00:00:00'),
-  ('ab23b7ea-eb78-4171-8de8-bd919281fb73', 'bppsdmkp@kkp.go.id', '$2b$10$SKrLmOqKyfKOGg9n2VwafODI1flvhMJoZv2QU9WnpkmzQVAANHadi', 'upt', 'upt_bppsdmkp', 'BPPSDMKP', '2026-01-01 00:00:00'),
-  ('5a30deb4-52be-4c37-8564-a687129a743a', 'brbih.depok@kkp.go.id', '$2b$10$wXxYWQNseprQA/0h4Y6QIOotVECOMy/bvf8GN9HuhJLtY2MAYgC/S', 'upt', 'upt_brbih_depok', 'BRBIH Depok', '2026-01-01 00:00:00'),
-  ('b80b2726-3b90-479a-815a-5ae7504c0bfc', 'brpbappp.maros@kkp.go.id', '$2b$10$5J5FBTzirjwmaabwd/QaMuFMhDZJo6HemFpBqB53yD7Mu8l/3KVh.', 'upt', 'upt_brpbappp_maros', 'BRPBAPPP Maros', '2026-01-01 00:00:00'),
-  ('2751bc4b-3b09-4d44-8274-79c6e3c6ffd9', 'brpi@kkp.go.id', '$2b$10$TPvj7NpFBN8tFWEsjzkm/ukC1NKLYjy3AmnwLts8zC/olG7dQr/UW', 'upt', 'upt_brpi', 'BRPI', '2026-01-01 00:00:00'),
-  ('541309b9-7c84-44b1-8487-0357e27ae96b', 'pusat.pelatihan.kp@kkp.go.id', '$2b$10$5A13GV5YPQu1lq7sMTKglOnlo72ttFneXVMgZrFctexXWWop5VSaS', 'upt', 'upt_pusat_pelatihan_kp', 'Pusat Pelatihan KP', '2026-01-01 00:00:00');
+  ('0d0fcaf3-78a1-4ee0-8446-9a5c81167ffd', 'admin@puslatkp.kkp.go.id', '$2b$10$rGs7T8tdxXKB7ZsnIamiwOCenWSzx9pDszt.uam8L1sTKTDlKRiFy', 'admin', NULL, 'Admin PUSLATKP', '2026-01-01 00:00:00'),
+  ('9802d06b-f2a0-4f6c-82e8-940d7e13a1df', 'bppp.jakarta@kkp.go.id', '$2b$10$UeqhdXzsqY9rIWLGLCCk6uxdwyr7mdp6dZ27LVrpG9MXAPHTIL9g6', 'upt', 'upt_jakarta', 'BPPP Jakarta', '2026-01-01 00:00:00'),
+  ('d5ae756b-5036-45bd-8f57-a22ae970b179', 'bppp.medan@kkp.go.id', '$2b$10$WfFmPH2CyG.048/kRTKAoOZ8DyaK3cEbJlU4jpWkkk3gVGk4vXdYq', 'upt', 'upt_medan', 'BPPP Medan', '2026-01-01 00:00:00'),
+  ('cb80a328-398c-4339-8e9b-a7c27db00701', 'bppp.banyuwangi@kkp.go.id', '$2b$10$rPxqqmhF.GEm5qv3GEystOVTF8KIl2Ia1/Kpg8AaLX.CXSVJsNEJa', 'upt', 'upt_banyuwangi', 'BPPP Banyuwangi', '2026-01-01 00:00:00'),
+  ('1d1c82c1-cc51-4431-8f3b-69487d0fc662', 'bppp.tegal@kkp.go.id', '$2b$10$kB6EreD6tDDURYpw928QDOVP6MhyB4p2Y6vO8vKg30xOK8X8rqScq', 'upt', 'upt_tegal', 'BPPP Tegal', '2026-01-01 00:00:00'),
+  ('66bcf275-7c59-45d7-8cc6-942667bcdfdf', 'bppp.bitung@kkp.go.id', '$2b$10$nEe/T66UiqYSkF6VELGnoOTPCsKOAP2/mp7/vtTBE6LEHPJaDHTSa', 'upt', 'upt_bitung', 'BPPP Bitung', '2026-01-01 00:00:00'),
+  ('e8a1fe30-d2fe-47ee-85fd-429f76d696a7', 'bppp.ambon@kkp.go.id', '$2b$10$VXUqtlLEVGDETuv0pEdcMOjvYHiomcnfxumy62iChrP7nRaI37qm6', 'upt', 'upt_ambon', 'BPPP Ambon', '2026-01-01 00:00:00'),
+  ('050b142e-809a-4212-800c-b90b91584fbd', 'bppp.padang@kkp.go.id', '$2b$10$Ln1pZexlmpKBPzaCF5CYwuL8xBa9qI6xjHik72Uk/3fxAh2gqK/CO', 'upt', 'upt_padang', 'BPPP Padang', '2026-01-01 00:00:00'),
+  ('1357883c-c49d-4d5b-8c58-573713f9505d', 'bppp.pontianak@kkp.go.id', '$2b$10$wUgKucwHe3HKSd2kZmraUeXvEUbSDfIaI9EhlmbwwTHcNX319pupW', 'upt', 'upt_pontianak', 'BPPP Pontianak', '2026-01-01 00:00:00'),
+  ('9a8aa809-b18e-48cb-86d8-fb903f4fa692', 'bppp.makassar@kkp.go.id', '$2b$10$HFgslqvxYN9QFlAdItklz.VUAXJoS./wkMxh27DIigxs8MmWAIdkW', 'upt', 'upt_makassar', 'BPPP Makassar', '2026-01-01 00:00:00'),
+  ('f380f850-fc65-4d66-817b-8f55abf1f172', 'bppp.sorong@kkp.go.id', '$2b$10$Xw9LAhPu6E1kKyXeIJ262.bfri2G9O/8Zm6Ozk9c0k0aIxWJfY7jm', 'upt', 'upt_sorong', 'BPPP Sorong', '2026-01-01 00:00:00'),
+  ('ee1b6e4a-f626-433a-8d0b-9600433ff6eb', 'bda.sukamandi@kkp.go.id', '$2b$10$aBryt.lK0toyUeOmokk04ufyYsaUXDz31bMokwSKiZm.gugtkwhgS', 'upt', 'upt_bda_sukamandi', 'BDA Sukamandi', '2026-01-01 00:00:00'),
+  ('c0b8d846-19dd-43d9-8219-5bf006939c45', 'bpmpkp.buleleng@kkp.go.id', '$2b$10$V4Ym1oCLFD6txrFOlJbms.HNIt5HDtEHf8zTNbxGCtYQb.2TXJGd6', 'upt', 'upt_bpmpkp_buleleng', 'BPMPKP Buleleng', '2026-01-01 00:00:00'),
+  ('2510dd49-e930-4261-8651-be4c75569456', 'bpppa.denpasar@kkp.go.id', '$2b$10$Ok5e3STCCqOBVxtZ.1wKYe6aUaYyRdEZdE2JDdwPeLwJzxKGC.UEy', 'upt', 'upt_bpppa_denpasar', 'BPPPA Denpasar', '2026-01-01 00:00:00'),
+  ('ab23b7ea-eb78-4171-8de8-bd919281fb73', 'bppsdmkp@kkp.go.id', '$2b$10$yIPkQeJtNXHJVDe/.6Fame2bStHxDBce2OqJlBD9oIQ/fdY0bAXTi', 'upt', 'upt_bppsdmkp', 'BPPSDMKP', '2026-01-01 00:00:00'),
+  ('5a30deb4-52be-4c37-8564-a687129a743a', 'brbih.depok@kkp.go.id', '$2b$10$HpylZcHqjaS1hgHbh/l4QuGhLUnv2DhX7I7cG1fzSP6vDMHvqzMpq', 'upt', 'upt_brbih_depok', 'BRBIH Depok', '2026-01-01 00:00:00'),
+  ('b80b2726-3b90-479a-815a-5ae7504c0bfc', 'brpbappp.maros@kkp.go.id', '$2b$10$fA3iZ.k0J9NZFuMxtLNOMOlERkSfFR46b2kDSJnucyKzW4jd5B1mO', 'upt', 'upt_brpbappp_maros', 'BRPBAPPP Maros', '2026-01-01 00:00:00'),
+  ('2751bc4b-3b09-4d44-8274-79c6e3c6ffd9', 'brpi@kkp.go.id', '$2b$10$tBJsNOepvxj6MZA.LmrFDOskQpKZc0hjT.TKkS9qAcqxHy9j8gfx6', 'upt', 'upt_brpi', 'BRPI', '2026-01-01 00:00:00'),
+  ('541309b9-7c84-44b1-8487-0357e27ae96b', 'pusat.pelatihan.kp@kkp.go.id', '$2b$10$mw5qXElFTgtjrGHEpCLAhu4vM8gKYlj5fNo.Y3jLlOdnXsfVHo6vK', 'upt', 'upt_pusat_pelatihan_kp', 'Pusat Pelatihan KP', '2026-01-01 00:00:00');
 
 -- ==========================================================
 -- DATA MASTER — 9 JENIS DATA
@@ -414,7 +414,7 @@ INSERT IGNORE INTO `jenis_data` (`id`, `key`, `judul`, `deskripsi`, `level_utama
 -- ==========================================================
 INSERT IGNORE INTO `field_definitions` (`id`, `jenis_data_id`, `level`, `field_key`, `label`, `tipe`, `opsi_pilihan`, `opsi_bersyarat`, `agregasi`, `wajib`, `is_identitas`, `urutan`, `aktif`) VALUES
   ('c85c402d-e8a0-4c8b-8ae2-ef22f9ba0d0d', '11111111-0001-0000-0000-000000000001', 'minggu', 'nama_pelatihan', 'Nama Pelatihan/Judul Pelatihan', 'teks', NULL, NULL, 'sum', 1, 0, 1, 1),
-  ('5a5ca0d3-81f2-4f14-81a1-cce375082b9c', '11111111-0001-0000-0000-000000000001', 'minggu', 'jumlah_peserta', 'Jumlah Peserta', 'angka', NULL, NULL, 'sum', 1, 0, 2, 1),
+  ('5a5ca0d3-81f2-4f14-81a1-cce375082b9c', '11111111-0001-0000-0000-000000000001', 'minggu', 'jumlah_peserta', 'Jumlah Peserta', 'angka', NULL, NULL, 'last', 1, 0, 2, 1),
   ('ea9f67e6-8053-4d4c-895f-719f26968bb0', '11111111-0001-0000-0000-000000000001', 'minggu', 'tanggal_pelatihan', 'Tanggal Pelatihan', 'tanggal', NULL, NULL, 'sum', 0, 0, 3, 1),
   ('5c833b18-d1e5-4d69-8067-e5e10a836415', '11111111-0001-0000-0000-000000000001', 'minggu', 'pagu_anggaran', 'Pagu Anggaran (Rp)', 'angka', NULL, NULL, 'last', 0, 0, 4, 1),
   ('a2d6bee4-0680-4c7c-8d4a-af7091723233', '11111111-0001-0000-0000-000000000001', 'minggu', 'realisasi_anggaran', 'Realisasi Anggaran (Rp)', 'angka', NULL, NULL, 'last', 0, 0, 5, 1),
@@ -445,7 +445,7 @@ INSERT IGNORE INTO `field_definitions` (`id`, `jenis_data_id`, `level`, `field_k
   ('48cf95d6-d3d7-4b21-83da-313b79484b80', '11111111-0002-0000-0000-000000000002', 'bulan', 'jenis_pelatihan', 'Jenis Pelatihan', 'pilihan', '[\"Aspirasi\",\"Reguler\",\"Kerjasama\",\"Mandiri\"]', NULL, 'sum', 0, 0, 20, 1),
   ('60c16f4b-b7b5-4a4b-878f-fa7e13ae320d', '11111111-0003-0000-0000-000000000003', 'minggu', 'nama_pelatihan', 'Nama Pelatihan/Judul Pelatihan', 'teks', NULL, NULL, 'sum', 1, 0, 1, 1),
   ('f773f15d-5b50-42a5-87e6-d5818bd48063', '11111111-0003-0000-0000-000000000003', 'minggu', 'kategori_pelatihan', 'Kategori Pelatihan', 'pilihan', '[\"Struktural\",\"Fungsional\",\"Teknis\",\"Manajerial\"]', NULL, 'sum', 0, 0, 2, 1),
-  ('d219205b-25c3-45bc-8d68-0822075799fb', '11111111-0003-0000-0000-000000000003', 'minggu', 'jumlah_peserta', 'Jumlah Peserta', 'angka', NULL, NULL, 'sum', 1, 0, 3, 1),
+  ('d219205b-25c3-45bc-8d68-0822075799fb', '11111111-0003-0000-0000-000000000003', 'minggu', 'jumlah_peserta', 'Jumlah Peserta', 'angka', NULL, NULL, 'last', 1, 0, 3, 1),
   ('172c12f7-aca1-4400-8a19-c04120580b2f', '11111111-0003-0000-0000-000000000003', 'minggu', 'tanggal_pelatihan', 'Tanggal Pelatihan', 'tanggal', NULL, NULL, 'sum', 0, 0, 4, 1),
   ('9322e74a-7f29-4139-8b60-aa93bc9325e9', '11111111-0003-0000-0000-000000000003', 'minggu', 'pagu_anggaran', 'Pagu Anggaran (Rp)', 'angka', NULL, NULL, 'last', 0, 0, 5, 1),
   ('1993bb48-8d51-4102-8080-cc693fdbd910', '11111111-0003-0000-0000-000000000003', 'minggu', 'realisasi_anggaran', 'Realisasi Anggaran (Rp)', 'angka', NULL, NULL, 'last', 0, 0, 6, 1),

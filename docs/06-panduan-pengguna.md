@@ -340,7 +340,9 @@ Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun hal
   berisi nama berkas asli, bukan teks link. Mengganti berkas otomatis membuang berkas lama. **Tidak bisa** diisi
   lewat Excel — kolom bertipe Berkas dikecualikan dari template & impor Excel (termasuk Impor Data Historis).
 * Untuk kolom **angka** pada jenis data mingguan tersedia **Cara Rekap** (jumlahkan / nilai terakhir / rata-rata /
-  maksimum) — atur *nilai terakhir* untuk angka kumulatif. Lencana cara rekap tampil di daftar kolom.
+  maksimum). **Bawaan kolom baru: Nilai terakhir** (angka dianggap berjalan/kumulatif — mis. minggu 1 = 10, minggu 2
+  = 30 → rekap bulan pakai 30, bukan 10 + 30). Ganti ke *Jumlahkan* hanya untuk kolom yang memang mencatat tambahan
+  baru tiap minggu secara terpisah. Lencana cara rekap tampil di daftar kolom.
 * Pada jenis data mingguan, kotak **Boleh lebih dari 1 pelatihan per minggu** (di *Edit Pengaturan*) menampilkan
   tombol "Tambah pelatihan lain" di form mingguan.
 * Pada jenis data bulanan **Per nama**, kotak **Data kumulatif (bulan terbaru menggantikan sebelumnya)** (di

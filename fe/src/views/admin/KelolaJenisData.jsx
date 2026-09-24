@@ -456,7 +456,7 @@ export default function KelolaJenisData() {
       wajib: false,
       is_identitas: false,
       opsi_text: '',
-      agregasi: 'sum',
+      agregasi: 'last', // kolom angka mingguan baru bawaannya kumulatif (nilai terakhir); ubah manual bila perlu dijumlahkan
       opsi_bersyarat_enabled: false,
       depends_on: '',
       bersyarat_map: {},
@@ -674,8 +674,9 @@ export default function KelolaJenisData() {
                   ))}
                 </select>
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Pilih <strong>Nilai terakhir</strong> untuk angka kumulatif (pagu, realisasi, jumlah SDM) agar tidak terhitung berulang.
-                  Pilih <strong>Jumlahkan</strong> untuk angka yang bertambah tiap minggu (mis. jumlah peserta).
+                  Bawaan <strong>Nilai terakhir</strong>: dipakai untuk angka kumulatif yang terus dilaporkan berjalan
+                  (mis. minggu 1 = 10, minggu 2 = 30 → rekap bulan pakai 30, bukan 10 + 30) agar tidak terhitung berulang.
+                  Pilih <strong>Jumlahkan</strong> hanya bila kolom ini memang mencatat tambahan baru tiap minggu secara terpisah.
                 </p>
               </div>
             )}

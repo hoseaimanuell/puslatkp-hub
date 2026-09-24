@@ -76,12 +76,10 @@ master += insert('profiles', ['id', 'email', 'password_hash', 'role', 'upt_key',
 // Jenis data mingguan bertipe daftar pelatihan: boleh lebih dari 1 baris per minggu
 const MULTI_BARIS = new Set(['masyarakat', 'aparatur', 'data_belanja_modal', 'data_instruktur_dan_wi'])
 
-// Pagu/realisasi/jumlah SDM bersifat KUMULATIF (stok) -> rekap memakai nilai terakhir, bukan dijumlahkan
-const agregasiDefault = f =>
-  f.level === 'minggu' && f.tipe === 'angka' &&
-  (/^(pagu|realisasi)/.test(f.field_key) || ['jumlah', 'berdasarkan_keahlian', 'volume'].includes(f.field_key))
-    ? 'last'
-    : 'sum'
+// Bawaan kolom angka mingguan: KUMULATIF (nilai terakhir) -> minggu 1 = 10, minggu 2 = 30 direkap sebagai 30,
+// bukan 10 + 30. Admin dapat mengubah kolom tertentu jadi "Jumlahkan" lewat Kelola Jenis Data bila memang
+// mencatat tambahan baru tiap minggu secara terpisah (bukan angka berjalan).
+const agregasiDefault = f => (f.level === 'minggu' && f.tipe === 'angka' ? 'last' : 'sum')
 
 const jenisData = [...seed.DEFAULT_JENIS_DATA]
   .sort((a, b) => (a.pasangan_mingguan_id ? 1 : 0) - (b.pasangan_mingguan_id ? 1 : 0)) // induk dulu, agar FK terpenuhi
