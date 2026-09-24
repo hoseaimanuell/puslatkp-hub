@@ -192,9 +192,11 @@ Bila UPT belum menginput, indikator menampilkan **–** dan keterangan *"Menungg
 tidak lagi ikut terhitung.
 
 > **Cara rekap per kolom.** Tiap kolom angka mingguan punya cara rekap: **Jumlahkan (Σ)**, **Nilai terakhir
-> (kumulatif)**, **Rata-rata**, atau **Maksimum**. Bawaan: pagu, realisasi (termasuk realisasi fisik), jumlah
-> instruktur/widyaiswara, dan volume = *nilai terakhir*; kolom lain = *jumlahkan*. Antar-UPT, angka *nilai terakhir*
-> tetap dijumlahkan (total RM semua UPT = jumlah RM terakhir tiap UPT). Admin dapat mengubahnya di **Kelola Jenis Data**.
+> (kumulatif)**, **Rata-rata**, atau **Maksimum**. Bawaan untuk kolom baru: **nilai terakhir** (angka dianggap
+> berjalan/kumulatif — mis. minggu 1 = 10, minggu 2 = 30 → rekap bulan pakai 30, bukan 10 + 30); ganti ke *jumlahkan*
+> hanya untuk kolom yang memang mencatat tambahan baru tiap minggu secara terpisah (mis. jumlah peserta pelatihan
+> per sesi). Antar-UPT, angka *nilai terakhir* tetap dijumlahkan (total RM semua UPT = jumlah RM terakhir tiap UPT).
+> Admin dapat mengubahnya per kolom di **Kelola Jenis Data**.
 
 ## Koreksi & Penghapusan Data
 

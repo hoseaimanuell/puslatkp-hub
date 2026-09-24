@@ -456,7 +456,9 @@ export default function KelolaJenisData() {
       wajib: false,
       is_identitas: false,
       opsi_text: '',
-      agregasi: 'last', // kolom angka mingguan baru bawaannya kumulatif (nilai terakhir); ubah manual bila perlu dijumlahkan
+      // Bawaan kumulatif (nilai terakhir) hanya berlaku untuk kolom angka level minggu (satu-satunya level yang
+      // punya kontrol Cara Rekap); level bulan tetap 'sum' seperti bawaan lama, mengikuti be/scripts/build-sql.js.
+      agregasi: activeLevel === 'minggu' ? 'last' : 'sum',
       opsi_bersyarat_enabled: false,
       depends_on: '',
       bersyarat_map: {},

@@ -19,11 +19,13 @@ export const AGREGASI_LABEL = {
 
 export const AGREGASI_SHORT = { sum: 'Σ jumlah', last: 'nilai terakhir', avg: 'rata-rata', max: 'maks.' }
 
-/** Tebakan bila kolom `agregasi` belum ada di database (sebelum migrasi_03): sama dengan aturan di migrasi. */
+/**
+ * Tebakan bila kolom `agregasi` belum ada di database (sebelum migrasi_03). Selalu dipanggil untuk kolom angka
+ * mingguan (lihat pemakaian `agregasiOf` di seluruh kode) — kumulatif ('last') adalah bawaan kolom baru sejak
+ * commit "Kolom angka mingguan default kumulatif", sama seperti `be/scripts/build-sql.js`'s `agregasiDefault`.
+ */
 export function defaultAgregasi(fieldKey = '') {
-  if (/^(pagu|realisasi)/.test(fieldKey)) return 'last'
-  if (['jumlah', 'berdasarkan_keahlian', 'volume'].includes(fieldKey)) return 'last'
-  return 'sum'
+  return 'last'
 }
 
 export const agregasiOf = field => field?.agregasi || defaultAgregasi(field?.field_key)

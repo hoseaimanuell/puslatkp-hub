@@ -139,11 +139,11 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 
 * **Jenis data uji coba di lingkungan pengembangan ini tidak ikut disemai.** Saat menyinkronkan `seed-data.js`
   (lihat di atas), ditemukan beberapa jenis data hasil eksperimen langsung lewat menu Kelola Jenis Data di database
-  pengembangan ini yang tampak seperti data uji, bukan desain permanen: jenis data berkunci `zzz`, `data_masyarakat_2`
-  (kosong, tanpa kolom), `data_aparatur_2` (duplikat "Data Aparatur"), dan jenis data asli `data_aparatur` yang
-  judulnya berubah jadi "Data Instruktur dan WI" dengan kolom yang disederhanakan. **Semua itu sengaja TIDAK
-  dimasukkan** ke `seed-data.js`/`puslatkp1a.sql` — bila ternyata salah satu memang permanen, beri tahu agar
-  ditambahkan dengan benar.
+  pengembangan ini yang tampak seperti data uji, bukan desain permanen: `data_masyarakat_2` (kosong, tanpa kolom),
+  `data_aparatur_2` (duplikat "Data Aparatur"), dan jenis data asli berkunci `data_aparatur` yang judulnya berubah
+  jadi "Data Instruktur dan WI" dengan kolom yang disederhanakan (bentrok nama dengan jenis data asli
+  `data_instruktur_dan_wi`). **Semua itu sengaja TIDAK dimasukkan** ke `seed-data.js`/`puslatkp1a.sql` — bila
+  ternyata salah satu memang permanen, beri tahu agar ditambahkan dengan benar.
 * **`Rekap Triwulan & Tahun`** ("Total Realisasi Anggaran") masih dijumlahkan dari RM + PNBP/BLU + SBSN (belum
   disamakan dengan perbaikan yang sudah diterapkan di **Dashboard**, yang totalnya dari Masyarakat + Aparatur +
   Data Belanja Modal). Berpotensi memberi angka yang berbeda antara dua halaman itu untuk periode yang sama.

@@ -276,7 +276,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
 
     const rekapList = partnerRekap || []
 
-    // Field angka utama di pasangan (mis. jumlah_peserta, jumlah_instruktur_wi)
+    // Field angka utama di pasangan (mis. jumlah_peserta)
     const targetField = partnerFieldDefs.find(f => f.tipe === 'angka') || {
       field_key: 'jumlah_peserta',
       label: 'Jumlah Peserta'

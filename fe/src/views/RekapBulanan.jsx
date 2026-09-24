@@ -264,6 +264,10 @@ export default function RekapBulanan({ onNavigate }) {
     const uptKeys = new Set(effectiveUptList.map(u => u.key))
     const weekIds = new Set(currentWeeks.map(w => w.id))
     const weekOrder = new Map(currentWeeks.map((w, i) => [w.id, i]))
+    // Cara Rekap kolom "Jumlah" bisa diubah Admin di Kelola Jenis Data (bawaan: nilai terakhir/kumulatif) — ikuti
+    // pengaturannya, jangan hardcode, supaya kartu ini tidak diam-diam menyimpang bila diubah.
+    const jumlahField = fieldDefs.find(f => f.jenis_data_id === instrukturWiJd.id && f.field_key === 'jumlah')
+    const mode = agregasiOf(jumlahField || { field_key: 'jumlah' })
 
     // Kumpulkan per (upt, minggu, baris): pasangan nilai kolom "Jenis" & "Jumlah" (disimpan sebagai baris terpisah)
     const perBaris = new Map()
@@ -286,23 +290,29 @@ export default function RekapBulanan({ onNavigate }) {
       perUptWeekJenis.set(k3, (perUptWeekJenis.get(k3) || 0) + g.jumlah)
     }
 
-    // Kumulatif: nilai TERAKHIR per (upt, jenis) di antara minggu yang ada datanya, baru dijumlahkan antar UPT
-    const latestPerUptJenis = new Map()
+    // Kelompokkan per (upt, jenis) jadi deret nilai per minggu urut kronologis, terapkan Cara Rekap kolom "Jumlah"
+    const perUptJenisWeeks = new Map()
     for (const [k3, jumlah] of perUptWeekJenis) {
       const [upt, periodId, jenis] = k3.split('|')
-      const order = weekOrder.get(periodId) ?? -1
       const k2 = `${upt}|${jenis}`
-      const cur = latestPerUptJenis.get(k2)
-      if (!cur || order > cur.order) latestPerUptJenis.set(k2, { order, jumlah })
+      const arr = perUptJenisWeeks.get(k2) || []
+      arr.push({ order: weekOrder.get(periodId) ?? -1, jumlah })
+      perUptJenisWeeks.set(k2, arr)
     }
 
-    let totalInstruktur = 0, totalWidyaiswara = 0
-    for (const [k2, v] of latestPerUptJenis) {
-      if (k2.endsWith('|Instruktur')) totalInstruktur += v.jumlah
-      else if (k2.endsWith('|Widyaiswara')) totalWidyaiswara += v.jumlah
+    const perJenisPerUptValue = { Instruktur: [], Widyaiswara: [] }
+    for (const [k2, arr] of perUptJenisWeeks) {
+      const jenis = k2.split('|')[1]
+      if (jenis !== 'Instruktur' && jenis !== 'Widyaiswara') continue
+      const ordered = arr.sort((a, b) => a.order - b.order).map(x => x.jumlah)
+      perJenisPerUptValue[jenis].push(applyAgregasi(ordered, mode))
     }
-    return { totalInstruktur, totalWidyaiswara }
-  }, [rekapRows, effectiveUptList, currentWeeks, instrukturWiJd])
+
+    return {
+      totalInstruktur: combineUpt(perJenisPerUptValue.Instruktur, mode),
+      totalWidyaiswara: combineUpt(perJenisPerUptValue.Widyaiswara, mode),
+    }
+  }, [rekapRows, effectiveUptList, currentWeeks, instrukturWiJd, fieldDefs])
 
   // Bangun tabel rekap per jenis data
   const recapPerJenisData = useMemo(() => {
