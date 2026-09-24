@@ -180,4 +180,8 @@ export const db = {
     setujui: id => api(`/permintaan-hapus/${id}/setujui`, { method: 'POST' }),
     tolak: (id, catatan_admin) => api(`/permintaan-hapus/${id}/tolak`, { method: 'POST', body: { catatan_admin } }),
   },
+  periodeKirim: {
+    /** Admin: setujui data yang UPT kirim (status draft -> disetujui) — baru saat ini periode terkunci bagi UPT. */
+    setujui: id => api(`/periode-kirim/${id}/setujui`, { method: 'POST' }),
+  },
 }

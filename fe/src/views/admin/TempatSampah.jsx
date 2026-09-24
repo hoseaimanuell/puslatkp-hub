@@ -27,6 +27,7 @@ const ACTION = {
   ajukan_hapus: ['Ajukan Hapus', 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'],
   setujui_hapus: ['Setujui Hapus', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
   tolak_hapus: ['Tolak Hapus', 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'],
+  setujui_data: ['Setujui Data', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
 }
 
 const TABLE_LABEL = {
@@ -56,6 +57,7 @@ function summarize(row) {
   if (row.action === 'ajukan_hapus') return `${d.ringkasan || `${d.jumlah} ${TABLE_LABEL[d.tabel] || d.tabel}`} (menunggu persetujuan)`
   if (row.action === 'setujui_hapus') return `${d.ringkasan || `${d.jumlah} ${TABLE_LABEL[d.tabel] || d.tabel}`} — ${d.upt || ''}`
   if (row.action === 'tolak_hapus') return `${d.ringkasan || `${d.jumlah} ${TABLE_LABEL[d.tabel] || d.tabel}`} — ${d.upt || ''}${d.catatan ? ` (alasan: ${d.catatan})` : ''}`
+  if (row.action === 'setujui_data') return `${d.upt || ''} · ${d.periode || ''} — periode terkunci`
   const tabel = d.tabel && typeof d.tabel === 'object'
     ? Object.entries(d.tabel).map(([t, n]) => `${n} ${TABLE_LABEL[t] || t}`).join(', ')
     : `${d.jumlah ?? '?'} ${TABLE_LABEL[d.tabel] || d.tabel || 'data'}`

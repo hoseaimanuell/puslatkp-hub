@@ -42,7 +42,10 @@ export const TABLES = {
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'baris_ke', 'field_key'],
     stamp: { updated_by: 'id' },
+    // Gerbang bersyarat: hapus/ubah bebas selagi periode belum 'disetujui' (draft/belum dikirim), digerbang jadi
+    // permintaan (hapus) atau ditolak (ubah/simpan) begitu periode itu sudah disetujui Admin & terkunci.
     deleteRequiresApproval: true,
+    periodLockCheck: true,
   }),
   data_entries: table({
     cols: ['id', 'jenis_data_id', 'upt_key', 'period_id', 'nama', 'nik', 'data_json', 'data_ekstra', 'created_at', 'created_by', 'terlambat'],
@@ -51,6 +54,7 @@ export const TABLES = {
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'nik'],
     stamp: { created_by: 'id' },
     deleteRequiresApproval: true,
+    periodLockCheck: true,
   }),
   daily_activity: table({
     cols: ['id', 'upt_key', 'tanggal', 'status', 'uraian', 'pic', 'deskripsi', 'lingkup', 'output', 'foto_url', 'dokumen_url', 'hambatan', 'hambatan_keterangan', 'interaksi', 'feedback', 'created_at', 'updated_at'],
@@ -64,6 +68,7 @@ export const TABLES = {
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'],
     deleteRequiresApproval: true,
+    periodLockCheck: true,
   }),
   permintaan_hapus: table({
     // Dibuat otomatis oleh server saat akun UPT menekan hapus/kosongkan pada tabel ber-`deleteRequiresApproval`
@@ -79,14 +84,23 @@ export const TABLES = {
     read: 'auth', write: 'none',
   }),
   periode_kirim: table({
-    // "Kirim & Kunci Data": UPT mengunci SEMUA jenis data pada satu periode (minggu/bulan) sekaligus. Baris ada
-    // (deleted_at NULL) = terkunci. UPT membuka kunci lewat delete() — karena `deleteRequiresApproval`, ini
-    // otomatis jadi permintaan di `permintaan_hapus` (tabel='periode_kirim') seperti permintaan hapus biasa.
-    cols: ['id', 'upt_key', 'period_id', 'terkirim_at', 'terkirim_by', 'terkirim_by_label'],
+    // "Kirim & Kunci Data": UPT menekan "Kirim" pada satu periode (minggu/bulan) -> baris di sini dibuat dengan
+    // status 'draft' (dipaksa server, lihat forceOnWrite — klien tidak bisa mengatur status sendiri). Status
+    // 'draft' BELUM mengunci apa pun (UPT masih bebas edit/hapus/batal kirim). Admin meninjau lalu menyetujui
+    // lewat POST /api/periode-kirim/:id/setujui -> status 'disetujui' -> BARU SEMUA jenis data periode itu
+    // terkunci. Selagi 'disetujui', UPT membuka kunci lewat delete() seperti biasa — approvalGate memastikan ini
+    // hanya digerbang (jadi permintaan di `permintaan_hapus`) bila statusnya sudah 'disetujui'; membatalkan draft
+    // yang belum disetujui tetap bebas tanpa persetujuan Admin.
+    cols: ['id', 'upt_key', 'period_id', 'status', 'terkirim_at', 'terkirim_by', 'terkirim_by_label', 'disetujui_at', 'disetujui_by', 'disetujui_by_label'],
     scope: 'upt', write: 'auth',
     soft: true, ctx: ['upt_key', 'period_id'], unique: ['upt_key', 'period_id'],
     stamp: { terkirim_by: 'id', terkirim_by_label: 'email' },
+    forceOnWrite: { status: 'draft' },
     deleteRequiresApproval: true,
+    approvalGate: { column: 'status', values: ['disetujui'] },
+    // Juga cegah UPT "kirim ulang" (upsert) periode yang sudah 'disetujui' agar diam-diam turun jadi 'draft' lagi
+    // lewat ON DUPLICATE KEY UPDATE — begitu terkunci, satu-satunya jalan adalah ajukan buka kunci (delete di atas).
+    periodLockCheck: true,
   }),
   dashboard_widgets: table({
     cols: ['id', 'tipe', 'judul', 'grup', 'gaya', 'ikon', 'warna', 'satuan', 'konfigurasi', 'urutan', 'aktif', 'created_at'],

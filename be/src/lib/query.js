@@ -140,6 +140,9 @@ function prepareRow(def, raw, user) {
   if (def.pk === 'id') row.id = randomUUID()
   for (const [col, from] of Object.entries(def.stamp || {})) row[col] = user[from] ?? null
   if (def.scope === 'upt' && user.role !== 'admin') row.upt_key = user.upt_key
+  // Kolom yang nilainya selalu dipaksa server, tidak boleh diatur klien (mis. `status` selalu 'draft' saat
+  // UPT mengirim — hanya endpoint persetujuan khusus yang boleh mengubahnya jadi 'disetujui').
+  if (def.forceOnWrite) for (const [col, val] of Object.entries(def.forceOnWrite)) row[col] = val
   return row
 }
 
@@ -177,6 +180,7 @@ async function doInsert(def, spec, user, upsert) {
   if (!items.length || items.some(i => !i || typeof i !== 'object')) throw bad('Data tidak valid.')
   const rows = items.map(i => prepareRow(def, i, user))
 
+  await ensurePeriodNotLocked(def, spec, user, rows.map(r => r.period_id))
   if (def.late) await stampLate(def, rows, user)
 
   const conflict = upsert ? String(spec.onConflict || def.pk).split(',').map(s => s.trim()) : []
@@ -231,6 +235,14 @@ async function doUpdate(def, spec, user) {
     setParams.push(todayJakarta())
   }
   const { sql: where, params } = buildWhere(def, spec, user, true)
+  if (def.periodLockCheck && user.role !== 'admin') {
+    let periodIds = spec.values?.period_id ? [spec.values.period_id] : []
+    if (!periodIds.length) {
+      const [existing] = await pool.query(`SELECT DISTINCT t.period_id FROM ${q(spec.table)} AS t${where}`, params)
+      periodIds = existing.map(r => r.period_id)
+    }
+    await ensurePeriodNotLocked(def, spec, user, periodIds)
+  }
   const [res] = await pool.query(`UPDATE ${q(spec.table)} AS t SET ${sets.join(', ')}${where}`, [...setParams, ...params])
   if (spec.table === 'periods' && res.affectedRows) {
     await logAudit(user, 'ubah_periode', { jumlah: res.affectedRows, perubahan: spec.values, filter: (spec.filters || []).map(f => `${f.col}=${JSON.stringify(f.val)}`).join(', ').slice(0, 200) })
@@ -255,6 +267,45 @@ export async function executeSoftDelete(def, tableName, where, params, user) {
 }
 
 const REQUEST_TABLE_LABEL = { rekap_nilai: 'baris data mingguan/bulanan', data_entries: 'baris data rincian (nama)', dokumen_upload: 'berkas dokumen', periode_kirim: 'kunci periode (buka kunci)' }
+
+/**
+ * Dari daftar period_id, kembalikan yang sedang 'disetujui' (terkunci) bagi UPT ini. Dipakai baik untuk menggerbang
+ * hapus (`periodLockCheck` pada deleteRequiresApproval) maupun menolak tulis/ubah langsung (`ensurePeriodNotLocked`)
+ * pada rekap_nilai/data_entries/dokumen_upload — supaya periode yang sudah dikunci Admin benar-benar tidak bisa
+ * diubah lewat API, bukan cuma disembunyikan di tampilan. Aman-gagal (kosong) bila migrasi periode_kirim belum ada.
+ */
+async function findLockedPeriodIds(uptKey, periodIds) {
+  if (!TABLES.periode_kirim || !uptKey || !periodIds.length) return new Set()
+  const [rows] = await pool.query(
+    `SELECT period_id FROM periode_kirim WHERE upt_key = ? AND status = 'disetujui' AND deleted_at IS NULL AND period_id IN (${marks(periodIds)})`,
+    [uptKey, ...periodIds],
+  )
+  return new Set(rows.map(r => r.period_id))
+}
+
+/** Sebelum insert/upsert/update pada tabel ber-`periodLockCheck`: tolak keras (403) bila periode terkait sudah dikunci. */
+async function ensurePeriodNotLocked(def, spec, user, periodIds) {
+  if (!def.periodLockCheck || user.role === 'admin') return
+  const locked = await findLockedPeriodIds(user.upt_key, [...new Set(periodIds.filter(Boolean))])
+  if (locked.size) throw new HttpError(403, 'Periode ini sudah disetujui Admin & terkunci. Ajukan buka kunci ke Admin untuk mengedit lagi.')
+}
+
+/**
+ * Untuk tabel ber-`deleteRequiresApproval`: true bila operasi hapus ini perlu digerbang jadi permintaan, false bila
+ * boleh langsung dieksekusi. Tanpa def.approvalGate/periodLockCheck, selalu true (gerbang tanpa syarat).
+ */
+async function gateNeedsApproval(def, spec, user) {
+  if (!def.approvalGate && !def.periodLockCheck) return true
+  const { sql: where, params } = buildWhere(def, spec, user, true)
+  if (def.approvalGate) {
+    const [rows] = await pool.query(`SELECT t.${q(def.approvalGate.column)} FROM ${q(spec.table)} AS t${where}`, params)
+    return rows.some(r => def.approvalGate.values.includes(r[def.approvalGate.column]))
+  }
+  // periodLockCheck: hapus bebas selagi periode belum 'disetujui' (draft/belum dikirim), digerbang begitu terkunci
+  const [rows] = await pool.query(`SELECT t.period_id FROM ${q(spec.table)} AS t${where}`, params)
+  const locked = await findLockedPeriodIds(user.upt_key, [...new Set(rows.map(r => r.period_id).filter(Boolean))])
+  return locked.size > 0
+}
 
 /** Ringkasan singkat untuk ditampilkan ke Admin di menu Permintaan Hapus, dari kolom konteks yang sudah dibaca. */
 async function summarizeDeleteRequest(tableName, rows, count) {
@@ -306,7 +357,10 @@ async function doDelete(def, spec, user) {
 
   // UPT: tabel ber-`deleteRequiresApproval` tidak dihapus langsung, kecuali penghapusan implisit saat masih
   // mengedit form (spec.liveEdit) — mis. mengosongkan satu kolom lalu menyimpan minggu yang sama.
-  if (def.deleteRequiresApproval && user.role !== 'admin' && !spec.liveEdit) {
+  // Hanya digerbang bila kondisinya butuh persetujuan (mis. status 'disetujui' pada periode_kirim, atau periode
+  // terkait sudah terkunci untuk rekap_nilai dkk.). Draft/periode yang belum dikunci boleh dihapus bebas oleh
+  // UPT sendiri, tanpa perlu izin — belum ada yang benar-benar dikunci Admin.
+  if (def.deleteRequiresApproval && user.role !== 'admin' && !spec.liveEdit && (await gateNeedsApproval(def, spec, user))) {
     return createDeleteRequest(def, spec, user)
   }
 

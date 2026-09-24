@@ -60,6 +60,15 @@ export async function detectOptionalTables() {
         }
       }
       console.warn('PERINGATAN: tabel periode_kirim (atau kolomnya di permintaan_hapus) belum ada. Jalankan database/migrasi_11_periode_kirim.sql agar fitur Kirim & Kunci Data aktif.')
+    } else {
+      const [statusCol] = await pool.query("SHOW COLUMNS FROM periode_kirim LIKE 'status'")
+      if (!statusCol.length) {
+        // Tanpa kolom status (draft/disetujui), fitur ini butuh migrasi_12 sebelum aman dipakai — nonaktifkan
+        // seluruhnya (bukan cuma kolomnya) supaya tidak ada kondisi setengah-jalan yang membingungkan.
+        features.periodeKirim = false
+        delete TABLES.periode_kirim
+        console.warn('PERINGATAN: kolom periode_kirim.status belum ada. Jalankan database/migrasi_12_status_kirim.sql agar Kirim & Kunci Data punya alur draft/disetujui.')
+      }
     }
   }
 }

@@ -14,7 +14,7 @@ import { useAuth } from '../AuthContext'
 import { db, getFeatures } from '../lib/db'
 
 const LOGO_MARK = 'P'
-const PERMINTAAN_POLL_MS = 60000 // cek permintaan hapus baru tiap 1 menit
+const PERMINTAAN_POLL_MS = 60000 // cek permintaan baru (persetujuan data + hapus/buka kunci) tiap 1 menit
 
 export default function Sidebar({ activePage, onNavigate, collapsed, onToggle }) {
   const { isAdmin, profile } = useAuth()
@@ -28,8 +28,10 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
     if (!isAdmin) return
     const feat = await getFeatures()
     if (!feat.permintaanHapus) return
-    const { count } = await db.from('permintaan_hapus').select('*', { head: true }).eq('status', 'pending')
-    setPermintaanPending(count || 0)
+    const counts = [db.from('permintaan_hapus').select('*', { head: true }).eq('status', 'pending')]
+    if (feat.periodeKirim) counts.push(db.from('periode_kirim').select('*', { head: true }).eq('status', 'draft'))
+    const results = await Promise.all(counts)
+    setPermintaanPending(results.reduce((a, r) => a + (r.count || 0), 0))
   }, [isAdmin])
 
   // Muat ulang tiap kali pindah halaman (mis. baru saja menyetujui/menolak di Permintaan Hapus) + polling berkala
@@ -108,7 +110,7 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
             <SectionLabel label="Administrasi" />
             <NavItem icon={FileText} label="Dokumen & Arsip" page="dokumen-arsip" />
             <NavItem icon={Users} label="Kelola Akun UPT" page="kelola-upt" />
-            <NavItem icon={Inbox} label="Permintaan Hapus" page="permintaan-hapus" badge={permintaanPending > 0 ? permintaanPending : null} />
+            <NavItem icon={Inbox} label="Permintaan" page="permintaan-hapus" badge={permintaanPending > 0 ? permintaanPending : null} />
             <NavItem icon={Settings} label="Kelola Jenis Data" page="kelola-jenis-data" />
             <NavItem icon={LayoutGrid} label="Kelola Dashboard" page="kelola-dashboard" />
 

@@ -125,10 +125,12 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
   // Deadline TIDAK mengunci: UPT tetap boleh mengisi, tetapi datanya ditandai "Terlambat" (merah).
   const pastDeadline = !!activePeriod && !isAdmin && isPeriodLocked(activePeriod.deadline)
 
-  // "Kirim & Kunci Data": UPT mengunci SEMUA jenis data pada periode ini sekaligus (bukan cuma jenisData saat
-  // ini) setelah yakin datanya benar. Membuka kunci lagi perlu persetujuan Admin — memakai jalur yang sama
-  // seperti Permintaan Hapus (delete() pada baris kuncinya otomatis jadi permintaan, lihat be/src/lib/query.js).
-  const [periodeLock, setPeriodeLock] = useState(undefined) // undefined = belum dimuat, null = tidak terkunci
+  // "Kirim & Kunci Data": UPT menekan "Kirim" pada periode ini (SEMUA jenis data periode itu, bukan cuma
+  // jenisData saat ini) -> status 'draft', BELUM terkunci, UPT masih bebas mengedit/membatalkan. Admin meninjau
+  // lalu menyetujui (POST /api/periode-kirim/:id/setujui) -> status 'disetujui' -> BARU periode ini terkunci.
+  // Selagi 'disetujui', membuka kunci lagi perlu persetujuan Admin — memakai jalur yang sama seperti Permintaan
+  // Hapus (delete() pada baris kuncinya otomatis jadi permintaan, lihat be/src/lib/query.js: approvalGate).
+  const [periodeLock, setPeriodeLock] = useState(undefined) // undefined = belum dimuat, null = belum dikirim
   const [pendingUnlock, setPendingUnlock] = useState(null)
   const canLock = !isAdmin && !isAllUpt && features.periodeKirim && !!currentUptKey
 
@@ -144,13 +146,21 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
 
   useEffect(() => { loadLockStatus() }, [loadLockStatus])
 
-  const locked = !isAdmin && !!periodeLock
+  const isDraft = !isAdmin && periodeLock?.status === 'draft'
+  const locked = !isAdmin && periodeLock?.status === 'disetujui'
 
   async function kirimData() {
     const levelLabel = activeLevel === 'minggu' ? 'minggu' : 'bulan'
-    if (!confirm(`Kirim & kunci data ${levelLabel} ini?\n\nSemua jenis data ${levelLabel === 'minggu' ? 'mingguan' : 'bulanan'} untuk periode ini (bukan hanya "${jenisData.judul}") akan terkunci dan tidak bisa diedit lagi tanpa persetujuan Admin.`)) return
+    if (!confirm(`Kirim data ${levelLabel} ini untuk disetujui Admin?\n\nSemua jenis data ${levelLabel === 'minggu' ? 'mingguan' : 'bulanan'} untuk periode ini (bukan hanya "${jenisData.judul}") akan menunggu persetujuan. Selagi menunggu, Anda masih bisa mengedit — baru terkunci setelah Admin menyetujui.`)) return
     const { error } = await db.from('periode_kirim').upsert({ period_id: activePeriod.id }, { onConflict: 'upt_key,period_id' })
     if (error) { alert('Gagal mengirim: ' + error.message); return }
+    loadLockStatus()
+  }
+
+  async function batalkanKirim() {
+    if (!confirm('Batalkan pengiriman? Data belum disetujui Admin, jadi bisa dibatalkan bebas.')) return
+    const { error } = await db.from('periode_kirim').delete().eq('upt_key', currentUptKey).eq('period_id', activePeriod.id)
+    if (error) { alert('Gagal membatalkan: ' + error.message); return }
     loadLockStatus()
   }
 
@@ -668,7 +678,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
         </div>
       )}
 
-      {/* Kirim & Kunci Data */}
+      {/* Kirim & Kunci Data: belum dikirim (biru) / draft menunggu persetujuan (kuning, masih bisa diedit) / disetujui & terkunci (oranye) */}
       {canLock && periodeLock !== undefined && (
         locked ? (
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
@@ -678,7 +688,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
               </span>
               <div>
                 <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
-                  Data {activeLevel === 'minggu' ? 'minggu' : 'bulan'} ini sudah dikirim & terkunci
+                  Data {activeLevel === 'minggu' ? 'minggu' : 'bulan'} ini sudah disetujui Admin & terkunci
                 </p>
                 <p className="text-xs text-amber-700 dark:text-amber-400">
                   Berlaku untuk semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini, bukan hanya &quot;{jenisData.judul}&quot;.
@@ -692,14 +702,33 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
               </button>
             )}
           </div>
-        ) : (
+        ) : isDraft ? (
           <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-xs text-blue-700 dark:text-blue-400">
-              Sudah yakin datanya benar? Kirim untuk mengunci semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini —
-              setelah dikirim, perlu persetujuan Admin untuk mengedit lagi.
+            <div className="flex items-center gap-3">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                <Send size={16} />
+              </span>
+              <div>
+                <p className="font-semibold text-blue-800 dark:text-blue-300 text-sm">
+                  Terkirim, menunggu persetujuan Admin
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-400">
+                  Berlaku untuk semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini. Masih bisa diedit sampai Admin menyetujui — setelah itu baru terkunci.
+                </p>
+              </div>
+            </div>
+            <button type="button" onClick={batalkanKirim} className="btn-secondary text-xs whitespace-nowrap">
+              Batalkan Kirim
+            </button>
+          </div>
+        ) : (
+          <div className="bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Sudah yakin datanya benar? Kirim untuk diperiksa & disetujui Admin — semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini ikut terkirim.
+              Anda masih bisa mengedit selagi menunggu, baru terkunci setelah disetujui.
             </p>
             <button type="button" onClick={kirimData} className="btn-primary text-xs whitespace-nowrap">
-              <Send size={13} /> Kirim &amp; Kunci
+              <Send size={13} /> Kirim
             </button>
           </div>
         )
