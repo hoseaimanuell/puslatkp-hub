@@ -78,14 +78,23 @@ Anggaran per Jenis Belanja, dan per Sumber Dana.
 
 1. Halaman menampilkan **rekap mingguan** (filter tahun/triwulan/bulan/minggu/jenis data; Admin juga memilih UPT).
 2. Klik **Input Mingguan** (kanan atas) → pilih **Jenis Data** (daftar sudah terfilter mingguan) → pilih periode
-   (**Minggu ke-1…4** tiap bulan: tanggal 1–7, 8–14, 15–21, 22–akhir bulan) → pilih **UPT** → isi form → **Simpan**.
-   Seluruh isian disimpan sekaligus; **mengosongkan sebuah kolom lalu menyimpan akan menghapus nilainya**
-   (masuk Tempat Sampah).
-3. **Beberapa pelatihan dalam seminggu.** Bawaannya satu formulir (satu pelatihan). Pada jenis data yang diaktifkan
-   Admin (*Masyarakat, Aparatur, Data Belanja Modal, Data Instruktur dan WI*, dan lainnya bila diaktifkan lewat
-   **Kelola Jenis Data** → *Boleh lebih dari 1 pelatihan per minggu*) ada tombol **+ Tambah pelatihan lain
-   (opsional)** yang menambah blok *Pelatihan ke-2, ke-3, …*. Tiap blok berisi kolom yang sama; blok dapat dihapus
-   lewat **Hapus pelatihan ini**. Angka pada minggu itu = **jumlah semua pelatihan** (mis. peserta 12 + 8 = 20).
+   (**Minggu ke-1…4** tiap bulan: tanggal 1–7, 8–14, 15–21, 22–akhir bulan) → pilih **UPT**. Yang tampil adalah
+   **tabel rekap** berisi baris yang sudah tersimpan (kosong bila belum ada), dengan kolom **Status** (badge
+   Menunggu/Disetujui/Ditolak — lihat [Persetujuan Baris Data](#persetujuan-baris-data)) dan **Aksi** (Edit/Hapus)
+   di paling kanan. Input data TIDAK lagi lewat form yang selalu terbuka — klik **+ Tambah Pelatihan** (atau
+   **Isi Data Minggu Ini** untuk jenis data yang cuma satu baris nilai per minggu) untuk membuka jendela isian,
+   isi kolomnya, lalu **Simpan** — jendela tertutup dan baris itu langsung muncul di tabel. Untuk mengubah baris
+   yang sudah ada, klik ikon **Edit** di kolom Aksi (jendela yang sama terbuka terisi nilai lama); mengosongkan
+   sebuah kolom lalu Simpan akan menghapus nilai kolom itu saja (masuk Tempat Sampah). Klik ikon **Hapus** di
+   kolom Aksi untuk membuang seluruh baris (masuk Tempat Sampah 30 hari; berubah jadi **Ajukan Hapus** dengan
+   ikon amber begitu baris itu sudah **Disetujui** Admin — lihat [Persetujuan Baris Data](#persetujuan-baris-data)).
+3. **Beberapa pelatihan dalam seminggu.** Pada jenis data yang diaktifkan Admin (*Masyarakat, Aparatur, Data
+   Belanja Modal, Data Instruktur dan WI*, dan lainnya bila diaktifkan lewat **Kelola Jenis Data** → *Boleh lebih
+   dari 1 pelatihan per minggu*), tombol **+ Tambah Pelatihan** bisa diklik berkali-kali — tiap klik membuka
+   jendela isian baru untuk satu pelatihan, dan tabel rekap menampilkan semua pelatihan sebagai baris terpisah
+   (bernomor 1, 2, 3, …). Angka pada minggu itu = **jumlah semua pelatihan** (mis. peserta 12 + 8 = 20). Jenis
+   data yang tidak diaktifkan opsi ini hanya punya **satu baris** nilai per minggu (tombol **Isi Data Minggu Ini**
+   hilang setelah baris itu terisi, tersisa Edit/Hapus di tabel).
 4. **Angka kumulatif.** Kolom bertanda **kumulatif** (Pagu, Realisasi, jumlah SDM) diisi dengan **total sampai minggu
    tersebut**, bukan tambahan minggu itu saja. Rekap bulan/triwulan/tahun memakai **nilai terakhir** yang sudah diisi,
    sehingga pagu/realisasi tidak terhitung berulang. Kolom lain (mis. jumlah peserta) dijumlahkan.
@@ -205,7 +214,7 @@ berlaku — hanya **menghapus** yang diatur di bawah ini.
 
 | Kebutuhan | Cara |
 | :-- | :-- |
-| Mengoreksi nilai mingguan | Buka periodenya di **Input Mingguan**, ubah nilai, **Simpan** (menimpa nilai lama) |
+| Mengoreksi nilai mingguan | Buka periodenya di **Input Mingguan**, klik ikon ✏️ Edit pada baris di tabel rekap, ubah nilai, **Simpan** |
 | Mengoreksi satu baris bulanan | Ikon ✏️ pada baris di **Input Bulanan** → ubah → simpan. Impor Excel ulang dengan NIK yang sama juga memperbarui baris |
 | Menghapus **satu** baris/berkas/aktivitas | Ikon 🗑️ pada item tersebut (ada konfirmasi) |
 | Menghapus **seluruh isian satu periode** | **Input Mingguan** → tombol **Kosongkan Data Minggu Ini**; **Input Bulanan** → **Hapus Semua Data Bulan Ini**. Wajib mengetik **HAPUS** |
@@ -416,8 +425,9 @@ Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun hal
   maksimum). **Bawaan kolom baru: Nilai terakhir** (angka dianggap berjalan/kumulatif — mis. minggu 1 = 10, minggu 2
   = 30 → rekap bulan pakai 30, bukan 10 + 30). Ganti ke *Jumlahkan* hanya untuk kolom yang memang mencatat tambahan
   baru tiap minggu secara terpisah. Lencana cara rekap tampil di daftar kolom.
-* Pada jenis data mingguan, kotak **Boleh lebih dari 1 pelatihan per minggu** (di *Edit Pengaturan*) menampilkan
-  tombol "Tambah pelatihan lain" di form mingguan.
+* Pada jenis data mingguan, kotak **Boleh lebih dari 1 pelatihan per minggu** (di *Edit Pengaturan*) mengizinkan
+  tombol "Tambah Pelatihan" di Input Mingguan diklik berkali-kali (banyak baris per minggu); tanpa kotak ini,
+  jenis data itu cuma bisa punya satu baris nilai per minggu ("Isi Data Minggu Ini").
 * Pada jenis data bulanan **Per nama**, kotak **Data kumulatif (bulan terbaru menggantikan sebelumnya)** (di
   *Edit Pengaturan*) mengaktifkan perilaku loncat-otomatis-ke-bulan-terakhir di **Data by Name** — lihat
   [Input Bulanan](#input-bulanan).

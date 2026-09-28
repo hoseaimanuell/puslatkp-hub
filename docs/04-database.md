@@ -216,11 +216,12 @@ sendiri).
 (yang menunggu tombol "Kirim" dan mengunci SELURUH periode sekaligus), lapisan ini berlaku **otomatis pada
 setiap Simpan** dan granularitasnya **per baris**:
 
-- **Grain "satu baris"**: `rekap_nilai` disimpan per-field (EAV) — satu "baris" yang dilihat UPT di form (mis.
-  "Pelatihan ke-1") adalah grup baris DB yang berbagi `baris_ke` yang sama. Karena `saveRekap()` di
-  `fe/src/views/InputData/PeriodeTabs.jsx` selalu mengirim SEMUA field satu `baris_ke` bersamaan dalam satu
-  `upsert`, `forceOnWrite: { status: 'draft' }` (server, `be/src/schema.js`) otomatis menjaga status semua field
-  grup itu tetap sinkron — tidak perlu tabel join terpisah. Endpoint approve mengonfirmasi ini lewat
+- **Grain "satu baris"**: `rekap_nilai` disimpan per-field (EAV) — satu "baris" yang dilihat UPT di tabel rekap
+  (mis. "Pelatihan ke-1") adalah grup baris DB yang berbagi `baris_ke` yang sama. Karena `saveBarisModal()` di
+  `fe/src/views/InputData/PeriodeTabs.jsx` (dipanggil dari jendela Tambah/Edit satu pelatihan) selalu mengirim
+  SEMUA field `baris_ke` itu bersamaan dalam satu `upsert`, `forceOnWrite: { status: 'draft' }` (server,
+  `be/src/schema.js`) otomatis menjaga status semua field grup itu tetap sinkron — tidak perlu tabel join
+  terpisah. Endpoint approve mengonfirmasi ini lewat
   `rowApprovalGate.groupBy: ['jenis_data_id','upt_key','period_id','baris_ke']`. Untuk `data_entries` (satu
   baris = satu orang/nik) dan `dokumen_upload` (satu baris = satu berkas), satu baris DB = satu satuan approval.
 - Setiap UPT menyimpan (insert/upsert), status dipaksa **`draft`**, terlepas dari apa yang dikirim klien. Selagi

@@ -329,7 +329,7 @@ export function DynamicFormRekap({ fields, values, onChange, disabled, onSubmit,
       {!disabled && !bare && (
         <div className="pt-3 border-t border-gray-100 dark:border-gray-800">
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Menyimpan...' : 'Simpan Data Mingguan'}
+            {loading ? 'Menyimpan...' : 'Simpan'}
           </button>
         </div>
       )}
