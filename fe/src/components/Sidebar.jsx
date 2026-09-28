@@ -30,13 +30,20 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
     if (!feat.permintaanHapus) return
     const counts = [db.from('permintaan_hapus').select('*', { head: true }).eq('status', 'pending')]
     if (feat.periodeKirim) counts.push(db.from('periode_kirim').select('*', { head: true }).eq('status', 'draft'))
-    if (feat.persetujuanBaris) {
-      counts.push(db.from('rekap_nilai').select('*', { head: true }).eq('status', 'draft'))
-      counts.push(db.from('data_entries').select('*', { head: true }).eq('status', 'draft'))
-      counts.push(db.from('dokumen_upload').select('*', { head: true }).eq('status', 'draft'))
-    }
     const results = await Promise.all(counts)
-    setPermintaanPending(results.reduce((a, r) => a + (r.count || 0), 0))
+    let total = results.reduce((a, r) => a + (r.count || 0), 0)
+    if (feat.persetujuanBaris) {
+      // rekap_nilai disimpan per-field (EAV) — hitung baris_ke unik, bukan baris mentah, supaya cocok dengan
+      // jumlah yang ditampilkan di halaman Permintaan (bagian "Persetujuan Baris Data").
+      const [{ data: rekap }, entCount, dokCount] = await Promise.all([
+        db.from('rekap_nilai').select('jenis_data_id, upt_key, period_id, baris_ke').eq('status', 'draft'),
+        db.from('data_entries').select('*', { head: true }).eq('status', 'draft'),
+        db.from('dokumen_upload').select('*', { head: true }).eq('status', 'draft'),
+      ])
+      const barisKeys = new Set((rekap || []).map(r => `${r.jenis_data_id}|${r.upt_key}|${r.period_id}|${r.baris_ke}`))
+      total += barisKeys.size + (entCount.count || 0) + (dokCount.count || 0)
+    }
+    setPermintaanPending(total)
   }, [isAdmin])
 
   // Muat ulang tiap kali pindah halaman (mis. baru saja menyetujui/menolak di Permintaan Hapus) + polling berkala

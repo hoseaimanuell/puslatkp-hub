@@ -17,7 +17,7 @@ const OPTIONAL = [
   { table: 'field_definitions', col: 'opsi_bersyarat', feature: 'opsiBersyarat' },
 ]
 
-export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, periodeKirim: true, persetujuanBaris: true }
+export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, periodeKirim: true, persetujuanBaris: true, tolakBaris: true }
 
 /** Tabel opsional (migrasi_05/06/08). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {
@@ -94,6 +94,21 @@ export async function detectRowApproval() {
     delete def.rowApprovalGate
   }
   console.warn('PERINGATAN: kolom rekap_nilai.status belum ada. Jalankan database/migrasi_13_status_baris.sql agar setiap baris data yang disimpan UPT perlu disetujui Admin.')
+}
+
+/** Kolom migrasi_14 (`catatan_admin`, tombol Tolak pada Persetujuan Baris Data). Independen dari detectRowApproval
+ *  di atas — database bisa punya migrasi_13 tanpa migrasi_14 (Setujui tetap jalan, Tolak saja yang nonaktif). */
+export async function detectRejectBaris() {
+  if (!features.persetujuanBaris) { features.tolakBaris = false; return }
+  const [found] = await pool.query("SHOW COLUMNS FROM rekap_nilai LIKE 'catatan_admin'")
+  if (found.length) return
+  features.tolakBaris = false
+  for (const t of ROW_STATUS_TABLES) {
+    const def = TABLES[t]
+    if (!def) continue
+    for (const key of ['cols', 'writable']) def[key] = def[key].filter(c => c !== 'catatan_admin')
+  }
+  console.warn('PERINGATAN: kolom rekap_nilai.catatan_admin belum ada. Jalankan database/migrasi_14_tolak_baris.sql agar Admin bisa menolak baris data dengan catatan.')
 }
 
 export async function detectOptionalColumns() {

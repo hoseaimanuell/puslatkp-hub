@@ -281,14 +281,16 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
         const { data } = await q
         const snap = {}
         const statusByBaris = {}
+        const catatanByBaris = {}
         ;(data || []).forEach(r => {
           const b = r.baris_ke ?? 1
           ;(snap[b] ||= {})[r.field_key] = r.value !== null && r.value !== undefined ? r.value : r.value_text
           if (r.status) statusByBaris[b] = r.status // semua field satu baris_ke selalu sinkron (lihat forceOnWrite)
+          if (r.catatan_admin) catatanByBaris[b] = r.catatan_admin
         })
         setSavedSnap(snap)
         setLateRekap((data || []).some(r => r.terlambat))
-        const list = Object.keys(snap).map(Number).sort((a, b) => a - b).map(b => ({ baris_ke: b, values: { ...snap[b] }, status: statusByBaris[b] }))
+        const list = Object.keys(snap).map(Number).sort((a, b) => a - b).map(b => ({ baris_ke: b, values: { ...snap[b] }, status: statusByBaris[b], catatanAdmin: catatanByBaris[b] }))
         setBarisList(list.length ? list : [{ baris_ke: 1, values: {} }])
       }
     } else if (activeLevel === 'bulan' || activeLevel === 'triwulan' || activeLevel === 'tahun') {
@@ -974,7 +976,14 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                             {entry.nama || entry.data_json?.nama || `Baris #${globalIdx}`}{entry.terlambat ? <> {<span title="Disimpan setelah deadline" className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}</> : null}
                           </p>
                           <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex-wrap">
-                            {entry.status && <Badge variant={entry.status === 'disetujui' ? 'success' : 'warning'}>{entry.status === 'disetujui' ? 'Disetujui' : 'Menunggu Persetujuan'}</Badge>}
+                            {entry.status && (
+                              <Badge variant={entry.status === 'disetujui' ? 'success' : entry.status === 'ditolak' ? 'danger' : 'warning'}>
+                                {entry.status === 'disetujui' ? 'Disetujui' : entry.status === 'ditolak' ? 'Ditolak' : 'Menunggu Persetujuan'}
+                              </Badge>
+                            )}
+                            {entry.status === 'ditolak' && entry.catatan_admin && (
+                              <span className="text-rose-600 dark:text-rose-400">Catatan: {entry.catatan_admin}</span>
+                            )}
                             {isAllUpt && <span className="badge-blue text-[10px]">{uptLabelOf(entry.upt_key)}</span>}
                             {entry.nik && <span>NIK: <span className="font-mono">{entry.nik}</span></span>}
                             {entry.data_json?.jenis_kelamin && <span>JK: {entry.data_json.jenis_kelamin}</span>}
@@ -1120,13 +1129,18 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
               <form onSubmit={(e) => { e.preventDefault(); saveRekap() }} className="space-y-4">
                 {barisList.map((b, i) => {
                   const isApproved = b.status === 'disetujui'
+                  const isRejected = b.status === 'ditolak'
                   return (
                     <div key={b.baris_ke} className={multiBaris ? 'rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3' : ''}>
                       {(multiBaris || b.status) && (
                         <div className="flex items-center justify-between flex-wrap gap-2">
                           <div className="flex items-center gap-2">
                             {multiBaris && <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Pelatihan ke-{i + 1}</span>}
-                            {b.status && <Badge variant={isApproved ? 'success' : 'warning'}>{isApproved ? 'Disetujui' : 'Menunggu Persetujuan'}</Badge>}
+                            {b.status && (
+                              <Badge variant={isApproved ? 'success' : isRejected ? 'danger' : 'warning'}>
+                                {isApproved ? 'Disetujui' : isRejected ? 'Ditolak' : 'Menunggu Persetujuan'}
+                              </Badge>
+                            )}
                           </div>
                           {!locked && (
                             isApproved ? (
@@ -1148,6 +1162,11 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                             )
                           )}
                         </div>
+                      )}
+                      {isRejected && b.catatanAdmin && (
+                        <p className="text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-lg px-3 py-1.5">
+                          Catatan Admin: {b.catatanAdmin}
+                        </p>
                       )}
                       <DynamicForm
                         bare

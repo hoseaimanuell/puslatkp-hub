@@ -45,7 +45,7 @@ Bila tetap dibutuhkan untuk uji coba lokal, buat lewat menu *Kelola Akun UPT* (U
 | Melihat data | Semua UPT | Hanya UPT sendiri | Agregat jenis data publik |
 | Input/ubah data | Semua UPT, kapan saja, langsung **disetujui** (tidak antre) | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**); setiap baris yang disimpan otomatis **draft** (menunggu disetujui) sampai Admin menyetujuinya per baris — begitu disetujui, baris itu tidak bisa diedit langsung lagi. Periode juga bisa dikunci total lewat "Kirim" (lihat di bawah) | — |
 | Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | Bebas selagi baris/periode masih **draft**; **perlu persetujuan Admin** begitu baris ATAU periode itu **disetujui** (menu Permintaan) | — |
-| Menyetujui baris data yang disimpan UPT (draft → disetujui, per baris) | ✔ ("Setujui"/"Setujui Semua" di menu Permintaan, bagian Persetujuan Baris Data) | — (UPT hanya bisa mengedit/menghapus draft-nya sendiri) | — |
+| Menyetujui/menolak baris data yang disimpan UPT (draft → disetujui/ditolak, per baris) | ✔ ("Setujui"/"Setujui Semua"/"Tolak" di menu Permintaan, bagian Persetujuan Baris Data) | — (UPT hanya bisa mengedit/menghapus draft/ditolak-nya sendiri) | — |
 | Menyetujui data yang dikirim UPT (draft → disetujui, per periode) | ✔ ("Setujui" di menu Permintaan, bagian Persetujuan Data) | — (UPT hanya bisa mengirim/membatalkan draft sendiri) | — |
 | Buka kunci periode yang sudah **disetujui** | Langsung (tidak pernah terkunci) | **Perlu persetujuan Admin** ("Ajukan Buka Kunci") | — |
 | Kelola akun UPT & daftar UPT | ✔ | — | — |
@@ -82,8 +82,11 @@ dikelompokkan per UPT/Jenis Data/Periode, bisa disetujui satu-satu atau sekaligu
 Begitu disetujui (badge hijau), baris itu **tidak bisa diedit langsung lagi** — tombol edit disembunyikan/field
 dinonaktifkan, satu-satunya cara mengubahnya adalah **"Ajukan Hapus untuk Edit"**, yang masuk antrean Admin sama
 seperti hapus data biasa; setelah disetujui, UPT bisa memasukkan data baru di posisi itu (mulai dari draft lagi).
-Data yang Admin sendiri masukkan langsung (bukan lewat "Simpan" milik UPT) otomatis dianggap **disetujui** —
-Admin tidak pernah perlu menyetujui input dirinya sendiri.
+Selain Setujui, Admin juga bisa **Tolak** satu baris dengan catatan alasan (opsional) — baris itu TIDAK dihapus,
+hanya diberi badge merah "Ditolak" + catatan yang terlihat UPT; UPT tetap bebas memperbaiki & menyimpan ulang
+kapan saja (otomatis kembali ke draft, catatan lama ikut terhapus). Data yang Admin sendiri masukkan langsung
+(bukan lewat "Simpan" milik UPT) otomatis dianggap **disetujui** — Admin tidak pernah perlu menyetujui input
+dirinya sendiri.
 
 ## Mengelola akun
 

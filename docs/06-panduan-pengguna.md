@@ -271,6 +271,11 @@ Ini lapisan **kedua**, terpisah dari & berjalan berdampingan dengan Kirim Data d
    biasa (bulanan/berkas) — ini membuat permintaan ke Admin, sama seperti permintaan hapus data lainnya. Setelah
    Admin menyetujui penghapusannya, Anda bisa memasukkan data baru di posisi itu, yang otomatis kembali berstatus
    menunggu persetujuan.
+5. Admin juga bisa menekan **Tolak** alih-alih Setujui — baris itu TIDAK dihapus atau diubah, badge berubah
+   merah **"Ditolak"** disertai catatan alasan dari Admin (bila diisi). Baris yang ditolak tetap bisa Anda
+   edit/hapus bebas seperti biasa (sama seperti "Menunggu Persetujuan") — begitu Anda perbaiki & **Simpan**
+   ulang, badge otomatis kembali kuning "Menunggu Persetujuan" dan catatan penolakan lama hilang, menunggu
+   ditinjau Admin lagi dari awal.
 
 **Data yang Admin masukkan sendiri langsung dianggap disetujui** — Admin tidak pernah perlu menyetujui isian
 dirinya sendiri.
@@ -297,9 +302,10 @@ Kirim** sendiri, tanpa perlu Admin.
 **Persetujuan Baris Data** – lapisan kedua, terpisah dari yang di atas (lihat [Persetujuan Baris
 Data](#persetujuan-baris-data)): daftar baris data mingguan/bulanan/berkas yang UPT simpan dan masih menunggu
 disetujui, dikelompokkan per UPT · Jenis Data · Periode. Tiap grup menampilkan pratinjau ringkas tiap baris
-(nama pelatihan, nama orang, atau judul berkas) dengan tombol **Setujui** per baris, plus tombol **Setujui
-Semua** di judul grup untuk menyetujui banyak baris sekaligus. Tidak ada tombol tolak — UPT bebas
-mengedit/menghapus draft-nya sendiri.
+(nama pelatihan, nama orang, atau judul berkas) dengan tombol **Setujui** dan **Tolak** per baris, plus tombol
+**Setujui Semua** di judul grup untuk menyetujui banyak baris sekaligus. Menekan **Tolak** membuka kotak dialog
+untuk mengisi alasan (opsional) — baris itu TIDAK dihapus, hanya ditandai "Ditolak" dengan catatan yang terlihat
+UPT; mereka tetap bebas mengedit/menghapus baris draft maupun yang ditolak sendiri kapan saja.
 
 **Hapus & Buka Kunci** – daftar permintaan hapus data (lihat [Koreksi & Penghapusan
 Data](#koreksi--penghapusan-data)) maupun permintaan buka kunci periode yang sudah **disetujui** (lihat [Kirim

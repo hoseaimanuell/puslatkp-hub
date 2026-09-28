@@ -8,7 +8,8 @@
  * 2. Persetujuan Baris Data — lapisan KEDUA, terpisah & berjalan berdampingan dengan #1: SETIAP baris yang
  *    disimpan UPT (rekap_nilai/data_entries/dokumen_upload) langsung berstatus 'draft' menunggu persetujuan,
  *    tidak menunggu "Kirim". Digerombolkan per (UPT, Jenis Data, Periode) supaya bisa disetujui satu-satu atau
- *    sekaligus (tombol "Setujui Semua"). Juga tidak ada tombol tolak — UPT bebas mengedit/menghapus draft-nya.
+ *    sekaligus (tombol "Setujui Semua"). "Tolak" di sini TIDAK menghapus baris — hanya menandainya 'ditolak' +
+ *    catatan alasan (terlihat UPT), yang tetap bebas mengedit/menghapusnya sendiri seperti draft biasa.
  * 3. Hapus & Buka Kunci — permintaan pada `permintaan_hapus`: hapus data mingguan/bulanan/berkas (termasuk baris
  *    yang sudah disetujui di #2), atau buka kunci periode yang statusnya sudah 'disetujui' (tabel='periode_kirim').
  *    Disetujui = aksi aslinya benar-benar dijalankan; ditolak = data/kunci tidak disentuh.
@@ -50,6 +51,7 @@ export default function PermintaanHapus() {
   const [barisEntries, setBarisEntries] = useState([])
   const [barisDokumen, setBarisDokumen] = useState([])
   const [persetujuanBarisEnabled, setPersetujuanBarisEnabled] = useState(false)
+  const [tolakBarisEnabled, setTolakBarisEnabled] = useState(false)
   const [busy, setBusy] = useState('')
   const [toast, setToast] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
@@ -71,6 +73,7 @@ export default function PermintaanHapus() {
     setDrafts(draftRes?.data || [])
 
     setPersetujuanBarisEnabled(feat.persetujuanBaris)
+    setTolakBarisEnabled(feat.tolakBaris)
     if (feat.persetujuanBaris) {
       const [{ data: jds }, { data: rekap }, { data: ents }, { data: docs }] = await Promise.all([
         db.from('jenis_data').select('*'),
@@ -156,6 +159,36 @@ export default function PermintaanHapus() {
     const { error } = await db.persetujuanBaris.setujuiDokumen(d.id)
     setBusy('')
     setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Berkas disetujui.' })
+    load()
+  }
+
+  async function rejectRekapBaris(g) {
+    const catatan = prompt('Alasan penolakan (opsional, akan terlihat UPT pada baris ini):', '')
+    if (catatan === null) return // batal
+    setBusy(`r-${g.jenis_data_id}-${g.upt_key}-${g.period_id}-${g.baris_ke}`)
+    const { error } = await db.persetujuanBaris.tolakRekap(g.jenis_data_id, g.upt_key, g.period_id, g.baris_ke, catatan)
+    setBusy('')
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Baris ditolak — UPT bisa memperbaiki & menyimpan ulang.' })
+    load()
+  }
+
+  async function rejectEntryBaris(e) {
+    const catatan = prompt('Alasan penolakan (opsional, akan terlihat UPT pada baris ini):', '')
+    if (catatan === null) return
+    setBusy(`e-${e.id}`)
+    const { error } = await db.persetujuanBaris.tolakEntry(e.id, catatan)
+    setBusy('')
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Baris ditolak — UPT bisa memperbaiki & menyimpan ulang.' })
+    load()
+  }
+
+  async function rejectDokumenBaris(d) {
+    const catatan = prompt('Alasan penolakan (opsional, akan terlihat UPT pada berkas ini):', '')
+    if (catatan === null) return
+    setBusy(`d-${d.id}`)
+    const { error } = await db.persetujuanBaris.tolakDokumen(d.id, catatan)
+    setBusy('')
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Berkas ditolak — UPT bisa mengunggah ulang.' })
     load()
   }
 
@@ -305,26 +338,47 @@ export default function PermintaanHapus() {
                             return (
                               <div key={busyKey} className="py-2.5 px-4 flex items-start justify-between gap-3 flex-wrap">
                                 <p className="text-xs text-gray-600 dark:text-gray-300 min-w-0 truncate">{rekapPreview(r.fields)}</p>
-                                <button disabled={busy === busyKey} onClick={() => approveRekapBaris(r)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400 flex-shrink-0">
-                                  {busy === busyKey ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
-                                </button>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {tolakBarisEnabled && (
+                                    <button disabled={busy === busyKey} onClick={() => rejectRekapBaris(r)} className="btn-secondary text-xs !text-rose-600 dark:!text-rose-400">
+                                      <X size={12} /> Tolak
+                                    </button>
+                                  )}
+                                  <button disabled={busy === busyKey} onClick={() => approveRekapBaris(r)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400">
+                                    {busy === busyKey ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
+                                  </button>
+                                </div>
                               </div>
                             )
                           })}
                           {g.entries.map(e => (
                             <div key={`e-${e.id}`} className="py-2.5 px-4 flex items-start justify-between gap-3 flex-wrap">
                               <p className="text-xs text-gray-600 dark:text-gray-300 min-w-0 truncate">{e.nama || e.nik || '(tanpa nama)'}</p>
-                              <button disabled={busy === `e-${e.id}`} onClick={() => approveEntryBaris(e)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400 flex-shrink-0">
-                                {busy === `e-${e.id}` ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
-                              </button>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {tolakBarisEnabled && (
+                                  <button disabled={busy === `e-${e.id}`} onClick={() => rejectEntryBaris(e)} className="btn-secondary text-xs !text-rose-600 dark:!text-rose-400">
+                                    <X size={12} /> Tolak
+                                  </button>
+                                )}
+                                <button disabled={busy === `e-${e.id}`} onClick={() => approveEntryBaris(e)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400">
+                                  {busy === `e-${e.id}` ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
+                                </button>
+                              </div>
                             </div>
                           ))}
                           {g.dokumen.map(d => (
                             <div key={`d-${d.id}`} className="py-2.5 px-4 flex items-start justify-between gap-3 flex-wrap">
                               <p className="text-xs text-gray-600 dark:text-gray-300 min-w-0 truncate">{d.judul} ({d.file_name})</p>
-                              <button disabled={busy === `d-${d.id}`} onClick={() => approveDokumenBaris(d)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400 flex-shrink-0">
-                                {busy === `d-${d.id}` ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
-                              </button>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {tolakBarisEnabled && (
+                                  <button disabled={busy === `d-${d.id}`} onClick={() => rejectDokumenBaris(d)} className="btn-secondary text-xs !text-rose-600 dark:!text-rose-400">
+                                    <X size={12} /> Tolak
+                                  </button>
+                                )}
+                                <button disabled={busy === `d-${d.id}`} onClick={() => approveDokumenBaris(d)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400">
+                                  {busy === `d-${d.id}` ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>

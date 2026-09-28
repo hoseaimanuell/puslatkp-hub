@@ -150,6 +150,7 @@ function prepareRow(def, raw, user) {
       if (def.cols.includes('disetujui_at')) row.disetujui_at = new Date()
       if (def.cols.includes('disetujui_by')) row.disetujui_by = user.id
       if (def.cols.includes('disetujui_by_label')) row.disetujui_by_label = user.email
+      if (def.cols.includes('catatan_admin')) row.catatan_admin = null
     } else {
       for (const [col, val] of Object.entries(def.forceOnWrite)) row[col] = val
     }

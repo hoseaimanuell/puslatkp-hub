@@ -37,7 +37,7 @@ export const TABLES = {
     stamp: { dibuat_oleh: 'id' },
   }),
   rekap_nilai: table({
-    cols: ['id', 'jenis_data_id', 'upt_key', 'period_id', 'baris_ke', 'field_key', 'value', 'value_text', 'updated_at', 'updated_by', 'terlambat', 'status', 'disetujui_at', 'disetujui_by', 'disetujui_by_label'],
+    cols: ['id', 'jenis_data_id', 'upt_key', 'period_id', 'baris_ke', 'field_key', 'value', 'value_text', 'updated_at', 'updated_by', 'terlambat', 'status', 'disetujui_at', 'disetujui_by', 'disetujui_by_label', 'catatan_admin'],
     bool: ['terlambat'],
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'baris_ke', 'field_key'],
@@ -47,20 +47,21 @@ export const TABLES = {
     deleteRequiresApproval: true,
     periodLockCheck: true,
     // Lapisan kedua, per baris (baris_ke), terpisah dari periodLockCheck di atas: setiap Simpan dipaksa jadi
-    // 'draft' ("menunggu persetujuan") -- lihat forceOnWrite di query.js. Begitu Admin menyetujui satu baris
+    // 'draft' ("menunggu persetujuan") -- lihat forceOnWrite di query.js -- dan `catatan_admin` (catatan
+    // penolakan lama, bila ada) ikut dikosongkan karena sudah diperbaiki UPT. Begitu Admin menyetujui satu baris
     // (endpoint khusus, bukan lewat sini), rowApprovalGate menolak tulis langsung & menggerbang hapusnya.
-    forceOnWrite: { status: 'draft' },
+    forceOnWrite: { status: 'draft', catatan_admin: null, disetujui_at: null, disetujui_by: null, disetujui_by_label: null },
     rowApprovalGate: { column: 'status', values: ['disetujui'], groupBy: ['jenis_data_id', 'upt_key', 'period_id', 'baris_ke'] },
   }),
   data_entries: table({
-    cols: ['id', 'jenis_data_id', 'upt_key', 'period_id', 'nama', 'nik', 'data_json', 'data_ekstra', 'created_at', 'created_by', 'terlambat', 'status', 'disetujui_at', 'disetujui_by', 'disetujui_by_label'],
+    cols: ['id', 'jenis_data_id', 'upt_key', 'period_id', 'nama', 'nik', 'data_json', 'data_ekstra', 'created_at', 'created_by', 'terlambat', 'status', 'disetujui_at', 'disetujui_by', 'disetujui_by_label', 'catatan_admin'],
     json: ['data_json', 'data_ekstra'], bool: ['terlambat'],
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'nik'],
     stamp: { created_by: 'id' },
     deleteRequiresApproval: true,
     periodLockCheck: true,
-    forceOnWrite: { status: 'draft' },
+    forceOnWrite: { status: 'draft', catatan_admin: null, disetujui_at: null, disetujui_by: null, disetujui_by_label: null },
     rowApprovalGate: { column: 'status', values: ['disetujui'] },
   }),
   daily_activity: table({
@@ -70,13 +71,13 @@ export const TABLES = {
     soft: true, ctx: ['upt_key', 'tanggal'],
   }),
   dokumen_upload: table({
-    cols: ['id', 'jenis_data_id', 'period_id', 'upt_key', 'judul', 'file_name', 'file_size', 'file_ext', 'file_type', 'file_data', 'catatan', 'uploaded_by', 'created_at', 'terlambat', 'status', 'disetujui_at', 'disetujui_by', 'disetujui_by_label'],
+    cols: ['id', 'jenis_data_id', 'period_id', 'upt_key', 'judul', 'file_name', 'file_size', 'file_ext', 'file_type', 'file_data', 'catatan', 'uploaded_by', 'created_at', 'terlambat', 'status', 'disetujui_at', 'disetujui_by', 'disetujui_by_label', 'catatan_admin'],
     bool: ['terlambat'],
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'],
     deleteRequiresApproval: true,
     periodLockCheck: true,
-    forceOnWrite: { status: 'draft' },
+    forceOnWrite: { status: 'draft', catatan_admin: null, disetujui_at: null, disetujui_by: null, disetujui_by_label: null },
     rowApprovalGate: { column: 'status', values: ['disetujui'] },
   }),
   permintaan_hapus: table({

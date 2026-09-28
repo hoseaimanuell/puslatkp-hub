@@ -16,7 +16,7 @@ import arsipRoutes, { detectArsip, arsipEnabled, sweepArsipFiles } from './route
 import fieldFilesRoutes, { detectFieldFiles, fieldFilesEnabled, sweepFieldFiles } from './routes/fieldFiles.js'
 import { ensureCurrentYears } from './lib/yearService.js'
 import { detectSoftDelete, purgeExpired, trashEnabled } from './lib/trash.js'
-import { detectOptionalColumns, detectOptionalTables, detectRowApproval, features } from './lib/compat.js'
+import { detectOptionalColumns, detectOptionalTables, detectRowApproval, detectRejectBaris, features } from './lib/compat.js'
 
 const app = express()
 
@@ -54,6 +54,7 @@ await detectSoftDelete()
 await detectOptionalColumns()
 await detectOptionalTables()
 await detectRowApproval()
+await detectRejectBaris()
 await detectArsip()
 await detectFieldFiles()
 const purge = () => purgeExpired().catch(e => console.error('Gagal membuang tempat sampah kedaluwarsa:', e.message))

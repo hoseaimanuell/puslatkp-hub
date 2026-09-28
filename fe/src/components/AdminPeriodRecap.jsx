@@ -159,10 +159,10 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
           (e.jenis_data_id === jd.id || (partnerId && e.jenis_data_id === partnerId))
         )
         const entCount = ownEntries.length
-        const entCountApproved = ownEntries.filter(e => e.status !== 'draft').length
+        const entCountApproved = ownEntries.filter(e => !e.status || e.status === 'disetujui').length
         // Total resmi (kartu & grafik) hanya menghitung baris yang sudah disetujui Admin — baris yang masih
         // menunggu persetujuan tetap terlihat di tabel rincian (badge 3-status), tapi tidak ikut dijumlah di sini.
-        const approvedRecs = recs.filter(r => r.status !== 'draft')
+        const approvedRecs = recs.filter(r => !r.status || r.status === 'disetujui')
         const peserta = approvedRecs.filter(r => r.field_key === 'jumlah_peserta').reduce((a, r) => a + num(r.value), 0)
         const pagu = approvedRecs.filter(r => r.field_key.includes('pagu')).reduce((a, r) => a + num(r.value), 0)
         const realisasi = approvedRecs.filter(r => r.field_key.includes('realisasi_anggaran') || r.field_key === 'realisasi_anggaran').reduce((a, r) => a + num(r.value), 0)
@@ -552,8 +552,8 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                     <td className="px-3 py-2 text-center whitespace-nowrap">
                       {row.hasData ? (
                         <>
-                          <Badge variant={row.approvalStatus === 'draft' ? 'warning' : 'success'}>
-                            {row.approvalStatus === 'draft' ? 'Menunggu Persetujuan' : 'Disetujui'}
+                          <Badge variant={row.approvalStatus === 'ditolak' ? 'danger' : row.approvalStatus === 'draft' ? 'warning' : 'success'}>
+                            {row.approvalStatus === 'ditolak' ? 'Ditolak' : row.approvalStatus === 'draft' ? 'Menunggu Persetujuan' : 'Disetujui'}
                           </Badge>
                           {row.terlambat && <span className="ml-1 inline-flex text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
                         </>

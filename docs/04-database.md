@@ -232,7 +232,7 @@ setiap Simpan** dan granularitasnya **per baris**:
   `POST /api/persetujuan-baris/rekap-nilai/setujui` (body: `jenis_data_id, upt_key, period_id, baris_ke`,
   meng-UPDATE semua field grup itu sekaligus), `.../rekap-nilai/setujui-massal` (banyak baris sekaligus, tombol
   "Setujui Semua"), `.../data-entries/setujui` dan `.../dokumen-upload/setujui` (masing-masing body `{ id }`).
-  Tidak ada endpoint tolak — UPT bebas mengedit/menghapus draft-nya sendiri kapan saja.
+  Admin juga bisa **Tolak** (`.../tolak`, migrasi 14 — lihat di bawah) alih-alih Setujui.
 - Begitu `disetujui`, baris itu **tidak bisa ditulis ulang langsung** — server menolak (403) setiap
   insert/upsert/update yang cocok dengan baris yang sudah `disetujui`
   (`ensureRowsNotApproved`/`ensureUpdateTargetNotApproved` di `be/src/lib/query.js`, dijalankan sebelum
@@ -246,6 +246,29 @@ setiap Simpan** dan granularitasnya **per baris**:
 - Tanpa migrasi_13, `features.persetujuanBaris` bernilai `false`, keempat kolom baru dilepas dari whitelist
   (`be/src/lib/compat.js`: `detectRowApproval()`), dan seluruh mekanisme ini nonaktif total — data UPT langsung
   tersimpan resmi seperti sebelum revisi ini.
+
+### Tolak Baris Data (migrasi 14) — melengkapi Persetujuan Baris Data di atas
+**Migrasi 14** menambah kolom `catatan_admin` (VARCHAR 500, nullable) pada `rekap_nilai`, `data_entries`, dan
+`dokumen_upload`, plus melebarkan COMMENT kolom `status` untuk mencakup nilai `ditolak`. Selain **Setujui**, Admin
+sekarang bisa **Tolak** satu baris draft — `POST /api/persetujuan-baris/{rekap-nilai|data-entries|dokumen-upload}/tolak`
+(body sama seperti `setujui`, ditambah `catatan_admin` opsional, dijaga oleh middleware `requireTolakEnabled` yang
+memberi pesan jelas bila migrasi_14 belum jalan, bukan galat SQL mentah).
+
+Tolak **TIDAK menghapus atau mengubah isi baris** — hanya mengubah `status` jadi `'ditolak'` dan mengisi
+`catatan_admin`, ditampilkan UPT sebagai peringatan (badge merah "Ditolak" + teks catatan) pada baris/entri/
+berkasnya di form input. Baris `ditolak` diperlakukan SAMA seperti `draft` dalam segala hal lain: UPT bebas
+mengedit/menghapusnya sendiri (tidak digerbang, sama seperti `draft`), dan tidak dihitung di rekap/dashboard/
+publik resmi.
+
+Begitu UPT menyimpan ulang baris yang `ditolak`, `forceOnWrite` (`be/src/schema.js`) mengembalikan status ke
+`'draft'` **dan sekaligus mengosongkan** `catatan_admin`, `disetujui_at`, `disetujui_by`, `disetujui_by_label` —
+mencegah metadata persetujuan/penolakan lama nyangkut di baris yang isinya sudah berubah (baris itu kembali
+menunggu ditinjau dari awal, bukan otomatis dianggap sudah pernah ditolak/disetujui).
+
+Tanpa migrasi_14, `features.tolakBaris` bernilai `false` (independen dari `features.persetujuanBaris` — database
+bisa punya migrasi_13 tanpa migrasi_14, Setujui tetap jalan normal), kolom `catatan_admin` dilepas dari whitelist
+(`detectRejectBaris()` di `be/src/lib/compat.js`), dan tombol **Tolak** disembunyikan di menu Permintaan (Setujui
+tetap muncul seperti biasa).
 
 ### `dashboard_widgets` — Pengaturan Dashboard
 Satu baris = satu kartu/grafik (`tipe`, `judul`, `grup`, `gaya`, `ikon`, `warna`, `satuan`, `urutan`, `aktif`). Sumber angka ada di kolom JSON

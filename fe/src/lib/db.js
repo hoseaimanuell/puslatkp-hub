@@ -155,7 +155,7 @@ export function getFeatures() {
   if (!featuresPromise) {
     featuresPromise = api('/health', { method: 'GET' }).then(({ data }) => {
       if (!data) featuresPromise = null
-      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, periodeKirim: false, persetujuanBaris: false }
+      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, periodeKirim: false, persetujuanBaris: false, tolakBaris: false }
     })
   }
   return featuresPromise
@@ -194,5 +194,12 @@ export const db = {
     setujuiEntry: id => api('/persetujuan-baris/data-entries/setujui', { body: { id } }),
     /** Admin: setujui satu berkas dokumen_upload. */
     setujuiDokumen: id => api('/persetujuan-baris/dokumen-upload/setujui', { body: { id } }),
+    /** Admin: tolak satu baris rekap_nilai (status draft -> ditolak + catatan; baris tidak dihapus/diubah). */
+    tolakRekap: (jenis_data_id, upt_key, period_id, baris_ke, catatan_admin) =>
+      api('/persetujuan-baris/rekap-nilai/tolak', { body: { jenis_data_id, upt_key, period_id, baris_ke, catatan_admin } }),
+    /** Admin: tolak satu baris data_entries. */
+    tolakEntry: (id, catatan_admin) => api('/persetujuan-baris/data-entries/tolak', { body: { id, catatan_admin } }),
+    /** Admin: tolak satu berkas dokumen_upload. */
+    tolakDokumen: (id, catatan_admin) => api('/persetujuan-baris/dokumen-upload/tolak', { body: { id, catatan_admin } }),
   },
 }

@@ -1,18 +1,27 @@
 /**
  * routes/persetujuan-baris.js
- * Admin: setujui baris data yang disimpan UPT (status 'draft' -> 'disetujui'), lapisan KEDUA yang terpisah
- * dari & berjalan berdampingan dengan periode-kirim.js (Kirim Data per periode). Di sini granularitasnya per
- * baris — rekap_nilai per (jenis_data_id, upt_key, period_id, baris_ke), data_entries/dokumen_upload per id.
- * Sengaja TIDAK ada endpoint tolak: UPT bebas mengedit/menghapus baris draft-nya sendiri tanpa perlu izin.
+ * Admin: setujui/tolak baris data yang disimpan UPT ('draft' -> 'disetujui'/'ditolak'), lapisan KEDUA yang
+ * terpisah dari & berjalan berdampingan dengan periode-kirim.js (Kirim Data per periode). Di sini
+ * granularitasnya per baris — rekap_nilai per (jenis_data_id, upt_key, period_id, baris_ke), data_entries/
+ * dokumen_upload per id. Tolak TIDAK menghapus/mengubah isi baris — hanya menandainya 'ditolak' + catatan
+ * alasan (migrasi_14), terlihat UPT sebagai peringatan. UPT tetap bebas mengedit/menghapus baris 'draft' atau
+ * 'ditolak' kapan saja tanpa perlu izin; menyimpan ulang otomatis mengembalikan status ke 'draft' (lihat
+ * forceOnWrite di be/src/schema.js) dan mengosongkan catatan lama.
  */
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { requireAdmin } from '../auth.js'
 import { HttpError } from '../lib/query.js'
 import { logAudit } from '../lib/audit.js'
+import { features } from '../lib/compat.js'
 
 const router = Router()
 router.use(requireAdmin)
+
+function requireTolakEnabled(_req, _res, next) {
+  if (!features.tolakBaris) throw new HttpError(409, 'Fitur Tolak belum aktif. Jalankan database/migrasi_14_tolak_baris.sql lalu restart backend.')
+  next()
+}
 
 async function labelUpt(uptKey) {
   const [[row]] = await pool.query('SELECT label FROM upt_list WHERE `key` = ?', [uptKey])
@@ -41,6 +50,24 @@ router.post('/rekap-nilai/setujui', async (req, res) => {
   if (!res1.affectedRows) throw new HttpError(404, 'Baris ini tidak ditemukan atau sudah diproses sebelumnya.')
   const [jd, upt, period] = await Promise.all([labelJenisData(jenis_data_id), labelUpt(upt_key), labelPeriod(period_id)])
   await logAudit(req.user, 'setujui_baris', { tabel: 'rekap_nilai', jenis_data: jd, upt, periode: period, baris_ke, jumlah: res1.affectedRows })
+  res.json({ success: true, jumlah: res1.affectedRows })
+})
+
+// POST /api/persetujuan-baris/rekap-nilai/tolak — tandai 'ditolak' + catatan, baris TIDAK dihapus/diubah isinya
+router.post('/rekap-nilai/tolak', requireTolakEnabled, async (req, res) => {
+  const { jenis_data_id, upt_key, period_id, baris_ke, catatan_admin } = req.body || {}
+  if (!jenis_data_id || !upt_key || !period_id || baris_ke === undefined || baris_ke === null) {
+    throw new HttpError(400, 'jenis_data_id, upt_key, period_id, dan baris_ke wajib diisi.')
+  }
+  const catatan = catatan_admin ? String(catatan_admin).trim().slice(0, 500) || null : null
+  const [res1] = await pool.query(
+    `UPDATE rekap_nilai SET status = 'ditolak', catatan_admin = ?
+     WHERE jenis_data_id = ? AND upt_key = ? AND period_id = ? AND baris_ke = ? AND status = 'draft' AND deleted_at IS NULL`,
+    [catatan, jenis_data_id, upt_key, period_id, baris_ke],
+  )
+  if (!res1.affectedRows) throw new HttpError(404, 'Baris ini tidak ditemukan atau sudah diproses sebelumnya.')
+  const [jd, upt, period] = await Promise.all([labelJenisData(jenis_data_id), labelUpt(upt_key), labelPeriod(period_id)])
+  await logAudit(req.user, 'tolak_baris', { tabel: 'rekap_nilai', jenis_data: jd, upt, periode: period, baris_ke, catatan })
   res.json({ success: true, jumlah: res1.affectedRows })
 })
 
@@ -79,6 +106,23 @@ router.post('/data-entries/setujui', async (req, res) => {
   res.json({ success: true })
 })
 
+// POST /api/persetujuan-baris/data-entries/tolak
+router.post('/data-entries/tolak', requireTolakEnabled, async (req, res) => {
+  const { id, catatan_admin } = req.body || {}
+  if (!id) throw new HttpError(400, 'id wajib diisi.')
+  const [[row]] = await pool.query('SELECT jenis_data_id, upt_key, period_id, nama FROM data_entries WHERE id = ? AND deleted_at IS NULL', [id])
+  if (!row) throw new HttpError(404, 'Data tidak ditemukan (mungkin sudah dihapus).')
+  const catatan = catatan_admin ? String(catatan_admin).trim().slice(0, 500) || null : null
+  const [res1] = await pool.query(
+    `UPDATE data_entries SET status = 'ditolak', catatan_admin = ? WHERE id = ? AND status = 'draft'`,
+    [catatan, id],
+  )
+  if (!res1.affectedRows) throw new HttpError(409, 'Data ini sudah diproses sebelumnya.')
+  const [jd, upt, period] = await Promise.all([labelJenisData(row.jenis_data_id), labelUpt(row.upt_key), labelPeriod(row.period_id)])
+  await logAudit(req.user, 'tolak_baris', { tabel: 'data_entries', jenis_data: jd, upt, periode: period, nama: row.nama, catatan })
+  res.json({ success: true })
+})
+
 // POST /api/persetujuan-baris/dokumen-upload/setujui — satu berkas
 router.post('/dokumen-upload/setujui', async (req, res) => {
   const { id } = req.body || {}
@@ -93,6 +137,23 @@ router.post('/dokumen-upload/setujui', async (req, res) => {
   if (!res1.affectedRows) throw new HttpError(409, 'Berkas ini sudah diproses sebelumnya.')
   const [jd, upt, period] = await Promise.all([labelJenisData(row.jenis_data_id), labelUpt(row.upt_key), labelPeriod(row.period_id)])
   await logAudit(req.user, 'setujui_baris', { tabel: 'dokumen_upload', jenis_data: jd, upt, periode: period, judul: row.judul })
+  res.json({ success: true })
+})
+
+// POST /api/persetujuan-baris/dokumen-upload/tolak
+router.post('/dokumen-upload/tolak', requireTolakEnabled, async (req, res) => {
+  const { id, catatan_admin } = req.body || {}
+  if (!id) throw new HttpError(400, 'id wajib diisi.')
+  const [[row]] = await pool.query('SELECT jenis_data_id, upt_key, period_id, judul FROM dokumen_upload WHERE id = ? AND deleted_at IS NULL', [id])
+  if (!row) throw new HttpError(404, 'Berkas tidak ditemukan (mungkin sudah dihapus).')
+  const catatan = catatan_admin ? String(catatan_admin).trim().slice(0, 500) || null : null
+  const [res1] = await pool.query(
+    `UPDATE dokumen_upload SET status = 'ditolak', catatan_admin = ? WHERE id = ? AND status = 'draft'`,
+    [catatan, id],
+  )
+  if (!res1.affectedRows) throw new HttpError(409, 'Berkas ini sudah diproses sebelumnya.')
+  const [jd, upt, period] = await Promise.all([labelJenisData(row.jenis_data_id), labelUpt(row.upt_key), labelPeriod(row.period_id)])
+  await logAudit(req.user, 'tolak_baris', { tabel: 'dokumen_upload', jenis_data: jd, upt, periode: period, judul: row.judul, catatan })
   res.json({ success: true })
 })
 

@@ -28,6 +28,9 @@ const ACTION = {
   setujui_hapus: ['Setujui Hapus', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
   tolak_hapus: ['Tolak Hapus', 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'],
   setujui_data: ['Setujui Data', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
+  setujui_baris: ['Setujui Baris', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
+  setujui_baris_massal: ['Setujui Baris Massal', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
+  tolak_baris: ['Tolak Baris', 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'],
 }
 
 const TABLE_LABEL = {
@@ -58,6 +61,9 @@ function summarize(row) {
   if (row.action === 'setujui_hapus') return `${d.ringkasan || `${d.jumlah} ${TABLE_LABEL[d.tabel] || d.tabel}`} — ${d.upt || ''}`
   if (row.action === 'tolak_hapus') return `${d.ringkasan || `${d.jumlah} ${TABLE_LABEL[d.tabel] || d.tabel}`} — ${d.upt || ''}${d.catatan ? ` (alasan: ${d.catatan})` : ''}`
   if (row.action === 'setujui_data') return `${d.upt || ''} · ${d.periode || ''} — periode terkunci`
+  if (row.action === 'setujui_baris') return `${d.upt || ''} · ${d.jenis_data || ''} · ${d.periode || ''}${d.nama ? ` — ${d.nama}` : d.judul ? ` — ${d.judul}` : d.baris_ke !== undefined ? ` — baris ke-${d.baris_ke}` : ''}`
+  if (row.action === 'setujui_baris_massal') return `${d.jumlah_disetujui ?? 0} dari ${d.jumlah_diajukan ?? 0} baris disetujui`
+  if (row.action === 'tolak_baris') return `${d.upt || ''} · ${d.jenis_data || ''} · ${d.periode || ''}${d.nama ? ` — ${d.nama}` : d.judul ? ` — ${d.judul}` : d.baris_ke !== undefined ? ` — baris ke-${d.baris_ke}` : ''}${d.catatan ? ` (alasan: ${d.catatan})` : ''}`
   const tabel = d.tabel && typeof d.tabel === 'object'
     ? Object.entries(d.tabel).map(([t, n]) => `${n} ${TABLE_LABEL[t] || t}`).join(', ')
     : `${d.jumlah ?? '?'} ${TABLE_LABEL[d.tabel] || d.tabel || 'data'}`

@@ -27,15 +27,16 @@ Cek server & koneksi database. Tanpa autentikasi.
 { "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "periodeKirim": true, "arsip": true, "fieldFiles": true } }
 ```
 
-`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 11 / 12 / 13).
+`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 11 / 12 / 13 / 14).
 Bila belum, fiturnya nonaktif dan aplikasi tetap berjalan. `kumulatifBulanan` = kolom `jenis_data.kumulatif_bulanan`
 (migrasi_07), `dokumenResmi` = tabel `dokumen_resmi` (migrasi_08), `opsiBersyarat` = kolom
 `field_definitions.opsi_bersyarat` (migrasi_09), `permintaanHapus` = tabel `permintaan_hapus` (migrasi_10),
 `periodeKirim` = tabel `periode_kirim` + kolom `permintaan_hapus.period_id` (migrasi_11) + kolom
 `periode_kirim.status` (migrasi_12, alur draft→disetujui per periode), `persetujuanBaris` = kolom
 `rekap_nilai.status` dkk. (migrasi_13, alur draft→disetujui per baris — lapisan kedua, terpisah dari
-`periodeKirim`) — bila `false`, akun UPT tetap menghapus/mengedit data secara langsung seperti sebelumnya
-(tidak diblokir diam-diam).
+`periodeKirim`), `tolakBaris` = kolom `rekap_nilai.catatan_admin` dkk. (migrasi_14, tombol Tolak pada Persetujuan
+Baris Data — independen dari `persetujuanBaris`: bisa punya migrasi_13 tanpa migrasi_14, Setujui tetap jalan) —
+bila `false`, akun UPT tetap menghapus/mengedit data secara langsung seperti sebelumnya (tidak diblokir diam-diam).
 
 ## `POST /api/auth/login`
 
@@ -282,6 +283,16 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 > persetujuan sendiri — lihat cabang `user.role === 'admin'` di `prepareRow()`). Tanpa migrasi_13, seluruh
 > mekanisme ini nonaktif total dan data langsung tersimpan resmi seperti sebelum revisi ini (lihat
 > `features.persetujuanBaris` di atas).
+
+> **Tolak baris (migrasi_14).** Selain Setujui, Admin juga bisa **Tolak** satu baris draft lewat
+> `POST /api/persetujuan-baris/{rekap-nilai|data-entries|dokumen-upload}/tolak` (body sama seperti `setujui`,
+> ditambah `catatan_admin` opsional). Ini **TIDAK menghapus atau mengubah isi baris** — hanya mengubah statusnya
+> jadi `ditolak` dan mengisi `catatan_admin` (kolom baru, migrasi_14), terlihat UPT sebagai peringatan pada
+> baris/entri/berkasnya. Baris `ditolak` tetap dihitung sama seperti `draft` (bebas diedit/dihapus UPT, tidak
+> masuk total resmi). Begitu UPT menyimpan ulang, `forceOnWrite` mengembalikan status ke `draft` **dan**
+> mengosongkan `catatan_admin` beserta `disetujui_at`/`disetujui_by`/`disetujui_by_label` (mencegah metadata
+> persetujuan/penolakan lama nyangkut di baris yang sudah diperbarui) — baris itu lalu menunggu ditinjau lagi
+> dari awal.
 
 > **Pembatas menu vs pembatas server.** Sebagian besar tabel di atas dibatasi di **server** (`be/src/schema.js`/`query.js`) —
 > itulah pembatas yang sesungguhnya. `dokumen_resmi` adalah pengecualian: server mengizinkan semua akun login

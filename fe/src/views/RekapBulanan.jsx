@@ -211,9 +211,9 @@ export default function RekapBulanan({ onNavigate }) {
 
   // Baris yang masih menunggu persetujuan Admin belum dihitung di rekap/total resmi — tapi tetap terlihat apa
   // adanya (semua status) di tabel listing "Data by Name" (namaEntries) supaya UPT tetap melihat baris miliknya.
-  const approvedRekapRows = useMemo(() => rekapRows.filter(r => r.status !== 'draft'), [rekapRows])
-  const approvedDataEntries = useMemo(() => dataEntries.filter(e => e.status !== 'draft'), [dataEntries])
-  const approvedUploadedDocs = useMemo(() => uploadedDocs.filter(d => d.status !== 'draft'), [uploadedDocs])
+  const approvedRekapRows = useMemo(() => rekapRows.filter(r => !r.status || r.status === 'disetujui'), [rekapRows])
+  const approvedDataEntries = useMemo(() => dataEntries.filter(e => !e.status || e.status === 'disetujui'), [dataEntries])
+  const approvedUploadedDocs = useMemo(() => uploadedDocs.filter(d => !d.status || d.status === 'disetujui'), [uploadedDocs])
 
   // Hitung metrik agregat total bulan ini
   const monthlyMetrics = useMemo(() => {
@@ -1244,7 +1244,11 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
                     </td>
                   ))}
                   <td className="px-3 py-2.5 whitespace-nowrap">
-                    {e.status && <Badge variant={e.status === 'disetujui' ? 'success' : 'warning'}>{e.status === 'disetujui' ? 'Disetujui' : 'Menunggu'}</Badge>}
+                    {e.status && (
+                      <Badge variant={e.status === 'disetujui' ? 'success' : e.status === 'ditolak' ? 'danger' : 'warning'}>
+                        {e.status === 'disetujui' ? 'Disetujui' : e.status === 'ditolak' ? 'Ditolak' : 'Menunggu'}
+                      </Badge>
+                    )}
                   </td>
                 </tr>
               ))
