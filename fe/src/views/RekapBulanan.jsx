@@ -125,7 +125,7 @@ export default function RekapBulanan({ onNavigate }) {
     const [{ data: rek }, { data: ent }, { data: docs }] = await Promise.all([
       db.from('rekap_nilai').select('*').in('period_id', targetPeriodIds),
       db.from('data_entries').select('*').in('period_id', targetPeriodIds),
-      db.from('dokumen_upload').select('id, jenis_data_id, period_id, upt_key, judul, file_name, file_size, uploaded_by, created_at').in('period_id', targetPeriodIds),
+      db.from('dokumen_upload').select('id, jenis_data_id, period_id, upt_key, judul, file_name, file_size, uploaded_by, created_at, status').in('period_id', targetPeriodIds),
     ])
 
     setRekapRows(rek || [])
@@ -209,6 +209,12 @@ export default function RekapBulanan({ onNavigate }) {
     return jenisDataList
   }, [selectedJdId, jenisDataList])
 
+  // Baris yang masih menunggu persetujuan Admin belum dihitung di rekap/total resmi — tapi tetap terlihat apa
+  // adanya (semua status) di tabel listing "Data by Name" (namaEntries) supaya UPT tetap melihat baris miliknya.
+  const approvedRekapRows = useMemo(() => rekapRows.filter(r => r.status !== 'draft'), [rekapRows])
+  const approvedDataEntries = useMemo(() => dataEntries.filter(e => e.status !== 'draft'), [dataEntries])
+  const approvedUploadedDocs = useMemo(() => uploadedDocs.filter(d => d.status !== 'draft'), [uploadedDocs])
+
   // Hitung metrik agregat total bulan ini
   const monthlyMetrics = useMemo(() => {
     let totalPeserta = 0
@@ -220,7 +226,7 @@ export default function RekapBulanan({ onNavigate }) {
     const uptKeys = new Set(effectiveUptList.map(u => u.key))
 
     // Rekap tiap kolom sesuai cara rekapnya (pagu/realisasi kumulatif = nilai terakhir; peserta = dijumlahkan)
-    aggregateRows(rekapRows, currentWeeks.map(w => w.id), fieldDefs).forEach(r => {
+    aggregateRows(approvedRekapRows, currentWeeks.map(w => w.id), fieldDefs).forEach(r => {
       if (!uptKeys.has(r.upt_key)) return
       if (r.field_key === 'jumlah_peserta') totalPeserta += num(r.value)
       if (r.field_key.includes('pagu')) totalPagu += num(r.value)
@@ -232,11 +238,11 @@ export default function RekapBulanan({ onNavigate }) {
       }
     })
 
-    uploadedDocs.forEach(d => {
+    approvedUploadedDocs.forEach(d => {
       if (uptKeys.has(d.upt_key)) totalDokumen++
     })
 
-    const entCount = dataEntries.filter(e => uptKeys.has(e.upt_key)).length
+    const entCount = approvedDataEntries.filter(e => uptKeys.has(e.upt_key)).length
     if (totalPeserta === 0 && entCount > 0) {
       totalPeserta = entCount
     }
@@ -251,7 +257,7 @@ export default function RekapBulanan({ onNavigate }) {
       persentaseSerapan,
       totalDokumen,
     }
-  }, [rekapRows, uploadedDocs, effectiveUptList, currentWeeks, fieldDefs])
+  }, [approvedRekapRows, approvedUploadedDocs, approvedDataEntries, effectiveUptList, currentWeeks, fieldDefs])
 
   // "Data Instruktur dan WI (Mingguan)": saat jenis data ini dipilih di filter, kartu ringkasan berganti jadi
   // Total Instruktur / Total Widyaiswara (dipisah dari kolom "Jenis" per baris, bukan "Total Pelatihan/Peserta"
@@ -271,7 +277,7 @@ export default function RekapBulanan({ onNavigate }) {
 
     // Kumpulkan per (upt, minggu, baris): pasangan nilai kolom "Jenis" & "Jumlah" (disimpan sebagai baris terpisah)
     const perBaris = new Map()
-    for (const r of rekapRows) {
+    for (const r of approvedRekapRows) {
       if (r.jenis_data_id !== instrukturWiJd.id || !uptKeys.has(r.upt_key) || !weekIds.has(r.period_id)) continue
       if (r.field_key !== 'jenis_instruktur_wi' && r.field_key !== 'jumlah') continue
       const key = `${r.upt_key}|${r.period_id}|${r.baris_ke ?? 1}`
@@ -312,7 +318,7 @@ export default function RekapBulanan({ onNavigate }) {
       totalInstruktur: combineUpt(perJenisPerUptValue.Instruktur, mode),
       totalWidyaiswara: combineUpt(perJenisPerUptValue.Widyaiswara, mode),
     }
-  }, [rekapRows, effectiveUptList, currentWeeks, instrukturWiJd, fieldDefs])
+  }, [approvedRekapRows, effectiveUptList, currentWeeks, instrukturWiJd, fieldDefs])
 
   // Bangun tabel rekap per jenis data
   const recapPerJenisData = useMemo(() => {
@@ -331,7 +337,7 @@ export default function RekapBulanan({ onNavigate }) {
       const uptBreakdown = effectiveUptList.map(upt => {
         // Ambil nilai 4 minggu (semua field)
         const weekData = currentWeeks.map(w => {
-          const rows = rekapRows.filter(r =>
+          const rows = approvedRekapRows.filter(r =>
             r.upt_key === upt.key &&
             r.period_id === w.id &&
             r.jenis_data_id === jdTargetId
@@ -351,14 +357,14 @@ export default function RekapBulanan({ onNavigate }) {
         })
 
         // Hitung baris entries jika ada
-        const entCount = dataEntries.filter(e =>
+        const entCount = approvedDataEntries.filter(e =>
           e.upt_key === upt.key &&
           e.jenis_data_id === jd.id &&
           (e.period_id === currentMonthPeriod?.id || currentWeeks.some(w => w.id === e.period_id))
         ).length
 
         // Hitung dokumen terunggah
-        const docs = uploadedDocs.filter(d =>
+        const docs = approvedUploadedDocs.filter(d =>
           d.upt_key === upt.key &&
           d.jenis_data_id === jd.id &&
           (d.period_id === currentMonthPeriod?.id || currentWeeks.some(w => w.id === d.period_id))
@@ -407,7 +413,7 @@ export default function RekapBulanan({ onNavigate }) {
         totalUptComplete,
       }
     })
-  }, [effectiveJdList, fieldDefs, effectiveUptList, currentWeeks, rekapRows, dataEntries, uploadedDocs, currentMonthPeriod])
+  }, [effectiveJdList, fieldDefs, effectiveUptList, currentWeeks, rekapRows, dataEntries, approvedRekapRows, approvedDataEntries, approvedUploadedDocs, currentMonthPeriod])
 
   // Handle Export Excel Rekap Bulanan — semua kolom per minggu
   function handleExportExcel() {
@@ -1209,14 +1215,15 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
               {fields.map(f => (
                 <th key={f.id || f.field_key} className="px-3 py-2.5 whitespace-nowrap">{f.label}</th>
               ))}
+              <th className="px-3 py-2.5 whitespace-nowrap">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {loading ? (
-              <tr><td colSpan={fields.length + 1 + (showUptColumn ? 1 : 0)} className="px-4 py-8 text-center text-gray-400">Memuat data…</td></tr>
+              <tr><td colSpan={fields.length + 2 + (showUptColumn ? 1 : 0)} className="px-4 py-8 text-center text-gray-400">Memuat data…</td></tr>
             ) : paginated.length === 0 ? (
               <tr>
-                <td colSpan={fields.length + 1 + (showUptColumn ? 1 : 0)} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={fields.length + 2 + (showUptColumn ? 1 : 0)} className="px-4 py-8 text-center text-gray-400">
                   {entries.length === 0
                     ? (showUptColumn ? `Belum ada UPT yang mengunggah data untuk ${periodLabel}.` : `${uptLabel} belum mengunggah data untuk ${periodLabel}.`)
                     : 'Tidak ada data yang cocok dengan pencarian.'}
@@ -1236,6 +1243,9 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
                         : cell(e, f) || <span className="text-gray-300 dark:text-gray-600">-</span>}
                     </td>
                   ))}
+                  <td className="px-3 py-2.5 whitespace-nowrap">
+                    {e.status && <Badge variant={e.status === 'disetujui' ? 'success' : 'warning'}>{e.status === 'disetujui' ? 'Disetujui' : 'Menunggu'}</Badge>}
+                  </td>
                 </tr>
               ))
             )}

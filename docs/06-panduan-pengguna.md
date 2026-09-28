@@ -29,7 +29,7 @@ memfilter/menginput/menghapus.
 | **Rekap Triwulan & Tahun** | `/rekap-triwulan-tahun` | Semua | Hasil rekap **triwulan** dan **tahunan** (baca saja) |
 | **Dokumen & Arsip** | `/dokumen-arsip` | **Admin** | Dua tab: **Dokumen & Panduan** (pedoman, SOP, template Excel — tersimpan di database) dan **Arsip Data Historis** (berkas Excel/PDF tahun lalu) |
 | Kelola Akun UPT | `/kelola-upt` | Admin | Buat/hapus akun UPT, reset password, tambah/hapus UPT |
-| **Permintaan** | `/permintaan-hapus` | Admin | Setujui data yang dikirim UPT (draft → disetujui), serta setujui/tolak permintaan hapus data dan buka kunci periode |
+| **Permintaan** | `/permintaan-hapus` | Admin | Setujui data yang dikirim UPT per periode (draft → disetujui), setujui baris data per baris (Persetujuan Baris Data), serta setujui/tolak permintaan hapus data dan buka kunci periode |
 | Kelola Jenis Data | `/kelola-jenis-data` | Admin | Form Builder: jenis data & kolom, termasuk wizard **Buat dari Excel** |
 | **Kelola Dashboard** | `/kelola-dashboard` | Admin | Mengatur kartu & grafik Dashboard tanpa coding |
 | **Pengaturan Lanjutan** (menu lipat) | — | Admin | Jarang dipakai: **Kelola Periode** (`/kelola-periode`), **Impor Data Historis** (`/impor-historis`), **Tempat Sampah** (`/tempat-sampah`) |
@@ -253,6 +253,28 @@ yakin isiannya sudah benar — supaya tidak ada yang mengedit-edit lagi diam-dia
 **Admin tidak pernah terkunci** — bisa mengedit data UPT mana pun, periode apa pun, kapan pun, tanpa perlu
 mengirim atau membuka kunci apa-apa.
 
+## Persetujuan Baris Data
+
+Ini lapisan **kedua**, terpisah dari & berjalan berdampingan dengan Kirim Data di atas — berlaku otomatis pada
+**setiap baris** yang Anda simpan, bukan cuma saat menekan "Kirim".
+
+1. Begitu Anda mengisi & menekan **Simpan** (mingguan, bulanan, atau upload berkas), baris/entri itu langsung
+   muncul dengan badge kuning **"Menunggu Persetujuan"**. Anda masih bebas mengedit atau menghapusnya sendiri
+   kapan saja selama masih berstatus ini.
+2. Baris yang masih menunggu persetujuan **belum ikut dihitung** di Dashboard, Rekap, grafik, atau halaman
+   publik — hanya baris yang sudah disetujui yang masuk total resmi. Data Anda tetap tersimpan dan tetap
+   terlihat di form Anda sendiri, hanya belum "resmi".
+3. Setelah Admin menekan **Setujui** (menu **Permintaan**, bagian "Persetujuan Baris Data"), badge berubah hijau
+   **"Disetujui"** dan baris itu **tidak bisa diedit langsung lagi** — kolom formnya dinonaktifkan, tombol Edit
+   disembunyikan.
+4. Untuk mengubah baris yang sudah disetujui, klik **"Ajukan Hapus untuk Edit"** (mingguan) atau tombol Hapus
+   biasa (bulanan/berkas) — ini membuat permintaan ke Admin, sama seperti permintaan hapus data lainnya. Setelah
+   Admin menyetujui penghapusannya, Anda bisa memasukkan data baru di posisi itu, yang otomatis kembali berstatus
+   menunggu persetujuan.
+
+**Data yang Admin masukkan sendiri langsung dianggap disetujui** — Admin tidak pernah perlu menyetujui isian
+dirinya sendiri.
+
 ## Menu Admin
 
 ### Kelola Akun UPT
@@ -264,13 +286,20 @@ mengirim atau membuka kunci apa-apa.
   tidak lagi memuatnya. Aksi ini meminta konfirmasi dan **tidak dapat dibatalkan** (lakukan backup lebih dulu).
 
 ### Permintaan
-Ada dua bagian berbeda di halaman ini:
+Ada tiga bagian berbeda di halaman ini:
 
 **Persetujuan Data** – daftar periode yang dikirim UPT dan masih berstatus **draft**, menunggu ditinjau (lihat
 [Kirim Data](#kirim-data)). Menampilkan UPT pengirim, periode, dan waktu kirim. Satu-satunya aksi: **Setujui** —
 mengubah status jadi `disetujui` dan mengunci periode itu bagi UPT (semua jenis data periode itu ikut terkunci,
 bukan hanya satu). Tidak ada tombol tolak di sini — UPT yang ingin membatalkan drafnya cukup menekan **Batalkan
 Kirim** sendiri, tanpa perlu Admin.
+
+**Persetujuan Baris Data** – lapisan kedua, terpisah dari yang di atas (lihat [Persetujuan Baris
+Data](#persetujuan-baris-data)): daftar baris data mingguan/bulanan/berkas yang UPT simpan dan masih menunggu
+disetujui, dikelompokkan per UPT · Jenis Data · Periode. Tiap grup menampilkan pratinjau ringkas tiap baris
+(nama pelatihan, nama orang, atau judul berkas) dengan tombol **Setujui** per baris, plus tombol **Setujui
+Semua** di judul grup untuk menyetujui banyak baris sekaligus. Tidak ada tombol tolak — UPT bebas
+mengedit/menghapus draft-nya sendiri.
 
 **Hapus & Buka Kunci** – daftar permintaan hapus data (lihat [Koreksi & Penghapusan
 Data](#koreksi--penghapusan-data)) maupun permintaan buka kunci periode yang sudah **disetujui** (lihat [Kirim

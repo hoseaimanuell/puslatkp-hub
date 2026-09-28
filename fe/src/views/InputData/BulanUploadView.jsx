@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react'
 import { db, getFeatures } from '../../lib/db'
 import { formatPeriodLabel } from '../../lib/periods'
 import Modal from '../../components/Modal'
+import Badge from '../../components/Badge'
 import {
   UploadCloud, FileText, FileSpreadsheet, Download, Eye,
   Trash2, Plus, AlertCircle, CheckCircle2, Clock, Calendar,
@@ -46,7 +47,7 @@ export default function BulanUploadView({
     try {
       const { data, error } = await db
         .from('dokumen_upload')
-        .select('id, jenis_data_id, period_id, upt_key, judul, file_name, file_size, file_ext, file_type, catatan, uploaded_by, created_at' + ((await getFeatures()).terlambat ? ', terlambat' : ''))
+        .select('id, jenis_data_id, period_id, upt_key, judul, file_name, file_size, file_ext, file_type, catatan, uploaded_by, created_at, status' + ((await getFeatures()).terlambat ? ', terlambat' : ''))
         .eq('jenis_data_id', jenisData.id)
         .eq('period_id', activePeriod.id)
         .eq('upt_key', currentUptKey)
@@ -324,6 +325,7 @@ export default function BulanUploadView({
                         <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
                           {doc.file_ext || 'FILE'}
                         </span>
+                        {doc.status && <Badge variant={doc.status === 'disetujui' ? 'success' : 'warning'}>{doc.status === 'disetujui' ? 'Disetujui' : 'Menunggu Persetujuan'}</Badge>}
                       </h5>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-mono truncate">
                         {doc.file_name} • {formatBytes(doc.file_size)}

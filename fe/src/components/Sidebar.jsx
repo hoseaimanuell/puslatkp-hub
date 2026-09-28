@@ -30,6 +30,11 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
     if (!feat.permintaanHapus) return
     const counts = [db.from('permintaan_hapus').select('*', { head: true }).eq('status', 'pending')]
     if (feat.periodeKirim) counts.push(db.from('periode_kirim').select('*', { head: true }).eq('status', 'draft'))
+    if (feat.persetujuanBaris) {
+      counts.push(db.from('rekap_nilai').select('*', { head: true }).eq('status', 'draft'))
+      counts.push(db.from('data_entries').select('*', { head: true }).eq('status', 'draft'))
+      counts.push(db.from('dokumen_upload').select('*', { head: true }).eq('status', 'draft'))
+    }
     const results = await Promise.all(counts)
     setPermintaanPending(results.reduce((a, r) => a + (r.count || 0), 0))
   }, [isAdmin])

@@ -1,18 +1,22 @@
 /**
  * views/admin/PermintaanHapus.jsx
- * Admin: setujui/tolak permintaan dari akun UPT — dua jenis, ditampilkan sebagai dua daftar terpisah:
+ * Admin: setujui/tolak permintaan dari akun UPT — TIGA jenis, ditampilkan sebagai tiga daftar terpisah:
  * 1. Persetujuan Data — UPT menekan "Kirim" pada suatu periode (status 'draft' di tabel periode_kirim, BELUM
  *    mengunci apa pun). Admin meninjau lalu menyetujui di sini (POST /api/periode-kirim/:id/setujui) -> status
  *    'disetujui' -> BARU SAAT ITU periode terkunci bagi UPT. UPT bisa membatalkan draft sendiri kapan pun tanpa
  *    izin (belum ada yang terkunci), jadi tidak ada tombol "Tolak" di sini — cukup tidak disetujui saja.
- * 2. Hapus & Buka Kunci — permintaan pada `permintaan_hapus`: hapus data mingguan/bulanan/berkas, atau buka
- *    kunci periode yang statusnya sudah 'disetujui' (tabel='periode_kirim'). Disetujui = aksi aslinya benar-benar
- *    dijalankan; ditolak = data/kunci tidak disentuh.
+ * 2. Persetujuan Baris Data — lapisan KEDUA, terpisah & berjalan berdampingan dengan #1: SETIAP baris yang
+ *    disimpan UPT (rekap_nilai/data_entries/dokumen_upload) langsung berstatus 'draft' menunggu persetujuan,
+ *    tidak menunggu "Kirim". Digerombolkan per (UPT, Jenis Data, Periode) supaya bisa disetujui satu-satu atau
+ *    sekaligus (tombol "Setujui Semua"). Juga tidak ada tombol tolak — UPT bebas mengedit/menghapus draft-nya.
+ * 3. Hapus & Buka Kunci — permintaan pada `permintaan_hapus`: hapus data mingguan/bulanan/berkas (termasuk baris
+ *    yang sudah disetujui di #2), atau buka kunci periode yang statusnya sudah 'disetujui' (tabel='periode_kirim').
+ *    Disetujui = aksi aslinya benar-benar dijalankan; ditolak = data/kunci tidak disentuh.
  */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { db, getFeatures } from '../../lib/db'
 import InfoCard from '../../components/InfoCard'
-import { Inbox, Check, X, Loader2, CheckCircle2, XCircle, Clock, FileCheck } from 'lucide-react'
+import { Inbox, Check, X, Loader2, CheckCircle2, XCircle, Clock, FileCheck, ListChecks } from 'lucide-react'
 import { formatPeriodLabel } from '../../lib/periods'
 
 const TABLE_LABEL = {
@@ -41,6 +45,11 @@ export default function PermintaanHapus() {
   const [drafts, setDrafts] = useState([])
   const [uptList, setUptList] = useState([])
   const [periods, setPeriods] = useState([])
+  const [jenisDataList, setJenisDataList] = useState([])
+  const [barisRekap, setBarisRekap] = useState([])
+  const [barisEntries, setBarisEntries] = useState([])
+  const [barisDokumen, setBarisDokumen] = useState([])
+  const [persetujuanBarisEnabled, setPersetujuanBarisEnabled] = useState(false)
   const [busy, setBusy] = useState('')
   const [toast, setToast] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
@@ -60,6 +69,22 @@ export default function PermintaanHapus() {
     setUptList(upts || [])
     setPeriods(pers || [])
     setDrafts(draftRes?.data || [])
+
+    setPersetujuanBarisEnabled(feat.persetujuanBaris)
+    if (feat.persetujuanBaris) {
+      const [{ data: jds }, { data: rekap }, { data: ents }, { data: docs }] = await Promise.all([
+        db.from('jenis_data').select('*'),
+        db.from('rekap_nilai').select('*').eq('status', 'draft'),
+        db.from('data_entries').select('*').eq('status', 'draft'),
+        db.from('dokumen_upload').select('id, jenis_data_id, period_id, upt_key, judul, file_name, created_at').eq('status', 'draft'),
+      ])
+      setJenisDataList(jds || [])
+      setBarisRekap(rekap || [])
+      setBarisEntries(ents || [])
+      setBarisDokumen(docs || [])
+    } else {
+      setJenisDataList([]); setBarisRekap([]); setBarisEntries([]); setBarisDokumen([])
+    }
     setLoading(false)
   }, [])
 
@@ -73,8 +98,83 @@ export default function PermintaanHapus() {
 
   const uptLabel = key => uptList.find(u => u.key === key)?.label || key
   const periodLabel = id => { const p = periods.find(x => x.id === id); return p ? formatPeriodLabel(p) : id }
+  const jenisDataJudul = id => jenisDataList.find(j => j.id === id)?.judul || id
   const pending = items.filter(i => i.status === 'pending')
   const history = items.filter(i => i.status !== 'pending')
+
+  // rekap_nilai disimpan per-field (EAV) — kelompokkan balik jadi satu "baris" per baris_ke, sama seperti
+  // satu baris di form Input Mingguan (lihat be/src/lib/query.js: rowApprovalGate.groupBy).
+  const rekapGroups = useMemo(() => {
+    const map = new Map()
+    for (const r of barisRekap) {
+      const key = `${r.jenis_data_id}|${r.upt_key}|${r.period_id}|${r.baris_ke}`
+      if (!map.has(key)) map.set(key, { jenis_data_id: r.jenis_data_id, upt_key: r.upt_key, period_id: r.period_id, baris_ke: r.baris_ke, fields: {} })
+      map.get(key).fields[r.field_key] = r.value !== null && r.value !== undefined ? r.value : r.value_text
+    }
+    return [...map.values()]
+  }, [barisRekap])
+
+  // Gabungkan ketiga sumber jadi grup (UPT, Jenis Data, Periode) supaya bisa disetujui sekaligus.
+  const barisGroups = useMemo(() => {
+    const map = new Map()
+    const ensure = (upt_key, jenis_data_id, period_id) => {
+      const key = `${upt_key}|${jenis_data_id}|${period_id}`
+      if (!map.has(key)) map.set(key, { key, upt_key, jenis_data_id, period_id, rekap: [], entries: [], dokumen: [] })
+      return map.get(key)
+    }
+    rekapGroups.forEach(g => ensure(g.upt_key, g.jenis_data_id, g.period_id).rekap.push(g))
+    barisEntries.forEach(e => ensure(e.upt_key, e.jenis_data_id, e.period_id).entries.push(e))
+    barisDokumen.forEach(d => ensure(d.upt_key, d.jenis_data_id, d.period_id).dokumen.push(d))
+    return [...map.values()]
+  }, [rekapGroups, barisEntries, barisDokumen])
+
+  const totalBarisPending = rekapGroups.length + barisEntries.length + barisDokumen.length
+
+  function rekapPreview(fields) {
+    const parts = Object.entries(fields).filter(([, v]) => v !== null && v !== undefined && v !== '').slice(0, 3).map(([k, v]) => `${k}: ${v}`)
+    return parts.length ? parts.join(' · ') : '(tanpa isian)'
+  }
+
+  async function approveRekapBaris(g) {
+    setBusy(`r-${g.jenis_data_id}-${g.upt_key}-${g.period_id}-${g.baris_ke}`)
+    const { error } = await db.persetujuanBaris.setujuiRekap(g.jenis_data_id, g.upt_key, g.period_id, g.baris_ke)
+    setBusy('')
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Baris disetujui.' })
+    load()
+  }
+
+  async function approveEntryBaris(e) {
+    setBusy(`e-${e.id}`)
+    const { error } = await db.persetujuanBaris.setujuiEntry(e.id)
+    setBusy('')
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Baris disetujui.' })
+    load()
+  }
+
+  async function approveDokumenBaris(d) {
+    setBusy(`d-${d.id}`)
+    const { error } = await db.persetujuanBaris.setujuiDokumen(d.id)
+    setBusy('')
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Berkas disetujui.' })
+    load()
+  }
+
+  async function approveGroupAll(g) {
+    const total = g.rekap.length + g.entries.length + g.dokumen.length
+    if (!confirm(`Setujui ${total} baris untuk ${uptLabel(g.upt_key)} · ${jenisDataJudul(g.jenis_data_id)} · ${periodLabel(g.period_id)}?`)) return
+    setBusy(g.key)
+    let error = null
+    if (g.rekap.length) {
+      const items = g.rekap.map(r => ({ jenis_data_id: r.jenis_data_id, upt_key: r.upt_key, period_id: r.period_id, baris_ke: r.baris_ke }))
+      const res = await db.persetujuanBaris.setujuiRekapMassal(items)
+      if (res.error) error = res.error
+    }
+    for (const e of g.entries) { if (error) break; const res = await db.persetujuanBaris.setujuiEntry(e.id); if (res.error) error = res.error }
+    for (const d of g.dokumen) { if (error) break; const res = await db.persetujuanBaris.setujuiDokumen(d.id); if (res.error) error = res.error }
+    setBusy('')
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: `${total} baris disetujui.` })
+    load()
+  }
 
   async function approveDraft(item) {
     if (!confirm(`Setujui data ${item.upt_key ? uptLabel(item.upt_key) : ''} untuk ${periodLabel(item.period_id)}?\n\nSemua jenis data periode ini akan langsung terkunci bagi UPT setelah disetujui.`)) return
@@ -118,7 +218,7 @@ export default function PermintaanHapus() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title="Permintaan"
-        description="Data yang UPT kirim menunggu persetujuan Anda sebelum terkunci (Persetujuan Data). Setelah terkunci — atau untuk menghapus data — UPT mengajukan permintaan lagi di sini (Hapus & Buka Kunci)."
+        description="Periode yang UPT kirim (Persetujuan Data) dan tiap baris yang mereka simpan (Persetujuan Baris Data) menunggu persetujuan Anda sebelum resmi/terkunci. Setelah disetujui — atau untuk menghapus data — UPT mengajukan permintaan lagi di sini (Hapus & Buka Kunci)."
       />
 
       {toast && (
@@ -171,6 +271,70 @@ export default function PermintaanHapus() {
               </div>
             )}
           </InfoCard>
+
+          {persetujuanBarisEnabled && (
+            <InfoCard title={`Persetujuan Baris Data (${totalBarisPending})`}>
+              {barisGroups.length === 0 ? (
+                <div className="text-center py-10 text-gray-400">
+                  <ListChecks size={32} className="mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">Tidak ada baris data yang menunggu persetujuan.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {barisGroups.map(g => {
+                    const total = g.rekap.length + g.entries.length + g.dokumen.length
+                    return (
+                      <div key={g.key} className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div className="flex items-center justify-between gap-3 flex-wrap px-4 py-2.5 bg-gray-50 dark:bg-gray-800/40">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {uptLabel(g.upt_key)} <span className="text-gray-400 font-normal">· {jenisDataJudul(g.jenis_data_id)} · {periodLabel(g.period_id)}</span>
+                          </p>
+                          {total > 1 && (
+                            <button
+                              disabled={busy === g.key}
+                              onClick={() => approveGroupAll(g)}
+                              className="btn-primary text-xs !bg-emerald-600 hover:!bg-emerald-700"
+                            >
+                              {busy === g.key ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Setujui Semua ({total})
+                            </button>
+                          )}
+                        </div>
+                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                          {g.rekap.map(r => {
+                            const busyKey = `r-${r.jenis_data_id}-${r.upt_key}-${r.period_id}-${r.baris_ke}`
+                            return (
+                              <div key={busyKey} className="py-2.5 px-4 flex items-start justify-between gap-3 flex-wrap">
+                                <p className="text-xs text-gray-600 dark:text-gray-300 min-w-0 truncate">{rekapPreview(r.fields)}</p>
+                                <button disabled={busy === busyKey} onClick={() => approveRekapBaris(r)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400 flex-shrink-0">
+                                  {busy === busyKey ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
+                                </button>
+                              </div>
+                            )
+                          })}
+                          {g.entries.map(e => (
+                            <div key={`e-${e.id}`} className="py-2.5 px-4 flex items-start justify-between gap-3 flex-wrap">
+                              <p className="text-xs text-gray-600 dark:text-gray-300 min-w-0 truncate">{e.nama || e.nik || '(tanpa nama)'}</p>
+                              <button disabled={busy === `e-${e.id}`} onClick={() => approveEntryBaris(e)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400 flex-shrink-0">
+                                {busy === `e-${e.id}` ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
+                              </button>
+                            </div>
+                          ))}
+                          {g.dokumen.map(d => (
+                            <div key={`d-${d.id}`} className="py-2.5 px-4 flex items-start justify-between gap-3 flex-wrap">
+                              <p className="text-xs text-gray-600 dark:text-gray-300 min-w-0 truncate">{d.judul} ({d.file_name})</p>
+                              <button disabled={busy === `d-${d.id}`} onClick={() => approveDokumenBaris(d)} className="btn-secondary text-xs !text-emerald-700 dark:!text-emerald-400 flex-shrink-0">
+                                {busy === `d-${d.id}` ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Setujui
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </InfoCard>
+          )}
 
           <InfoCard title={`Hapus & Buka Kunci (${pending.length})`}>
             {pending.length === 0 ? (

@@ -155,7 +155,7 @@ export function getFeatures() {
   if (!featuresPromise) {
     featuresPromise = api('/health', { method: 'GET' }).then(({ data }) => {
       if (!data) featuresPromise = null
-      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, periodeKirim: false }
+      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, periodeKirim: false, persetujuanBaris: false }
     })
   }
   return featuresPromise
@@ -183,5 +183,16 @@ export const db = {
   periodeKirim: {
     /** Admin: setujui data yang UPT kirim (status draft -> disetujui) — baru saat ini periode terkunci bagi UPT. */
     setujui: id => api(`/periode-kirim/${id}/setujui`, { method: 'POST' }),
+  },
+  persetujuanBaris: {
+    /** Admin: setujui satu baris rekap_nilai (semua field baris_ke itu sekaligus, status draft -> disetujui). */
+    setujuiRekap: (jenis_data_id, upt_key, period_id, baris_ke) =>
+      api('/persetujuan-baris/rekap-nilai/setujui', { body: { jenis_data_id, upt_key, period_id, baris_ke } }),
+    /** Admin: setujui banyak baris rekap_nilai sekaligus (tombol "Setujui Semua" per grup). */
+    setujuiRekapMassal: items => api('/persetujuan-baris/rekap-nilai/setujui-massal', { body: { items } }),
+    /** Admin: setujui satu baris data_entries (satu orang/nik). */
+    setujuiEntry: id => api('/persetujuan-baris/data-entries/setujui', { body: { id } }),
+    /** Admin: setujui satu berkas dokumen_upload. */
+    setujuiDokumen: id => api('/persetujuan-baris/dokumen-upload/setujui', { body: { id } }),
   },
 }

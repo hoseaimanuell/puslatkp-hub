@@ -137,14 +137,18 @@ otomatis. Database yang diimpor sebelum fitur ini perlu menjalankan `database/mi
 Satu baris per (jenis_data, upt, periode, **`baris_ke`**, `field_key`) – **unik gabungan** sehingga simpan ulang =
 perbarui. `baris_ke` (bawaan 1) membedakan beberapa pelatihan dalam satu minggu.
 `value` (DECIMAL 24,4) untuk angka, `value_text` untuk teks. `updated_at` otomatis, `updated_by` diisi server.
+`status`/`disetujui_at`/`disetujui_by`/`disetujui_by_label` (**migrasi 13**) — lihat bagian **Persetujuan Baris
+Data** di bawah.
 
 ### `data_entries` — Data rincian per baris (level bulan)
 `nama`, `nik`, dan seluruh isian di `data_json` (JSON); kolom tak dikenal saat impor Excel disimpan di
 `data_ekstra`. Unik gabungan (jenis_data, upt, periode, `nik`) → impor Excel ulang memperbarui, bukan menggandakan.
 (MySQL mengizinkan banyak `NULL` pada kolom unik, jadi baris tanpa NIK tidak saling bentrok.)
+`status`/`disetujui_*` (**migrasi 13**) sama seperti `rekap_nilai` — lihat **Persetujuan Baris Data** di bawah.
 
 ### `dokumen_upload` — Berkas bulanan (mode `upload_file`)
 Metadata + isi berkas sebagai *data URL* base64 di `file_data` (LONGTEXT), maks. 15 MB/berkas (dicek UI).
+`status`/`disetujui_*` (**migrasi 13**) sama seperti `rekap_nilai` — lihat **Persetujuan Baris Data** di bawah.
 
 ### `arsip_historis` — Arsip Data Historis
 Metadata berkas Excel/PDF tahun lalu (`tahun`, `upt_key` NULL = arsip pusat, `jenis_data_id` opsional, `judul`, `file_name`, `file_ext`, `file_size`,
@@ -165,7 +169,8 @@ migrasi ini.
 bersama daftar draft `periode_kirim` yang menunggu disetujui (lihat di atas) — dua hal berbeda yang muncul di
 halaman yang sama: baris di sini untuk hapus/buka kunci, baris `periode_kirim` untuk persetujuan kirim data. Sejak
 migrasi 10, tombol Hapus/Kosongkan akun UPT pada `rekap_nilai`, `data_entries`, `dokumen_upload` (hanya bila
-periode terkait sudah `disetujui`; selagi `draft` boleh dihapus bebas — lihat bagian `periode_kirim` di atas), dan
+periode terkait sudah `disetujui` ATAU baris itu sendiri sudah `disetujui` — migrasi 13, lihat "Persetujuan
+Baris Data" di bawah; selagi keduanya masih `draft` boleh dihapus bebas), dan
 (sejak migrasi 11) **"Ajukan Buka Kunci"** pada `periode_kirim` yang sudah `disetujui`, tidak langsung menghapus —
 server membuat satu baris di sini (`tabel`,
 `upt_key`, `period_id`/`jenis_data_id` diisi dari baris yang diajukan untuk pencarian cepat, `filter_json` berisi
@@ -204,6 +209,43 @@ bisa mengedit periode itu lagi sampai menekan "Kirim" ulang. **Admin selalu bisa
 Baca/tulis: UPT hanya miliknya sendiri (dan hanya lewat upsert/delete, bukan update biasa); Admin lewat endpoint
 `/api/periode-kirim/:id/setujui` khusus untuk menyetujui (tidak ada endpoint tolak — UPT membatalkan draft-nya
 sendiri).
+
+### Persetujuan Baris Data (migrasi 13) — lapisan KEDUA, per baris, berdampingan dengan `periode_kirim`
+**Migrasi 13** menambah kolom `status`/`disetujui_at`/`disetujui_by`/`disetujui_by_label` langsung pada
+`rekap_nilai`, `data_entries`, dan `dokumen_upload` (tidak ada tabel baru). Beda dari `periode_kirim` di atas
+(yang menunggu tombol "Kirim" dan mengunci SELURUH periode sekaligus), lapisan ini berlaku **otomatis pada
+setiap Simpan** dan granularitasnya **per baris**:
+
+- **Grain "satu baris"**: `rekap_nilai` disimpan per-field (EAV) — satu "baris" yang dilihat UPT di form (mis.
+  "Pelatihan ke-1") adalah grup baris DB yang berbagi `baris_ke` yang sama. Karena `saveRekap()` di
+  `fe/src/views/InputData/PeriodeTabs.jsx` selalu mengirim SEMUA field satu `baris_ke` bersamaan dalam satu
+  `upsert`, `forceOnWrite: { status: 'draft' }` (server, `be/src/schema.js`) otomatis menjaga status semua field
+  grup itu tetap sinkron — tidak perlu tabel join terpisah. Endpoint approve mengonfirmasi ini lewat
+  `rowApprovalGate.groupBy: ['jenis_data_id','upt_key','period_id','baris_ke']`. Untuk `data_entries` (satu
+  baris = satu orang/nik) dan `dokumen_upload` (satu baris = satu berkas), satu baris DB = satu satuan approval.
+- Setiap UPT menyimpan (insert/upsert), status dipaksa **`draft`**, terlepas dari apa yang dikirim klien. Selagi
+  `draft`, baris itu **bebas diedit/dihapus** oleh UPT sendiri — tidak digerbang sama sekali — tapi **tidak
+  dihitung** di rekap/dashboard/grafik/halaman publik resmi (lihat query-query frontend yang menambahkan
+  `.eq('status', 'disetujui')`, dan `v_publik_rekap` yang menambah `AND status = 'disetujui'` di WHERE-nya).
+- Admin meninjau lewat menu **Permintaan** (bagian "Persetujuan Baris Data", dikelompokkan per UPT/Jenis
+  Data/Periode) dan menekan **Setujui** — endpoint `be/src/routes/persetujuan-baris.js`:
+  `POST /api/persetujuan-baris/rekap-nilai/setujui` (body: `jenis_data_id, upt_key, period_id, baris_ke`,
+  meng-UPDATE semua field grup itu sekaligus), `.../rekap-nilai/setujui-massal` (banyak baris sekaligus, tombol
+  "Setujui Semua"), `.../data-entries/setujui` dan `.../dokumen-upload/setujui` (masing-masing body `{ id }`).
+  Tidak ada endpoint tolak — UPT bebas mengedit/menghapus draft-nya sendiri kapan saja.
+- Begitu `disetujui`, baris itu **tidak bisa ditulis ulang langsung** — server menolak (403) setiap
+  insert/upsert/update yang cocok dengan baris yang sudah `disetujui`
+  (`ensureRowsNotApproved`/`ensureUpdateTargetNotApproved` di `be/src/lib/query.js`, dijalankan sebelum
+  `forceOnWrite` sempat menurunkannya diam-diam balik ke `draft`). Menghapusnya digerbang jadi `permintaan_hapus`
+  (`gateNeedsApproval()` diperluas jadi union: butuh persetujuan bila periode `disetujui` ATAU baris itu sendiri
+  `disetujui`) — setelah Admin menyetujui hapusnya, UPT bisa memasukkan data baru di posisi itu (otomatis mulai
+  dari `draft` lagi).
+- **Tulisan langsung dari akun Admin selalu otomatis `disetujui`** (dicap `disetujui_by`/`disetujui_by_label` =
+  Admin itu sendiri) — Admin tidak pernah perlu menyetujui tulisannya sendiri (lihat cabang
+  `user.role === 'admin'` di `prepareRow()`, `be/src/lib/query.js`).
+- Tanpa migrasi_13, `features.persetujuanBaris` bernilai `false`, keempat kolom baru dilepas dari whitelist
+  (`be/src/lib/compat.js`: `detectRowApproval()`), dan seluruh mekanisme ini nonaktif total — data UPT langsung
+  tersimpan resmi seperti sebelum revisi ini.
 
 ### `dashboard_widgets` — Pengaturan Dashboard
 Satu baris = satu kartu/grafik (`tipe`, `judul`, `grup`, `gaya`, `ikon`, `warna`, `satuan`, `urutan`, `aktif`). Sumber angka ada di kolom JSON

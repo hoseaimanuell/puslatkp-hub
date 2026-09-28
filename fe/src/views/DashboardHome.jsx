@@ -85,10 +85,14 @@ export default function DashboardHome() {
     const sel = weeks.find(w => w.id === id)
     const upTo = sel ? weeks.filter(w => Number(w.tahun) === Number(sel.tahun)) : []
     const ids = upTo.slice(0, upTo.findIndex(w => w.id === id) + 1).map(w => w.id)
-    const { data } = await db
+    const feat = await getFeatures()
+    let q = db
       .from('rekap_nilai')
-      .select('period_id, jenis_data_id, upt_key, field_key, value' + ((await getFeatures()).terlambat ? ', terlambat' : ''))
+      .select('period_id, jenis_data_id, upt_key, field_key, value' + (feat.terlambat ? ', terlambat' : ''))
       .in('period_id', ids.length ? ids : [id])
+    // Baris yang masih menunggu persetujuan Admin belum dihitung di Dashboard (total resmi).
+    if (feat.persetujuanBaris) q = q.eq('status', 'disetujui')
+    const { data } = await q
     setRekap(data || [])
     setLoadingRekap(false)
   }

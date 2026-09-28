@@ -134,7 +134,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
 
     const [{ data: rek }, { data: ent }] = await Promise.all([
       db.from('rekap_nilai').select('*').in('period_id', targetPeriodIds),
-      db.from('data_entries').select('id, upt_key, jenis_data_id, period_id').in('period_id', targetPeriodIds),
+      db.from('data_entries').select('id, upt_key, jenis_data_id, period_id, status').in('period_id', targetPeriodIds),
     ])
     setRekapRows(rek || [])
     setEntries(ent || [])
@@ -154,22 +154,27 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
           r.upt_key === upt.key &&
           (r.jenis_data_id === jd.id || (partnerId && r.jenis_data_id === partnerId))
         )
-        const entCount = entries.filter(e =>
+        const ownEntries = entries.filter(e =>
           e.upt_key === upt.key &&
           (e.jenis_data_id === jd.id || (partnerId && e.jenis_data_id === partnerId))
-        ).length
-        const peserta = recs.filter(r => r.field_key === 'jumlah_peserta').reduce((a, r) => a + num(r.value), 0)
-        const pagu = recs.filter(r => r.field_key.includes('pagu')).reduce((a, r) => a + num(r.value), 0)
-        const realisasi = recs.filter(r => r.field_key.includes('realisasi_anggaran') || r.field_key === 'realisasi_anggaran').reduce((a, r) => a + num(r.value), 0)
-        const pelatihanKeys = recs.filter(r => r.field_key === 'nama_pelatihan' && (r.value_text || r.value))
-        const pelatihan = pelatihanKeys.length || (recs.length ? 1 : 0)
+        )
+        const entCount = ownEntries.length
+        const entCountApproved = ownEntries.filter(e => e.status !== 'draft').length
+        // Total resmi (kartu & grafik) hanya menghitung baris yang sudah disetujui Admin — baris yang masih
+        // menunggu persetujuan tetap terlihat di tabel rincian (badge 3-status), tapi tidak ikut dijumlah di sini.
+        const approvedRecs = recs.filter(r => r.status !== 'draft')
+        const peserta = approvedRecs.filter(r => r.field_key === 'jumlah_peserta').reduce((a, r) => a + num(r.value), 0)
+        const pagu = approvedRecs.filter(r => r.field_key.includes('pagu')).reduce((a, r) => a + num(r.value), 0)
+        const realisasi = approvedRecs.filter(r => r.field_key.includes('realisasi_anggaran') || r.field_key === 'realisasi_anggaran').reduce((a, r) => a + num(r.value), 0)
+        const pelatihanKeys = approvedRecs.filter(r => r.field_key === 'nama_pelatihan' && (r.value_text || r.value))
+        const pelatihan = pelatihanKeys.length || (approvedRecs.length ? 1 : 0)
         const hasData = recs.length > 0 || entCount > 0
         rows.push({
           upt_key: upt.key,
           upt_label: upt.label,
           jenis: jd.judul,
           pelatihan,
-          peserta: peserta || entCount,
+          peserta: peserta || entCountApproved,
           pagu,
           realisasi,
           status: hasData ? 'Submitted' : 'Draft',
@@ -215,6 +220,8 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
           upt_label: upt.label,
           baris_ke: barisKe,
           hasData: forBaris.length > 0,
+          // Semua field satu baris_ke selalu sinkron statusnya (lihat forceOnWrite di be/src/schema.js).
+          approvalStatus: forBaris[0]?.status,
           terlambat: forBaris.some(r => r.terlambat),
           values,
         })
@@ -545,10 +552,12 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                     <td className="px-3 py-2 text-center whitespace-nowrap">
                       {row.hasData ? (
                         <>
-                          <Badge variant="success">Sudah</Badge>
+                          <Badge variant={row.approvalStatus === 'draft' ? 'warning' : 'success'}>
+                            {row.approvalStatus === 'draft' ? 'Menunggu Persetujuan' : 'Disetujui'}
+                          </Badge>
                           {row.terlambat && <span className="ml-1 inline-flex text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
                         </>
-                      ) : <Badge variant="draft">Menunggu</Badge>}
+                      ) : <Badge variant="draft">Belum Diisi</Badge>}
                     </td>
                   </tr>
                 ))}

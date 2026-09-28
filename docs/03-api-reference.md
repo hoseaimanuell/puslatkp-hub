@@ -27,13 +27,15 @@ Cek server & koneksi database. Tanpa autentikasi.
 { "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "periodeKirim": true, "arsip": true, "fieldFiles": true } }
 ```
 
-`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 11 / 12).
+`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 11 / 12 / 13).
 Bila belum, fiturnya nonaktif dan aplikasi tetap berjalan. `kumulatifBulanan` = kolom `jenis_data.kumulatif_bulanan`
 (migrasi_07), `dokumenResmi` = tabel `dokumen_resmi` (migrasi_08), `opsiBersyarat` = kolom
 `field_definitions.opsi_bersyarat` (migrasi_09), `permintaanHapus` = tabel `permintaan_hapus` (migrasi_10),
 `periodeKirim` = tabel `periode_kirim` + kolom `permintaan_hapus.period_id` (migrasi_11) + kolom
-`periode_kirim.status` (migrasi_12, alur draft→disetujui) — bila `false`, akun UPT tetap menghapus/mengedit data
-secara langsung seperti sebelumnya (tidak diblokir diam-diam).
+`periode_kirim.status` (migrasi_12, alur draft→disetujui per periode), `persetujuanBaris` = kolom
+`rekap_nilai.status` dkk. (migrasi_13, alur draft→disetujui per baris — lapisan kedua, terpisah dari
+`periodeKirim`) — bila `false`, akun UPT tetap menghapus/mengedit data secara langsung seperti sebelumnya
+(tidak diblokir diam-diam).
 
 ## `POST /api/auth/login`
 
@@ -229,9 +231,9 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 | `v_publik_rekap` (view) | ✔ baca | ✔ | — | ✔ |
 | `periods`, `field_definitions` | — | semua | — | baca/tulis |
 | `upt_list` | — | **own** (hanya UPT-nya) | — | baca/tulis (semua UPT) |
-| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat); **ditolak (403)** bila periodenya sudah `disetujui` (butuh migrasi_12); **hapus own** → permintaan bila periode `disetujui`, bebas bila belum/`draft` (butuh migrasi_10; lihat di bawah) | semua |
+| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat), status dipaksa `draft`; **ditolak (403)** bila periodenya `disetujui` (migrasi_12) ATAU baris itu sendiri sudah `disetujui` (migrasi_13); **hapus own** → permintaan bila salah satu dari keduanya `disetujui`, bebas bila belum/`draft` (butuh migrasi_10; lihat di bawah) | semua (tulis langsung = otomatis `disetujui`) |
 | `daily_activity` | — | own | own | semua |
-| `dokumen_upload` | — | own | own; sama seperti di atas — ditolak/digerbang mengikuti status `periode_kirim` | semua |
+| `dokumen_upload` | — | own | own, status dipaksa `draft`; sama seperti di atas — ditolak/digerbang mengikuti status `periode_kirim` ATAU status baris itu sendiri | semua |
 | `dashboard_widgets` | — | semua (baca) | — | baca/tulis (menu Kelola Dashboard; butuh migrasi_05) |
 | `dokumen_resmi` | — | ✔ (lewat API; menu **disembunyikan** untuk UPT) | — | baca/tulis (menu Dokumen & Arsip; butuh migrasi_08) |
 | `permintaan_hapus` | — | own (baca saja) | — (dibuat server saat UPT hapus data/buka kunci periode) | baca semua; setujui/tolak lewat `/api/permintaan-hapus/:id/...` (butuh migrasi_10) |
@@ -261,6 +263,25 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 > menurunkan statusnya balik ke `draft`. Admin tidak pernah terkunci. Tanpa migrasi_11, tombol Kirim tidak muncul
 > dan periode tidak pernah terkunci; tanpa migrasi_12 (kolom `status` belum ada), fitur ini nonaktif total dan
 > semua baris `periode_kirim` lama diperlakukan seperti sebelum revisi ini (lihat `features.periodeKirim` di atas).
+
+> **Persetujuan Baris Data (migrasi_13) — lapisan KEDUA, terpisah dari & berjalan berdampingan dengan Kirim
+> Data di atas.** Bukan cuma saat "Kirim", tapi **setiap kali UPT menyimpan data** (`rekap_nilai`, `data_entries`,
+> `dokumen_upload`), baris itu langsung dipaksa berstatus `draft` ("menunggu persetujuan") lewat `forceOnWrite`.
+> Satuan "satu baris": untuk `rekap_nilai` (disimpan per-field/EAV) adalah satu grup `baris_ke` — semua
+> `field_key` grup itu selalu disimpan & disetujui bersamaan (`rowApprovalGate.groupBy` di `be/src/schema.js`);
+> untuk `data_entries`/`dokumen_upload`, satu baris DB = satu satuan approval. Selagi `draft`, baris itu **bebas
+> diedit/dihapus** oleh UPT (tidak digerbang), tapi **tidak dihitung** di rekap/dashboard/grafik/halaman publik
+> resmi — hanya baris `disetujui` yang dihitung (lihat query-query yang menambahkan `.eq('status', 'disetujui')`
+> di frontend, dan `v_publik_rekap` yang menambahkan `AND status = 'disetujui'`). Admin menyetujui satu per satu
+> atau sekaligus lewat `POST /api/persetujuan-baris/{rekap-nilai|data-entries|dokumen-upload}/setujui`
+> (+ `/rekap-nilai/setujui-massal` untuk banyak baris sekaligus) — lihat menu **Permintaan**, bagian "Persetujuan
+> Baris Data". Begitu `disetujui`, baris itu **tidak bisa diedit langsung lagi** (403, `ensureRowsNotApproved`/
+> `ensureUpdateTargetNotApproved` di `be/src/lib/query.js`) — UPT harus mengajukan hapus dulu (digerbang jadi
+> `permintaan_hapus`, sama seperti alur di atas), baru bisa memasukkan data baru di posisi itu (statusnya
+> otomatis balik `draft`). **Tulisan langsung dari akun Admin selalu otomatis `disetujui`** (tidak ikut antre
+> persetujuan sendiri — lihat cabang `user.role === 'admin'` di `prepareRow()`). Tanpa migrasi_13, seluruh
+> mekanisme ini nonaktif total dan data langsung tersimpan resmi seperti sebelum revisi ini (lihat
+> `features.persetujuanBaris` di atas).
 
 > **Pembatas menu vs pembatas server.** Sebagian besar tabel di atas dibatasi di **server** (`be/src/schema.js`/`query.js`) —
 > itulah pembatas yang sesungguhnya. `dokumen_resmi` adalah pengecualian: server mengizinkan semua akun login

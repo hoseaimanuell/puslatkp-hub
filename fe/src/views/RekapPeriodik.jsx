@@ -5,7 +5,7 @@
  * Akun UPT hanya melihat data UPT-nya sendiri; Admin dapat memilih satu UPT atau semua UPT.
  */
 import { useState, useEffect, useMemo } from 'react'
-import { db } from '../lib/db'
+import { db, getFeatures } from '../lib/db'
 import { useAuth } from '../AuthContext'
 import StatCard from '../components/StatCard'
 import * as XLSX from 'xlsx'
@@ -94,10 +94,14 @@ export default function RekapPeriodik() {
     if (!weeks.length) { setRows([]); return }
     let alive = true
     setLoadingRows(true)
-    db.from('rekap_nilai')
-      .select('jenis_data_id, upt_key, period_id, field_key, value')
-      .in('period_id', weeks.map(w => w.id))
-      .then(({ data }) => {
+    getFeatures().then(feat => {
+      let q = db.from('rekap_nilai')
+        .select('jenis_data_id, upt_key, period_id, field_key, value')
+        .in('period_id', weeks.map(w => w.id))
+      // Baris yang masih menunggu persetujuan Admin belum dihitung di rekap resmi.
+      if (feat.persetujuanBaris) q = q.eq('status', 'disetujui')
+      return q
+    }).then(({ data }) => {
         if (!alive) return
         setRows(data || [])
         setLoadingRows(false)

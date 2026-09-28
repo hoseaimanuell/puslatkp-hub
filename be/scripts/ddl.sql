@@ -107,6 +107,10 @@ CREATE TABLE IF NOT EXISTS rekap_nilai (
   field_key     VARCHAR(120)  NOT NULL,
   `value`       DECIMAL(24,4) NULL,
   value_text    TEXT          NULL,
+  status              VARCHAR(10)  NOT NULL DEFAULT 'draft' COMMENT 'draft | disetujui (persetujuan per baris_ke)',
+  disetujui_at        DATETIME     NULL,
+  disetujui_by        CHAR(36)     NULL,
+  disetujui_by_label  VARCHAR(190) NULL,
   updated_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   updated_by    CHAR(36)      NULL,
   terlambat     TINYINT(1)    NOT NULL DEFAULT 0 COMMENT 'Diisi setelah deadline periode (dicap server)',
@@ -115,13 +119,15 @@ CREATE TABLE IF NOT EXISTS rekap_nilai (
   deleted_batch CHAR(36)     NULL COMMENT 'Satu aksi hapus = satu batch (untuk pulihkan sekaligus)',
   PRIMARY KEY (id),
   KEY idx_rekap_trash (deleted_at, deleted_batch),
+  KEY idx_rekap_status (status),
   UNIQUE KEY uq_rekap (jenis_data_id, upt_key, period_id, baris_ke, field_key),
   KEY idx_rekap_period (period_id),
   KEY idx_rekap_upt (upt_key),
   CONSTRAINT fk_rn_jd     FOREIGN KEY (jenis_data_id) REFERENCES jenis_data(id) ON DELETE CASCADE,
   CONSTRAINT fk_rn_upt    FOREIGN KEY (upt_key)       REFERENCES upt_list(`key`) ON DELETE CASCADE,
   CONSTRAINT fk_rn_period FOREIGN KEY (period_id)     REFERENCES periods(id) ON DELETE CASCADE,
-  CONSTRAINT fk_rn_by     FOREIGN KEY (updated_by)    REFERENCES profiles(id) ON DELETE SET NULL
+  CONSTRAINT fk_rn_by     FOREIGN KEY (updated_by)    REFERENCES profiles(id) ON DELETE SET NULL,
+  CONSTRAINT fk_rn_disetujui_by FOREIGN KEY (disetujui_by) REFERENCES profiles(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 7. Data detail per baris (level bulan)
@@ -134,6 +140,10 @@ CREATE TABLE IF NOT EXISTS data_entries (
   nik           VARCHAR(32)  NULL,
   data_json     JSON         NOT NULL,
   data_ekstra   JSON         NULL,
+  status              VARCHAR(10)  NOT NULL DEFAULT 'draft' COMMENT 'draft | disetujui (persetujuan per baris)',
+  disetujui_at        DATETIME     NULL,
+  disetujui_by        CHAR(36)     NULL,
+  disetujui_by_label  VARCHAR(190) NULL,
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   created_by    CHAR(36)     NULL,
   terlambat     TINYINT(1)   NOT NULL DEFAULT 0 COMMENT 'Diisi setelah deadline periode (dicap server)',
@@ -142,13 +152,15 @@ CREATE TABLE IF NOT EXISTS data_entries (
   deleted_batch CHAR(36)     NULL COMMENT 'Satu aksi hapus = satu batch (untuk pulihkan sekaligus)',
   PRIMARY KEY (id),
   KEY idx_entries_trash (deleted_at, deleted_batch),
+  KEY idx_entries_status (status),
   UNIQUE KEY uq_entry (jenis_data_id, upt_key, period_id, nik),
   KEY idx_entries_period (period_id),
   KEY idx_entries_upt (upt_key),
   CONSTRAINT fk_de_jd     FOREIGN KEY (jenis_data_id) REFERENCES jenis_data(id) ON DELETE CASCADE,
   CONSTRAINT fk_de_upt    FOREIGN KEY (upt_key)       REFERENCES upt_list(`key`) ON DELETE CASCADE,
   CONSTRAINT fk_de_period FOREIGN KEY (period_id)     REFERENCES periods(id) ON DELETE CASCADE,
-  CONSTRAINT fk_de_by     FOREIGN KEY (created_by)    REFERENCES profiles(id) ON DELETE SET NULL
+  CONSTRAINT fk_de_by     FOREIGN KEY (created_by)    REFERENCES profiles(id) ON DELETE SET NULL,
+  CONSTRAINT fk_de_disetujui_by FOREIGN KEY (disetujui_by) REFERENCES profiles(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 8. Dokumen bulanan (mode upload_file)
@@ -165,6 +177,10 @@ CREATE TABLE IF NOT EXISTS dokumen_upload (
   file_data     LONGTEXT     NULL COMMENT 'Data URL base64 berkas',
   catatan       TEXT         NULL,
   uploaded_by   VARCHAR(150) NULL,
+  status              VARCHAR(10)  NOT NULL DEFAULT 'draft' COMMENT 'draft | disetujui (persetujuan per berkas)',
+  disetujui_at        DATETIME     NULL,
+  disetujui_by        CHAR(36)     NULL,
+  disetujui_by_label  VARCHAR(190) NULL,
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   terlambat     TINYINT(1)   NOT NULL DEFAULT 0 COMMENT 'Diisi setelah deadline periode (dicap server)',
   deleted_at    DATETIME     NULL COMMENT 'Tempat sampah: NULL = aktif',
@@ -172,10 +188,12 @@ CREATE TABLE IF NOT EXISTS dokumen_upload (
   deleted_batch CHAR(36)     NULL COMMENT 'Satu aksi hapus = satu batch (untuk pulihkan sekaligus)',
   PRIMARY KEY (id),
   KEY idx_du_trash (deleted_at, deleted_batch),
+  KEY idx_du_status (status),
   KEY idx_du_lookup (jenis_data_id, period_id, upt_key),
   CONSTRAINT fk_du_jd     FOREIGN KEY (jenis_data_id) REFERENCES jenis_data(id) ON DELETE CASCADE,
   CONSTRAINT fk_du_period FOREIGN KEY (period_id)     REFERENCES periods(id) ON DELETE CASCADE,
-  CONSTRAINT fk_du_upt    FOREIGN KEY (upt_key)       REFERENCES upt_list(`key`) ON DELETE CASCADE
+  CONSTRAINT fk_du_upt    FOREIGN KEY (upt_key)       REFERENCES upt_list(`key`) ON DELETE CASCADE,
+  CONSTRAINT fk_du_disetujui_by FOREIGN KEY (disetujui_by) REFERENCES profiles(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 9. Daily activity
@@ -369,7 +387,7 @@ SELECT
 FROM data_entries de
 JOIN jenis_data jd ON jd.id = de.jenis_data_id
 JOIN periods p     ON p.id  = de.period_id
-WHERE jd.publik_boleh_lihat = 1 AND jd.aktif = 1 AND de.deleted_at IS NULL
+WHERE jd.publik_boleh_lihat = 1 AND jd.aktif = 1 AND de.deleted_at IS NULL AND de.status = 'disetujui'
 GROUP BY de.jenis_data_id, jd.judul, de.period_id, p.label, p.`level`, p.tahun, p.bulan;
 
 SET FOREIGN_KEY_CHECKS = 1;

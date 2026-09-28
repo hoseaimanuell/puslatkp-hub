@@ -17,7 +17,7 @@ const OPTIONAL = [
   { table: 'field_definitions', col: 'opsi_bersyarat', feature: 'opsiBersyarat' },
 ]
 
-export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, periodeKirim: true }
+export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, periodeKirim: true, persetujuanBaris: true }
 
 /** Tabel opsional (migrasi_05/06/08). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {
@@ -71,6 +71,29 @@ export async function detectOptionalTables() {
       }
     }
   }
+}
+
+/**
+ * Kolom migrasi_13 (status draft/disetujui per baris) pada rekap_nilai/data_entries/dokumen_upload. Beda dari
+ * `OPTIONAL` di atas (yang men-strip SATU kolom saja): di sini 4 kolom + forceOnWrite/rowApprovalGate dilepas
+ * bersamaan bila belum ada, supaya tidak ada kondisi setengah-jalan (mis. rowApprovalGate menunjuk kolom
+ * `status` yang sudah di-strip tapi forceOnWrite masih mencoba menulisnya).
+ */
+const ROW_STATUS_TABLES = ['rekap_nilai', 'data_entries', 'dokumen_upload']
+const ROW_STATUS_COLS = ['status', 'disetujui_at', 'disetujui_by', 'disetujui_by_label']
+
+export async function detectRowApproval() {
+  const [found] = await pool.query("SHOW COLUMNS FROM rekap_nilai LIKE 'status'")
+  if (found.length) return
+  features.persetujuanBaris = false
+  for (const t of ROW_STATUS_TABLES) {
+    const def = TABLES[t]
+    if (!def) continue
+    for (const key of ['cols', 'writable']) def[key] = def[key].filter(c => !ROW_STATUS_COLS.includes(c))
+    delete def.forceOnWrite
+    delete def.rowApprovalGate
+  }
+  console.warn('PERINGATAN: kolom rekap_nilai.status belum ada. Jalankan database/migrasi_13_status_baris.sql agar setiap baris data yang disimpan UPT perlu disetujui Admin.')
 }
 
 export async function detectOptionalColumns() {

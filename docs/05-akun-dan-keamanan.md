@@ -43,9 +43,10 @@ Bila tetap dibutuhkan untuk uji coba lokal, buat lewat menu *Kelola Akun UPT* (U
 | | Admin | UPT | Publik |
 | :-- | :-- | :-- | :-- |
 | Melihat data | Semua UPT | Hanya UPT sendiri | Agregat jenis data publik |
-| Input/ubah data | Semua UPT, kapan saja | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**); masih bebas selagi periode berstatus **draft** (menunggu disetujui), terkunci total begitu Admin **menyetujui**nya | — |
-| Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | Bebas selagi periode **draft**; **perlu persetujuan Admin** begitu periode **disetujui** (menu Permintaan) | — |
-| Menyetujui data yang dikirim UPT (draft → disetujui) | ✔ ("Setujui" di menu Permintaan) | — (UPT hanya bisa mengirim/membatalkan draft sendiri) | — |
+| Input/ubah data | Semua UPT, kapan saja, langsung **disetujui** (tidak antre) | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**); setiap baris yang disimpan otomatis **draft** (menunggu disetujui) sampai Admin menyetujuinya per baris — begitu disetujui, baris itu tidak bisa diedit langsung lagi. Periode juga bisa dikunci total lewat "Kirim" (lihat di bawah) | — |
+| Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | Bebas selagi baris/periode masih **draft**; **perlu persetujuan Admin** begitu baris ATAU periode itu **disetujui** (menu Permintaan) | — |
+| Menyetujui baris data yang disimpan UPT (draft → disetujui, per baris) | ✔ ("Setujui"/"Setujui Semua" di menu Permintaan, bagian Persetujuan Baris Data) | — (UPT hanya bisa mengedit/menghapus draft-nya sendiri) | — |
+| Menyetujui data yang dikirim UPT (draft → disetujui, per periode) | ✔ ("Setujui" di menu Permintaan, bagian Persetujuan Data) | — (UPT hanya bisa mengirim/membatalkan draft sendiri) | — |
 | Buka kunci periode yang sudah **disetujui** | Langsung (tidak pernah terkunci) | **Perlu persetujuan Admin** ("Ajukan Buka Kunci") | — |
 | Kelola akun UPT & daftar UPT | ✔ | — | — |
 | Kelola Jenis Data & kolom | ✔ | — | — |
@@ -71,6 +72,18 @@ bisa melihat, dan server juga menolak permintaan tulis langsung ke data periode 
 tampilan). Untuk mengedit lagi setelah terkunci, UPT menekan **"Ajukan Buka Kunci"**, yang masuk ke menu
 **Permintaan** yang sama seperti permintaan hapus — setelah Admin menyetujui, kunci dibuka dan UPT bisa mengedit
 sampai menekan "Kirim" lagi. Admin sendiri tidak pernah terkunci, kapan pun.
+
+**Persetujuan Baris Data — setiap baris yang disimpan, bukan cuma saat Kirim.** Ini lapisan KEDUA, terpisah dari
+& berjalan berdampingan dengan Kirim Data di atas. Begitu UPT menekan **Simpan** pada form (mingguan, bulanan,
+maupun upload berkas), baris itu langsung berstatus **draft** ("Menunggu Persetujuan", badge kuning) — bukan
+menunggu Admin menyetujui, baris itu **masih bebas diedit/dihapus** oleh UPT sendiri, tapi belum dihitung di
+Dashboard/Rekap/halaman publik. Admin meninjau di menu **Permintaan** (bagian "Persetujuan Baris Data",
+dikelompokkan per UPT/Jenis Data/Periode, bisa disetujui satu-satu atau sekaligus) dan menekan **Setujui**.
+Begitu disetujui (badge hijau), baris itu **tidak bisa diedit langsung lagi** — tombol edit disembunyikan/field
+dinonaktifkan, satu-satunya cara mengubahnya adalah **"Ajukan Hapus untuk Edit"**, yang masuk antrean Admin sama
+seperti hapus data biasa; setelah disetujui, UPT bisa memasukkan data baru di posisi itu (mulai dari draft lagi).
+Data yang Admin sendiri masukkan langsung (bukan lewat "Simpan" milik UPT) otomatis dianggap **disetujui** —
+Admin tidak pernah perlu menyetujui input dirinya sendiri.
 
 ## Mengelola akun
 

@@ -10,6 +10,7 @@ import { weekValues, applyAgregasi, agregasiOf, AGREGASI_SHORT } from '../../lib
 import { useAuth } from '../../AuthContext'
 import PeriodSelector from '../../components/PeriodSelector'
 import DynamicForm from '../../components/DynamicForm'
+import Badge from '../../components/Badge'
 import Modal from '../../components/Modal'
 import HapusMassalDialog from '../../components/HapusMassalDialog'
 import ColumnMappingScreen from '../../components/ColumnMappingScreen'
@@ -279,13 +280,15 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
           .eq('upt_key', currentUptKey)
         const { data } = await q
         const snap = {}
+        const statusByBaris = {}
         ;(data || []).forEach(r => {
           const b = r.baris_ke ?? 1
           ;(snap[b] ||= {})[r.field_key] = r.value !== null && r.value !== undefined ? r.value : r.value_text
+          if (r.status) statusByBaris[b] = r.status // semua field satu baris_ke selalu sinkron (lihat forceOnWrite)
         })
         setSavedSnap(snap)
         setLateRekap((data || []).some(r => r.terlambat))
-        const list = Object.keys(snap).map(Number).sort((a, b) => a - b).map(b => ({ baris_ke: b, values: { ...snap[b] } }))
+        const list = Object.keys(snap).map(Number).sort((a, b) => a - b).map(b => ({ baris_ke: b, values: { ...snap[b] }, status: statusByBaris[b] }))
         setBarisList(list.length ? list : [{ baris_ke: 1, values: {} }])
       }
     } else if (activeLevel === 'bulan' || activeLevel === 'triwulan' || activeLevel === 'tahun') {
@@ -414,6 +417,16 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
   function removeBaris(i) {
     setBarisList(list => (list.length > 1 ? list.filter((_, idx) => idx !== i) : [{ baris_ke: list[0].baris_ke, values: {} }]))
   }
+  // Baris yang sudah disetujui Admin tidak bisa diedit langsung -- satu-satunya jalan adalah mengajukan hapus
+  // (masuk permintaan_hapus, sama seperti tombol Hapus lainnya), baru boleh memasukkan data baru di posisinya.
+  async function ajukanHapusBaris(barisKe) {
+    if (!confirm('Baris ini sudah disetujui Admin, tidak bisa diedit langsung.\n\nAjukan hapus ke Admin? Setelah disetujui, Anda bisa memasukkan data baru di posisi ini.')) return
+    const { error, pending } = await db.from('rekap_nilai').delete()
+      .eq('jenis_data_id', jenisData.id).eq('upt_key', currentUptKey).eq('period_id', activePeriod.id).eq('baris_ke', barisKe)
+    if (error) { alert('Gagal mengajukan: ' + error.message); return }
+    if (pending) alert(PENDING_MSG)
+    loadData()
+  }
 
   // Simpan seluruh isian minggu ini dalam SATU permintaan. Kolom yang dikosongkan / baris yang dihapus
   // ikut dihapus (masuk Tempat Sampah), jadi mengosongkan kolom benar-benar menghapus nilainya.
@@ -426,6 +439,9 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
 
     for (const b of barisList) {
       keep.add(b.baris_ke)
+      // Baris yang sudah disetujui Admin tidak ikut dikirim ulang (server menolaknya 403) -- lihat
+      // ajukanHapusBaris() untuk cara mengedit ulang baris yang sudah disetujui.
+      if (b.status === 'disetujui') continue
       for (const f of fieldDefs) {
         const val = b.values[f.field_key]
         if (val === '' || val === null || val === undefined) {
@@ -958,6 +974,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                             {entry.nama || entry.data_json?.nama || `Baris #${globalIdx}`}{entry.terlambat ? <> {<span title="Disimpan setelah deadline" className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}</> : null}
                           </p>
                           <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex-wrap">
+                            {entry.status && <Badge variant={entry.status === 'disetujui' ? 'success' : 'warning'}>{entry.status === 'disetujui' ? 'Disetujui' : 'Menunggu Persetujuan'}</Badge>}
                             {isAllUpt && <span className="badge-blue text-[10px]">{uptLabelOf(entry.upt_key)}</span>}
                             {entry.nik && <span>NIK: <span className="font-mono">{entry.nik}</span></span>}
                             {entry.data_json?.jenis_kelamin && <span>JK: {entry.data_json.jenis_kelamin}</span>}
@@ -975,7 +992,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                           </button>
                           {!locked && (
                             <>
-                              {!isAllUpt && (
+                              {!isAllUpt && entry.status !== 'disetujui' && (
                                 <button
                                   onClick={() => { setEditEntry(entry); setFormValues(entry.data_json || {}); setAddEntryModal(true) }}
                                   className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
@@ -987,7 +1004,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                               <button
                                 onClick={() => deleteEntry(entry.id)}
                                 className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                                title="Hapus Baris"
+                                title={entry.status === 'disetujui' ? 'Sudah disetujui — ajukan hapus untuk mengedit ulang' : 'Hapus Baris'}
                               >
                                 <Trash2 size={15} />
                               </button>
@@ -1101,35 +1118,51 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
               <p className="text-gray-400 text-sm text-center py-8">Belum ada kolom konfigurasi untuk jenis data mingguan ini.</p>
             ) : (
               <form onSubmit={(e) => { e.preventDefault(); saveRekap() }} className="space-y-4">
-                {barisList.map((b, i) => (
-                  <div key={b.baris_ke} className={multiBaris ? 'rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3' : ''}>
-                    {multiBaris && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Pelatihan ke-{i + 1}</span>
-                        {!locked && (barisList.length > 1 || Object.keys(b.values).length > 0) && (
-                          <button
-                            type="button"
-                            onClick={() => removeBaris(i)}
-                            className="text-xs text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1"
-                          >
-                            <Trash2 size={12} /> {barisList.length > 1 ? 'Hapus pelatihan ini' : 'Kosongkan'}
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    <DynamicForm
-                      bare
-                      idPrefix={multiBaris ? `r${i}-` : ''}
-                      level="minggu"
-                      fields={fieldDefs}
-                      values={b.values}
-                      onChange={(key, val) => updateBaris(i, key, val)}
-                      disabled={locked}
-                      jenisDataId={jenisData.id}
-                      uptKey={currentUptKey}
-                    />
-                  </div>
-                ))}
+                {barisList.map((b, i) => {
+                  const isApproved = b.status === 'disetujui'
+                  return (
+                    <div key={b.baris_ke} className={multiBaris ? 'rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3' : ''}>
+                      {(multiBaris || b.status) && (
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-2">
+                            {multiBaris && <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Pelatihan ke-{i + 1}</span>}
+                            {b.status && <Badge variant={isApproved ? 'success' : 'warning'}>{isApproved ? 'Disetujui' : 'Menunggu Persetujuan'}</Badge>}
+                          </div>
+                          {!locked && (
+                            isApproved ? (
+                              <button
+                                type="button"
+                                onClick={() => ajukanHapusBaris(b.baris_ke)}
+                                className="text-xs text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"
+                              >
+                                <Trash2 size={12} /> Ajukan Hapus untuk Edit
+                              </button>
+                            ) : multiBaris && (barisList.length > 1 || Object.keys(b.values).length > 0) && (
+                              <button
+                                type="button"
+                                onClick={() => removeBaris(i)}
+                                className="text-xs text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1"
+                              >
+                                <Trash2 size={12} /> {barisList.length > 1 ? 'Hapus pelatihan ini' : 'Kosongkan'}
+                              </button>
+                            )
+                          )}
+                        </div>
+                      )}
+                      <DynamicForm
+                        bare
+                        idPrefix={multiBaris ? `r${i}-` : ''}
+                        level="minggu"
+                        fields={fieldDefs}
+                        values={b.values}
+                        onChange={(key, val) => updateBaris(i, key, val)}
+                        disabled={locked || isApproved}
+                        jenisDataId={jenisData.id}
+                        uptKey={currentUptKey}
+                      />
+                    </div>
+                  )
+                })}
                 {multiBaris && !locked && (
                   <button type="button" onClick={addBaris} className="btn-secondary text-xs">
                     <Plus size={14} /> Tambah pelatihan lain (opsional)
