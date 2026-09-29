@@ -24,10 +24,10 @@ Base URL: `http://localhost:4000/api` (ubah lewat `NEXT_PUBLIC_API_URL` di front
 Cek server & koneksi database. Tanpa autentikasi.
 
 ```json
-{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "persetujuanBaris": true, "tolakBaris": true, "arsip": true, "fieldFiles": true } }
+{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "persetujuanBaris": true, "tolakBaris": true, "permintaanEdit": true, "arsip": true, "fieldFiles": true } }
 ```
 
-`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 13 / 14).
+`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 13 / 14 / 15).
 Bila belum, fiturnya nonaktif dan aplikasi tetap berjalan. `kumulatifBulanan` = kolom `jenis_data.kumulatif_bulanan`
 (migrasi_07), `dokumenResmi` = tabel `dokumen_resmi` (migrasi_08), `opsiBersyarat` = kolom
 `field_definitions.opsi_bersyarat` (migrasi_09), `permintaanHapus` = tabel `permintaan_hapus` (migrasi_10),
@@ -36,8 +36,11 @@ lapisan persetujuan; migrasi_11/12 pernah menambahkan lapisan kedua per-periode 
 itu sudah dihapus total karena dua lapisan sekaligus membingungkan UPT — lihat
 [04-database.md](04-database.md#permintaan_hapus--menu-permintaan-bagian-hapus-persetujuan-admin)), `tolakBaris` =
 kolom `rekap_nilai.catatan_admin` dkk. (migrasi_14, tombol Tolak pada Persetujuan Baris Data — independen dari
-`persetujuanBaris`: bisa punya migrasi_13 tanpa migrasi_14, Setujui tetap jalan) — bila `false`, akun UPT tetap
-menghapus/mengedit data secara langsung seperti sebelumnya (tidak diblokir diam-diam).
+`persetujuanBaris`: bisa punya migrasi_13 tanpa migrasi_14, Setujui tetap jalan), `permintaanEdit` = kolom
+`permintaan_hapus.aksi`/`data_baru_json` (migrasi_15, tombol Edit pada baris yang sudah disetujui mengajukan nilai
+baru ke Admin alih-alih harus dihapus dulu — lihat
+[04-database.md](04-database.md#permintaan-edit-migrasi-15--melengkapi-permintaan_hapus-di-atas)) — bila `false`,
+akun UPT tetap menghapus/mengedit data secara langsung seperti sebelumnya (tidak diblokir diam-diam).
 
 ## `POST /api/auth/login`
 
@@ -84,19 +87,51 @@ Validasi: password ≥ 8 karakter, akun harus ada (404 bila tidak). Respons: `{ 
 
 ## `POST /api/permintaan-hapus/:id/setujui` *(Admin)*
 
-Menyetujui satu permintaan hapus (lihat tabel `permintaan_hapus` di [04-database.md](04-database.md)) — benar-benar
-menjalankan penghapusannya (masuk Tempat Sampah seperti biasa, bisa dipulihkan 30 hari). Permintaan harus berstatus
-`pending` (409 bila sudah diproses, 404 bila tidak ada). Respons: `{ "success": true, "dihapus": <jumlah baris> }`.
+Menyetujui satu permintaan hapus **atau edit** (lihat tabel `permintaan_hapus` di [04-database.md](04-database.md)),
+dibedakan lewat kolom `aksi`. Untuk `aksi: 'hapus'`: benar-benar menjalankan penghapusannya (masuk Tempat Sampah
+seperti biasa, bisa dipulihkan 30 hari). Untuk `aksi: 'edit'` (migrasi_15): menulis nilai baru yang diajukan UPT
+(`data_baru_json`) — baris langsung kembali berstatus `disetujui`. Permintaan harus berstatus `pending` (409 bila
+sudah diproses, 404 bila tidak ada). Respons: `{ "success": true, "dihapus": <jumlah baris/field yang ditulis> }`.
 
 ## `POST /api/permintaan-hapus/:id/tolak` *(Admin)*
 
-Menolak satu permintaan hapus — data **tidak disentuh**. Body opsional:
+Menolak satu permintaan hapus atau edit — data **tidak disentuh** (untuk `aksi: 'edit'`, nilai lama tetap berlaku).
+Body opsional:
 
 ```json
 { "catatan_admin": "alasan penolakan (opsional, terlihat oleh UPT)" }
 ```
 
 Respons: `{ "success": true }`.
+
+## `POST /api/permintaan-edit/rekap-nilai` *(UPT)*
+
+Mengajukan nilai baru untuk satu baris mingguan/bulanan (satu `baris_ke`) yang sudah berstatus `disetujui` — lihat
+[04-database.md](04-database.md#permintaan-edit-migrasi-15--melengkapi-permintaan_hapus-di-atas). Butuh migrasi_15
+(409 bila belum aktif); Admin ditolak (403, admin selalu menulis langsung); baris yang dituju harus benar-benar
+`disetujui` (400 bila belum — pakai `/api/db/query` upsert biasa). `upt_key` diambil dari akun yang login, tidak
+bisa dipilih lewat body.
+
+```json
+{
+  "jenis_data_id": "...", "period_id": "...", "baris_ke": 1,
+  "upserts": [{ "field_key": "nama_pelatihan", "value": null, "value_text": "..." }],
+  "clearedFields": ["jumlah_peserta"],
+  "alasan": "opsional"
+}
+```
+
+Respons: `{ "success": true, "requestId": "..." }`.
+
+## `POST /api/permintaan-edit/data-entries` *(UPT)*
+
+Sama seperti di atas, untuk satu baris rincian (`data_entries`) yang sudah `disetujui`.
+
+```json
+{ "id": "...", "values": { "nama": "...", "nik": "...", "...field lain...": "..." }, "alasan": "opsional" }
+```
+
+Respons: `{ "success": true, "requestId": "..." }`.
 
 ## `POST /api/db/query`
 
@@ -233,7 +268,7 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 | `v_publik_rekap` (view) | ✔ baca | ✔ | — | ✔ |
 | `periods`, `field_definitions` | — | semua | — | baca/tulis |
 | `upt_list` | — | **own** (hanya UPT-nya) | — | baca/tulis (semua UPT) |
-| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat), status dipaksa `draft`; **ditolak (403)** bila baris itu sendiri sudah `disetujui` (migrasi_13); **hapus own** → permintaan bila `disetujui`, bebas bila belum/`draft`/`ditolak` (butuh migrasi_10; lihat di bawah) | semua (tulis langsung = otomatis `disetujui`) |
+| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat), status dipaksa `draft`; **ditolak (403)** bila baris itu sendiri sudah `disetujui` (migrasi_13) — mengedit baris `disetujui` lewat `/api/permintaan-edit/...` (migrasi_15) mengajukan permintaan alih-alih 403; **hapus own** → permintaan bila `disetujui`, bebas bila belum/`draft`/`ditolak` (butuh migrasi_10; lihat di bawah) | semua (tulis langsung = otomatis `disetujui`) |
 | `daily_activity` | — | own | own | semua |
 | `dokumen_upload` | — | own | own, status dipaksa `draft`; sama seperti di atas — ditolak/digerbang mengikuti status baris itu sendiri | semua |
 | `dashboard_widgets` | — | semua (baca) | — | baca/tulis (menu Kelola Dashboard; butuh migrasi_05) |

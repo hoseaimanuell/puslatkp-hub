@@ -27,6 +27,9 @@ const ACTION = {
   ajukan_hapus: ['Ajukan Hapus', 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'],
   setujui_hapus: ['Setujui Hapus', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
   tolak_hapus: ['Tolak Hapus', 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'],
+  ajukan_edit: ['Ajukan Edit', 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'],
+  setujui_edit: ['Setujui Edit', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
+  tolak_edit: ['Tolak Edit', 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'],
   setujui_data: ['Setujui Data', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
   setujui_baris: ['Setujui Baris', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
   setujui_baris_massal: ['Setujui Baris Massal', 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'],
@@ -60,6 +63,9 @@ function summarize(row) {
   if (row.action === 'ajukan_hapus') return `${d.ringkasan || `${d.jumlah} ${TABLE_LABEL[d.tabel] || d.tabel}`} (menunggu persetujuan)`
   if (row.action === 'setujui_hapus') return `${d.ringkasan || `${d.jumlah} ${TABLE_LABEL[d.tabel] || d.tabel}`} — ${d.upt || ''}`
   if (row.action === 'tolak_hapus') return `${d.ringkasan || `${d.jumlah} ${TABLE_LABEL[d.tabel] || d.tabel}`} — ${d.upt || ''}${d.catatan ? ` (alasan: ${d.catatan})` : ''}`
+  if (row.action === 'ajukan_edit') return `${d.ringkasan || TABLE_LABEL[d.tabel] || d.tabel} (menunggu persetujuan)`
+  if (row.action === 'setujui_edit') return `${d.ringkasan || TABLE_LABEL[d.tabel] || d.tabel} — ${d.upt || ''}`
+  if (row.action === 'tolak_edit') return `${d.ringkasan || TABLE_LABEL[d.tabel] || d.tabel} — ${d.upt || ''}${d.catatan ? ` (alasan: ${d.catatan})` : ''}`
   if (row.action === 'setujui_data') return `${d.upt || ''} · ${d.periode || ''} — periode terkunci`
   if (row.action === 'setujui_baris') return `${d.upt || ''} · ${d.jenis_data || ''} · ${d.periode || ''}${d.nama ? ` — ${d.nama}` : d.judul ? ` — ${d.judul}` : d.baris_ke !== undefined ? ` — baris ke-${d.baris_ke}` : ''}`
   if (row.action === 'setujui_baris_massal') return `${d.jumlah_disetujui ?? 0} dari ${d.jumlah_diajukan ?? 0} baris disetujui`

@@ -394,6 +394,9 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
   // Simpan SATU baris/pelatihan (lewat modal Tambah/Edit). Kolom yang dikosongkan ikut dihapus (masuk Tempat
   // Sampah), jadi mengosongkan kolom benar-benar menghapus nilainya -- .liveEdit() supaya tetap langsung
   // tersimpan (bukan diajukan sbg permintaan) karena ini bagian dari sesi edit, bukan tombol Hapus eksplisit.
+  // Mengedit baris yang SUDAH disetujui Admin (UPT, bukan Admin sendiri) tidak menulis langsung -- server
+  // menolaknya (403) -- melainkan diajukan sebagai permintaan edit (lihat be/src/routes/permintaan-edit.js),
+  // supaya UPT tidak perlu Ajukan Hapus dulu lalu mengetik ulang semua kolom dari nol.
   async function saveBarisModal() {
     setSaving(true)
     const barisKe = editingBarisKe
@@ -417,16 +420,30 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
       })
     }
 
+    const isApprovedEdit = !isAdmin && existingBaris.find(b => b.baris_ke === barisKe)?.status === 'disetujui'
     let error = null
-    if (upserts.length) {
-      const onConflict = features.multiBaris ? 'jenis_data_id,upt_key,period_id,baris_ke,field_key' : 'jenis_data_id,upt_key,period_id,field_key'
-      error = (await db.from('rekap_nilai').upsert(upserts, { onConflict })).error
-    }
-    if (!error && clearedFields.length) {
-      let q = db.from('rekap_nilai').delete().liveEdit()
-        .eq('jenis_data_id', jenisData.id).eq('upt_key', currentUptKey).eq('period_id', activePeriod.id).in('field_key', clearedFields)
-      if (features.multiBaris) q = q.eq('baris_ke', barisKe)
-      error = (await q).error
+    if (isApprovedEdit) {
+      const rekapUpserts = upserts.map(({ field_key, value, value_text }) => ({ field_key, value, value_text }))
+      error = (await db.permintaanEdit.ajukanRekap(jenisData.id, activePeriod.id, barisKe, rekapUpserts, clearedFields)).error
+      if (!error) {
+        setSaving(false)
+        closeBarisModal()
+        alert('Permintaan edit terkirim ke Admin. Nilai lama tetap berlaku sampai disetujui.')
+        await loadData()
+        onSaved?.()
+        return
+      }
+    } else {
+      if (upserts.length) {
+        const onConflict = features.multiBaris ? 'jenis_data_id,upt_key,period_id,baris_ke,field_key' : 'jenis_data_id,upt_key,period_id,field_key'
+        error = (await db.from('rekap_nilai').upsert(upserts, { onConflict })).error
+      }
+      if (!error && clearedFields.length) {
+        let q = db.from('rekap_nilai').delete().liveEdit()
+          .eq('jenis_data_id', jenisData.id).eq('upt_key', currentUptKey).eq('period_id', activePeriod.id).in('field_key', clearedFields)
+        if (features.multiBaris) q = q.eq('baris_ke', barisKe)
+        error = (await q).error
+      }
     }
 
     setSaving(false)
@@ -442,7 +459,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
   async function deleteBaris(baris) {
     const isApproved = baris.status === 'disetujui'
     const msg = isApproved
-      ? 'Baris ini sudah disetujui Admin, tidak bisa diedit langsung.\n\nAjukan hapus ke Admin? Setelah disetujui, Anda bisa memasukkan data baru di posisi ini.'
+      ? 'Baris ini sudah disetujui Admin.\n\nAjukan hapus ke Admin? Setelah disetujui, Anda bisa memasukkan data baru di posisi ini.'
       : 'Hapus baris ini?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.'
     if (!confirm(msg)) return
     const { error, pending } = await db.from('rekap_nilai').delete()
@@ -461,6 +478,20 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
       nama: values.nama || values.nama_pelatihan || null,
       nik: values.nik ? String(values.nik) : null,
       data_json: values,
+    }
+
+    // Mengedit entri yang sudah disetujui Admin (UPT, bukan Admin sendiri) diajukan sebagai permintaan edit,
+    // bukan ditulis langsung -- lihat be/src/routes/permintaan-edit.js & catatan di saveBarisModal().
+    if (editEntry && !isAdmin && editEntry.status === 'disetujui') {
+      const { error } = await db.permintaanEdit.ajukanEntry(editEntry.id, values)
+      setSaving(false)
+      if (error) { alert('Gagal mengajukan: ' + error.message); return }
+      setAddEntryModal(false)
+      setEditEntry(null)
+      setFormValues({})
+      alert('Permintaan edit terkirim ke Admin. Nilai lama tetap berlaku sampai disetujui.')
+      loadData()
+      return
     }
 
     if (editEntry) {
@@ -906,11 +937,11 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
                           >
                             <Eye size={15} />
                           </button>
-                          {!isAllUpt && entry.status !== 'disetujui' && (
+                          {!isAllUpt && (
                             <button
                               onClick={() => { setEditEntry(entry); setFormValues(entry.data_json || {}); setAddEntryModal(true) }}
                               className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-                              title="Edit Baris"
+                              title={entry.status === 'disetujui' ? 'Edit — perubahan perlu persetujuan Admin' : 'Edit Baris'}
                             >
                               <Edit size={15} />
                             </button>
@@ -918,7 +949,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
                           <button
                             onClick={() => deleteEntry(entry.id)}
                             className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                            title={entry.status === 'disetujui' ? 'Sudah disetujui — ajukan hapus untuk mengedit ulang' : 'Hapus Baris'}
+                            title={entry.status === 'disetujui' ? 'Sudah disetujui — ajukan hapus ke Admin' : 'Hapus Baris'}
                           >
                             <Trash2 size={15} />
                           </button>
@@ -1109,35 +1140,24 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
                                 </div>
                               </td>
                               <td className="px-3 py-2 text-right whitespace-nowrap border-l border-gray-100 dark:border-gray-800">
-                                {isApproved ? (
+                                <span className="inline-flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditBaris(b)}
+                                    className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                                    title={isApproved ? 'Edit — perubahan perlu persetujuan Admin' : 'Edit'}
+                                  >
+                                    <Edit size={15} />
+                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => deleteBaris(b)}
-                                    className="p-1.5 rounded text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-                                    title="Sudah disetujui — ajukan hapus untuk mengedit ulang"
+                                    className={`p-1.5 rounded transition-colors ${isApproved ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30' : 'text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30'}`}
+                                    title={isApproved ? 'Sudah disetujui — ajukan hapus ke Admin' : 'Hapus'}
                                   >
                                     <Trash2 size={15} />
                                   </button>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => openEditBaris(b)}
-                                      className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-                                      title="Edit"
-                                    >
-                                      <Edit size={15} />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => deleteBaris(b)}
-                                      className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                                      title="Hapus"
-                                    >
-                                      <Trash2 size={15} />
-                                    </button>
-                                  </span>
-                                )}
+                                </span>
                               </td>
                             </tr>
                           )

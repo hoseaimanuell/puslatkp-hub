@@ -17,7 +17,7 @@ const OPTIONAL = [
   { table: 'field_definitions', col: 'opsi_bersyarat', feature: 'opsiBersyarat' },
 ]
 
-export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, persetujuanBaris: true, tolakBaris: true }
+export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, persetujuanBaris: true, tolakBaris: true, permintaanEdit: true }
 
 /** Tabel opsional (migrasi_05/06/08). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {
@@ -95,6 +95,21 @@ export async function detectRejectBaris() {
     for (const key of ['cols', 'writable']) def[key] = def[key].filter(c => c !== 'catatan_admin')
   }
   console.warn('PERINGATAN: kolom rekap_nilai.catatan_admin belum ada. Jalankan database/migrasi_14_tolak_baris.sql agar Admin bisa menolak baris data dengan catatan.')
+}
+
+/** Kolom migrasi_15 (`aksi`, `data_baru_json` pada permintaan_hapus) — mengedit baris yang sudah disetujui
+ *  lewat "Permintaan Edit" alih-alih harus menghapus dulu. Butuh tabel permintaan_hapus (migrasi_10) sendiri. */
+export async function detectEditRequest() {
+  if (!features.permintaanHapus || !TABLES.permintaan_hapus) { features.permintaanEdit = false; return }
+  const [found] = await pool.query("SHOW COLUMNS FROM permintaan_hapus LIKE 'aksi'")
+  if (found.length) return
+  features.permintaanEdit = false
+  for (const c of ['aksi', 'data_baru_json']) {
+    TABLES.permintaan_hapus.cols = TABLES.permintaan_hapus.cols.filter(x => x !== c)
+    TABLES.permintaan_hapus.json = TABLES.permintaan_hapus.json.filter(x => x !== c)
+  }
+  for (const t of ['rekap_nilai', 'data_entries']) delete TABLES[t].editRequiresApproval
+  console.warn('PERINGATAN: kolom permintaan_hapus.aksi belum ada. Jalankan database/migrasi_15_permintaan_edit.sql agar UPT bisa mengajukan edit baris yang sudah disetujui, bukan hanya menghapusnya.')
 }
 
 export async function detectOptionalColumns() {

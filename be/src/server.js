@@ -9,13 +9,14 @@ import authRoutes from './routes/auth.js'
 import dbRoutes from './routes/db.js'
 import trashRoutes from './routes/trash.js'
 import permintaanHapusRoutes from './routes/permintaan-hapus.js'
+import permintaanEditRoutes from './routes/permintaan-edit.js'
 import persetujuanBarisRoutes from './routes/persetujuan-baris.js'
 import periodRoutes from './routes/periods.js'
 import arsipRoutes, { detectArsip, arsipEnabled, sweepArsipFiles } from './routes/arsip.js'
 import fieldFilesRoutes, { detectFieldFiles, fieldFilesEnabled, sweepFieldFiles } from './routes/fieldFiles.js'
 import { ensureCurrentYears } from './lib/yearService.js'
 import { detectSoftDelete, purgeExpired, trashEnabled } from './lib/trash.js'
-import { detectOptionalColumns, detectOptionalTables, detectRowApproval, detectRejectBaris, features } from './lib/compat.js'
+import { detectOptionalColumns, detectOptionalTables, detectRowApproval, detectRejectBaris, detectEditRequest, features } from './lib/compat.js'
 
 const app = express()
 
@@ -37,6 +38,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/db', dbRoutes)
 app.use('/api/trash', trashRoutes)
 app.use('/api/permintaan-hapus', permintaanHapusRoutes)
+app.use('/api/permintaan-edit', permintaanEditRoutes)
 app.use('/api/persetujuan-baris', persetujuanBarisRoutes)
 app.use('/api/periods', periodRoutes)
 app.use('/api/arsip', arsipRoutes)
@@ -53,6 +55,7 @@ await detectOptionalColumns()
 await detectOptionalTables()
 await detectRowApproval()
 await detectRejectBaris()
+await detectEditRequest()
 await detectArsip()
 await detectFieldFiles()
 const purge = () => purgeExpired().catch(e => console.error('Gagal membuang tempat sampah kedaluwarsa:', e.message))

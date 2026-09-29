@@ -249,17 +249,19 @@ Setiap baris data yang Anda simpan menunggu persetujuan Admin sebelum dihitung r
    publik — hanya baris yang sudah disetujui yang masuk total resmi. Data Anda tetap tersimpan dan tetap
    terlihat di form Anda sendiri, hanya belum "resmi".
 3. Setelah Admin menekan **Setujui** (menu **Permintaan**, bagian "Persetujuan Baris Data"), badge berubah hijau
-   **"Disetujui"** dan baris itu **tidak bisa diedit langsung lagi** — kolom formnya dinonaktifkan, tombol Edit
-   disembunyikan.
-4. Untuk mengubah baris yang sudah disetujui, klik **"Ajukan Hapus untuk Edit"** (mingguan) atau tombol Hapus
-   biasa (bulanan/berkas) — ini membuat permintaan ke Admin, sama seperti permintaan hapus data lainnya. Setelah
-   Admin menyetujui penghapusannya, Anda bisa memasukkan data baru di posisi itu, yang otomatis kembali berstatus
-   menunggu persetujuan.
+   **"Disetujui"**. Anda masih bisa menekan tombol **Edit**, tapi mengisi & menyimpan sekarang **mengajukan nilai
+   baru ke Admin** alih-alih menulis langsung — data lama tetap berlaku sampai disetujui.
+4. Untuk mengubah baris yang sudah disetujui, klik **Edit** seperti biasa (formnya terisi nilai lama, tidak perlu
+   mengetik ulang dari nol), ubah yang perlu, lalu **Simpan** — ini mengajukan permintaan edit ke Admin, sama
+   seperti permintaan hapus data lainnya (lihat bagian **Hapus & Edit** di [Menu Admin](#menu-admin)). Anda tetap
+   bisa menghapus baris yang sudah disetujui lewat tombol Hapus (mengajukan permintaan hapus), lalu memasukkan
+   data baru dari nol bila memang itu yang diinginkan.
 5. Admin juga bisa menekan **Tolak** alih-alih Setujui — baris itu TIDAK dihapus atau diubah, badge berubah
    merah **"Ditolak"** disertai catatan alasan dari Admin (bila diisi). Baris yang ditolak tetap bisa Anda
    edit/hapus bebas seperti biasa (sama seperti "Menunggu Persetujuan") — begitu Anda perbaiki & **Simpan**
    ulang, badge otomatis kembali kuning "Menunggu Persetujuan" dan catatan penolakan lama hilang, menunggu
-   ditinjau Admin lagi dari awal.
+   ditinjau Admin lagi dari awal. Menolak permintaan **edit** pada baris yang sudah disetujui tidak menyentuh
+   data — nilai lama tetap berlaku, badge tetap hijau "Disetujui".
 
 **Data yang Admin masukkan sendiri langsung dianggap disetujui** — Admin tidak pernah perlu menyetujui isian
 dirinya sendiri.
@@ -285,13 +287,18 @@ banyak baris sekaligus. Menekan **Tolak** membuka kotak dialog untuk mengisi ala
 dihapus, hanya ditandai "Ditolak" dengan catatan yang terlihat UPT; mereka tetap bebas mengedit/menghapus baris
 draft maupun yang ditolak sendiri kapan saja.
 
-**Hapus** – daftar permintaan hapus data (lihat [Koreksi & Penghapusan Data](#koreksi--penghapusan-data)),
-dikelompokkan **Menunggu Persetujuan** dan **Riwayat**. Tiap permintaan menampilkan UPT pengaju, jenis permintaan
-(data mingguan/bulanan/berkas), periode, jumlah baris, dan alasan (bila diisi UPT). Dua aksi:
+**Hapus & Edit** – daftar permintaan hapus DAN permintaan edit pada baris yang sudah disetujui (lihat [Koreksi &
+Penghapusan Data](#koreksi--penghapusan-data) dan [Persetujuan Baris Data](#persetujuan-baris-data)),
+dikelompokkan **Menunggu Persetujuan** dan **Riwayat**. Tiap permintaan diberi label **Hapus** (merah) atau
+**Edit** (kuning) supaya mudah dibedakan sekilas; untuk permintaan Edit, ringkasan nilai baru yang diajukan
+langsung terlihat di daftar sebelum Anda memutuskan. Menampilkan UPT pengaju, jenis data, periode, dan alasan
+(bila diisi UPT). Dua aksi:
 
-* **Setujui** – benar-benar menjalankan penghapusannya (masuk Tempat Sampah 30 hari seperti penghapusan biasa,
-  dapat dipulihkan).
-* **Tolak** – data tidak disentuh; boleh menambahkan catatan alasan penolakan (terlihat UPT di riwayat).
+* **Setujui** – untuk Hapus: benar-benar menjalankan penghapusannya (masuk Tempat Sampah 30 hari, dapat
+  dipulihkan). Untuk Edit: langsung menulis nilai baru yang diajukan — baris kembali berstatus **Disetujui**
+  seketika, UPT tidak perlu menunggu persetujuan kedua kali.
+* **Tolak** – data tidak disentuh (untuk Edit: nilai lama tetap berlaku); boleh menambahkan catatan alasan
+  penolakan (terlihat UPT di riwayat).
 
 ### Kelola Periode
 Periode (1 tahun = 65: 1 tahun, 4 triwulan, 12 bulan, 48 minggu) **tahun berjalan dan tahun depan dibuat otomatis** oleh

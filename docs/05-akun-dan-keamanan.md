@@ -43,9 +43,10 @@ Bila tetap dibutuhkan untuk uji coba lokal, buat lewat menu *Kelola Akun UPT* (U
 | | Admin | UPT | Publik |
 | :-- | :-- | :-- | :-- |
 | Melihat data | Semua UPT | Hanya UPT sendiri | Agregat jenis data publik |
-| Input/ubah data | Semua UPT, kapan saja, langsung **disetujui** (tidak antre) | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**); setiap baris yang disimpan otomatis **draft** (menunggu disetujui) sampai Admin menyetujuinya per baris — begitu disetujui, baris itu tidak bisa diedit langsung lagi | — |
+| Input/ubah data | Semua UPT, kapan saja, langsung **disetujui** (tidak antre) | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**); setiap baris yang disimpan otomatis **draft** (menunggu disetujui) sampai Admin menyetujuinya per baris — begitu disetujui, mengedit lagi mengajukan **permintaan edit** ke Admin (migrasi_15) alih-alih menulis langsung | — |
 | Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | Bebas selagi baris masih **draft/ditolak**; **perlu persetujuan Admin** begitu baris itu **disetujui** (menu Permintaan) | — |
 | Menyetujui/menolak baris data yang disimpan UPT (draft → disetujui/ditolak, per baris) | ✔ ("Setujui"/"Setujui Semua"/"Tolak" di menu Permintaan, bagian Persetujuan Baris Data) | — (UPT hanya bisa mengedit/menghapus draft/ditolak-nya sendiri) | — |
+| Menyetujui/menolak permintaan edit pada baris yang sudah disetujui | ✔ ("Setujui"/"Tolak" di menu Permintaan, bagian Hapus & Edit) | — (UPT hanya mengajukan lewat tombol Edit) | — |
 | Kelola akun UPT & daftar UPT | ✔ | — | — |
 | Kelola Jenis Data & kolom | ✔ | — | — |
 | Rekap & ekspor semua UPT | ✔ | — | — |
@@ -65,12 +66,14 @@ Begitu UPT menekan **Simpan** pada form (mingguan, bulanan, maupun upload berkas
 **draft** ("Menunggu Persetujuan", badge kuning) — baris itu **masih bebas diedit/dihapus** oleh UPT sendiri, tapi
 belum dihitung di Dashboard/Rekap/halaman publik. Admin meninjau di menu **Permintaan** (bagian "Persetujuan
 Baris Data", dikelompokkan per UPT/Jenis Data/Periode, bisa disetujui satu-satu atau sekaligus) dan menekan
-**Setujui**. Begitu disetujui (badge hijau), baris itu **tidak bisa diedit langsung lagi** — tombol edit
-disembunyikan/field dinonaktifkan, satu-satunya cara mengubahnya adalah **"Ajukan Hapus untuk Edit"**, yang masuk
-antrean Admin sama seperti hapus data biasa; setelah disetujui, UPT bisa memasukkan data baru di posisi itu
-(mulai dari draft lagi). Selain Setujui, Admin juga bisa **Tolak** satu baris dengan catatan alasan (opsional) —
-baris itu TIDAK dihapus, hanya diberi badge merah "Ditolak" + catatan yang terlihat UPT; UPT tetap bebas
-memperbaiki & menyimpan ulang kapan saja (otomatis kembali ke draft, catatan lama ikut terhapus). Data yang
+**Setujui**. Begitu disetujui (badge hijau), tombol Edit tetap ada — tapi menyimpan sekarang mengajukan
+**permintaan edit** ke Admin (migrasi_15, tabel `permintaan_hapus` dengan `aksi='edit'`, lihat
+[04-database.md](04-database.md#permintaan-edit-migrasi-15--melengkapi-permintaan_hapus-di-atas)) alih-alih menulis
+langsung, sehingga formnya tetap bisa diisi ulang dari nilai lama tanpa perlu menghapus dulu. UPT tetap bisa
+memilih menghapus baris itu (mengajukan **permintaan hapus** seperti biasa) lalu memasukkan data baru dari nol
+bila memang itu yang diinginkan. Selain Setujui, Admin juga bisa **Tolak** satu baris dengan catatan alasan
+(opsional) — baris itu TIDAK dihapus, hanya diberi badge merah "Ditolak" + catatan yang terlihat UPT; UPT tetap
+bebas memperbaiki & menyimpan ulang kapan saja (otomatis kembali ke draft, catatan lama ikut terhapus). Data yang
 Admin sendiri masukkan langsung (bukan lewat "Simpan" milik UPT) otomatis dianggap **disetujui** — Admin tidak
 pernah perlu menyetujui input dirinya sendiri.
 

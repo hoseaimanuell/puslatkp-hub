@@ -5,9 +5,12 @@
  *    berstatus 'draft' menunggu persetujuan. Digerombolkan per (UPT, Jenis Data, Periode) supaya bisa disetujui
  *    satu-satu atau sekaligus (tombol "Setujui Semua"). "Tolak" di sini TIDAK menghapus baris — hanya
  *    menandainya 'ditolak' + catatan alasan (terlihat UPT), yang tetap bebas mengedit/menghapusnya sendiri.
- * 2. Hapus — permintaan pada `permintaan_hapus`: UPT menekan Hapus/Kosongkan pada baris yang sudah disetujui
- *    di #1 (baris masih 'draft'/'ditolak' bebas dihapus langsung, tidak lewat sini). Disetujui = penghapusan
- *    aslinya benar-benar dijalankan (masuk Tempat Sampah); ditolak = data tidak disentuh.
+ * 2. Hapus & Edit — permintaan pada `permintaan_hapus`, dibedakan kolom `aksi`: UPT menekan Hapus/Kosongkan pada
+ *    baris yang sudah disetujui di #1 (aksi='hapus', baris masih 'draft'/'ditolak' bebas dihapus langsung, tidak
+ *    lewat sini), atau menekan Edit pada baris yang sudah disetujui (aksi='edit', migrasi_15 — lihat
+ *    be/src/routes/permintaan-edit.js). Menyetujui aksi='hapus' benar-benar menghapus (masuk Tempat Sampah);
+ *    menyetujui aksi='edit' menulis nilai baru yang diajukan dan baris langsung berstatus Disetujui lagi. Menolak
+ *    keduanya tidak menyentuh data.
  *
  * (Riwayat historis di sini bisa memuat entri lama "Buka Kunci Periode" dari fitur Kirim & Kunci Data per-periode
  * yang sudah dihapus — TABLE_LABEL/isUnlock tetap ada supaya baris riwayat lama itu masih terbaca dengan benar.)
@@ -15,7 +18,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { db, getFeatures } from '../../lib/db'
 import InfoCard from '../../components/InfoCard'
-import { Inbox, Check, X, Loader2, CheckCircle2, XCircle, Clock, ListChecks } from 'lucide-react'
+import { Inbox, Check, X, Loader2, CheckCircle2, XCircle, Clock, ListChecks, Pencil } from 'lucide-react'
 import { formatPeriodLabel } from '../../lib/periods'
 
 const TABLE_LABEL = {
@@ -26,6 +29,22 @@ const TABLE_LABEL = {
 }
 
 const isUnlock = item => item.tabel === 'periode_kirim'
+const isEdit = item => item.aksi === 'edit'
+
+/** Ringkasan singkat nilai baru yang diajukan (aksi='edit'), untuk pratinjau sebelum Admin menyetujui. */
+function editPreview(item) {
+  const raw = item.data_baru_json
+  const dataBaru = typeof raw === 'string' ? JSON.parse(raw) : raw
+  if (!dataBaru) return null
+  if (item.tabel === 'rekap_nilai') {
+    const parts = (dataBaru.values || []).map(v => `${v.field_key}: ${v.value_text ?? v.value ?? '-'}`)
+    if (dataBaru.clearedFields?.length) parts.push(`(kosongkan: ${dataBaru.clearedFields.join(', ')})`)
+    return parts.join(' · ') || null
+  }
+  const v = dataBaru.values
+  if (!v) return null
+  return [v.nama, v.nik].filter(Boolean).join(' · ') || null
+}
 
 const STATUS_BADGE = {
   pending: ['Menunggu', 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'],
@@ -206,6 +225,8 @@ export default function PermintaanHapus() {
   async function approve(item) {
     const confirmMsg = isUnlock(item)
       ? `Buka kunci "${item.ringkasan}"?\n\nUPT bisa mengedit lagi seluruh jenis data periode ini sampai mereka "Kirim" ulang.`
+      : isEdit(item)
+      ? `Terapkan perubahan "${item.ringkasan}"?\n\nNilai baru akan langsung ditulis dan baris kembali berstatus Disetujui.`
       : `Setujui penghapusan "${item.ringkasan || TABLE_LABEL[item.tabel]}"?\n\nData akan benar-benar terhapus (masuk Tempat Sampah, dapat dipulihkan 30 hari).`
     if (!confirm(confirmMsg)) return
     setBusy(item.id)
@@ -213,7 +234,7 @@ export default function PermintaanHapus() {
     setBusy('')
     setToast(error
       ? { type: 'error', message: error.message }
-      : { type: 'success', message: isUnlock(item) ? 'Disetujui — kunci periode dibuka.' : `Disetujui — ${data?.dihapus ?? item.jumlah_baris} data dihapus.` })
+      : { type: 'success', message: isUnlock(item) ? 'Disetujui — kunci periode dibuka.' : isEdit(item) ? 'Disetujui — nilai baru sudah tersimpan.' : `Disetujui — ${data?.dihapus ?? item.jumlah_baris} data dihapus.` })
     load()
   }
 
@@ -226,7 +247,7 @@ export default function PermintaanHapus() {
     setBusy(item.id)
     const { error } = await db.permintaanHapus.tolak(item.id, catatan)
     setBusy('')
-    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: isUnlock(item) ? 'Permintaan buka kunci ditolak — data tetap terkunci.' : 'Permintaan ditolak.' })
+    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: isUnlock(item) ? 'Permintaan buka kunci ditolak — data tetap terkunci.' : isEdit(item) ? 'Permintaan edit ditolak — nilai lama tetap berlaku.' : 'Permintaan ditolak.' })
     load()
   }
 
@@ -236,7 +257,7 @@ export default function PermintaanHapus() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title="Permintaan"
-        description="Tiap baris yang UPT simpan menunggu persetujuan Anda di sini (Persetujuan Baris Data) sebelum dihitung resmi. Untuk baris yang sudah disetujui, UPT mengajukan permintaan hapus terpisah di bagian Hapus."
+        description="Tiap baris yang UPT simpan menunggu persetujuan Anda di sini (Persetujuan Baris Data) sebelum dihitung resmi. Untuk baris yang sudah disetujui, UPT mengajukan permintaan hapus atau edit terpisah di bagian Hapus & Edit."
       />
 
       {toast && (
@@ -341,7 +362,7 @@ export default function PermintaanHapus() {
             </InfoCard>
           )}
 
-          <InfoCard title={`Hapus (${pending.length})`}>
+          <InfoCard title={`Hapus & Edit (${pending.length})`}>
             {pending.length === 0 ? (
               <div className="text-center py-10 text-gray-400">
                 <Inbox size={32} className="mx-auto mb-2 opacity-40" />
@@ -352,10 +373,20 @@ export default function PermintaanHapus() {
                 {pending.map(item => (
                   <div key={item.id} className="py-3 flex items-start justify-between gap-4 flex-wrap">
                     <div className="min-w-0">
-                      <p className="font-medium text-sm text-gray-900 dark:text-white">
+                      <p className="font-medium text-sm text-gray-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                         {uptLabel(item.upt_key)} <span className="text-gray-400 font-normal">· {TABLE_LABEL[item.tabel] || item.tabel}</span>
+                        {isEdit(item) ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                            <Pencil size={10} /> Edit
+                          </span>
+                        ) : (
+                          <span className="inline-flex text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">Hapus</span>
+                        )}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.ringkasan || `${item.jumlah_baris} baris`}</p>
+                      {isEdit(item) && editPreview(item) && (
+                        <p className="text-xs text-gray-400 mt-0.5">Nilai baru: {editPreview(item)}</p>
+                      )}
                       {item.alasan && <p className="text-xs text-gray-400 mt-0.5 italic">Alasan UPT: "{item.alasan}"</p>}
                       <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
                         <Clock size={11} /> {item.requested_by_label || 'UPT'} · {fmtTime(item.created_at)}
@@ -384,7 +415,7 @@ export default function PermintaanHapus() {
           </InfoCard>
 
           <InfoCard
-            title={`Riwayat Hapus (${history.length})`}
+            title={`Riwayat Hapus & Edit (${history.length})`}
             action={
               <button className="text-xs text-sky-600 hover:underline" onClick={() => setShowHistory(s => !s)}>
                 {showHistory ? 'Sembunyikan' : 'Tampilkan'}
@@ -412,7 +443,10 @@ export default function PermintaanHapus() {
                       return (
                         <tr key={item.id}>
                           <td className="py-2.5 px-3 whitespace-nowrap">{uptLabel(item.upt_key)}</td>
-                          <td className="py-2.5 px-3 text-xs">{item.ringkasan || `${item.jumlah_baris} baris ${TABLE_LABEL[item.tabel] || item.tabel}`}</td>
+                          <td className="py-2.5 px-3 text-xs">
+                            {isEdit(item) && <span className="mr-1 inline-flex text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">Edit</span>}
+                            {item.ringkasan || `${item.jumlah_baris} baris ${TABLE_LABEL[item.tabel] || item.tabel}`}
+                          </td>
                           <td className="py-2.5 px-3"><span className={`px-2 py-0.5 rounded text-[11px] font-semibold whitespace-nowrap ${cls}`}>{label}</span></td>
                           <td className="py-2.5 px-3 text-xs">{item.reviewed_by_label || '-'}</td>
                           <td className="py-2.5 px-3 text-xs whitespace-nowrap">{fmtTime(item.reviewed_at)}</td>

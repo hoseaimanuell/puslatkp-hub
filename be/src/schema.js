@@ -46,7 +46,10 @@ export const TABLES = {
     // query.js -- dan `catatan_admin` (catatan penolakan lama, bila ada) ikut dikosongkan karena sudah
     // diperbaiki UPT. Begitu Admin menyetujui satu baris (endpoint khusus, bukan lewat sini), rowApprovalGate
     // menolak tulis langsung & menggerbang hapusnya (draft/ditolak tetap bebas dihapus/diedit UPT sendiri).
+    // Mengedit baris yang sudah disetujui digerbang jadi "permintaan edit" (bukan tolak keras) -- lihat
+    // editRequiresApproval & be/src/routes/permintaan-edit.js -- supaya UPT tidak perlu menghapus dulu.
     deleteRequiresApproval: true,
+    editRequiresApproval: true,
     forceOnWrite: { status: 'draft', catatan_admin: null, disetujui_at: null, disetujui_by: null, disetujui_by_label: null },
     rowApprovalGate: { column: 'status', values: ['disetujui'], groupBy: ['jenis_data_id', 'upt_key', 'period_id', 'baris_ke'] },
   }),
@@ -57,6 +60,7 @@ export const TABLES = {
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'nik'],
     stamp: { created_by: 'id' },
     deleteRequiresApproval: true,
+    editRequiresApproval: true,
     forceOnWrite: { status: 'draft', catatan_admin: null, disetujui_at: null, disetujui_by: null, disetujui_by_label: null },
     rowApprovalGate: { column: 'status', values: ['disetujui'] },
   }),
@@ -77,14 +81,16 @@ export const TABLES = {
   }),
   permintaan_hapus: table({
     // Dibuat otomatis oleh server saat akun UPT menekan hapus/kosongkan pada tabel ber-`deleteRequiresApproval`
-    // (lihat be/src/lib/query.js: createDeleteRequest). Disetujui/ditolak lewat POST /api/permintaan-hapus/:id/...
-    // (bukan endpoint generik ini) karena menyetujui berarti benar-benar menjalankan penghapusan aslinya.
+    // (lihat be/src/lib/query.js: createDeleteRequest), atau menekan Edit pada baris yang sudah disetujui
+    // (ber-`editRequiresApproval`, lihat createEditRequest). `aksi` membedakan keduanya. Disetujui/ditolak lewat
+    // POST /api/permintaan-hapus/:id/... (bukan endpoint generik ini) karena menyetujui berarti benar-benar
+    // menjalankan aksi aslinya (hapus atau tulis nilai baru).
     cols: [
-      'id', 'tabel', 'upt_key', 'period_id', 'jenis_data_id', 'filter_json', 'ringkasan', 'jumlah_baris', 'alasan',
-      'status', 'catatan_admin', 'requested_by', 'requested_by_label', 'reviewed_by', 'reviewed_by_label',
-      'reviewed_at', 'created_at',
+      'id', 'tabel', 'aksi', 'upt_key', 'period_id', 'jenis_data_id', 'filter_json', 'data_baru_json', 'ringkasan',
+      'jumlah_baris', 'alasan', 'status', 'catatan_admin', 'requested_by', 'requested_by_label', 'reviewed_by',
+      'reviewed_by_label', 'reviewed_at', 'created_at',
     ],
-    json: ['filter_json'],
+    json: ['filter_json', 'data_baru_json'],
     scope: 'upt', // UPT hanya melihat permintaan miliknya sendiri; Admin melihat semua
     read: 'auth', write: 'none',
   }),

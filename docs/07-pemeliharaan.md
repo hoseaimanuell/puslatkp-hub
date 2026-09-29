@@ -62,6 +62,7 @@ Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut
 | `database/migrasi_10_permintaan_hapus.sql` | Membuat tabel `permintaan_hapus` (menu Permintaan, bagian "Hapus") — akun UPT tidak lagi langsung menghapus data, perlu persetujuan Admin. Jalankan setelah migrasi_09, lalu restart be |
 | `database/migrasi_13_status_baris.sql` | Menambah `status`/`disetujui_at`/`disetujui_by`/`disetujui_by_label` pada `rekap_nilai`, `data_entries`, `dokumen_upload` — setiap baris yang UPT **simpan** langsung **draft**, dihitung di rekap/dashboard/publik baru setelah Admin **Setujui** per baris (menu Permintaan, bagian "Persetujuan Baris Data"). Baris lama dibackfill jadi `disetujui`; `v_publik_rekap` diperbarui untuk hanya menghitung baris `disetujui`. Jalankan setelah migrasi_10, lalu restart be |
 | `database/migrasi_14_tolak_baris.sql` | Menambah `catatan_admin` pada `rekap_nilai`, `data_entries`, `dokumen_upload` — melengkapi migrasi_13: Admin sekarang bisa **Tolak** satu baris (bukan cuma Setujui), baris TIDAK dihapus, hanya ditandai status `ditolak` + catatan alasan yang terlihat UPT. Jalankan setelah migrasi_13, lalu restart be |
+| `database/migrasi_15_permintaan_edit.sql` | Menambah `aksi`/`data_baru_json` pada `permintaan_hapus` (menu Permintaan, bagian "Hapus & Edit") — UPT sekarang bisa menekan **Edit** pada baris `rekap_nilai`/`data_entries` yang sudah disetujui dan mengajukan nilai baru ke Admin, alih-alih harus Ajukan Hapus lalu mengetik ulang dari nol. Jalankan setelah migrasi_10, lalu restart be |
 
 > **Riwayat: `migrasi_11_periode_kirim.sql` / `migrasi_12_status_kirim.sql` (tidak lagi dipakai).** Kedua berkas ini
 > pernah menambahkan fitur "Kirim & Kunci Data" (persetujuan per-periode, terpisah dari Persetujuan Baris Data di
@@ -71,7 +72,7 @@ Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut
 > `periode_kirim` tidak di-`DROP` otomatis), tapi **jangan dijalankan lagi di instalasi baru** — `ddl.sql`/
 > `puslatkp1a.sql` sudah tidak memuat tabel ini.
 
-> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–10 dan migrasi_13–14 secara penuh** (`be/scripts/ddl.sql` dan
+> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–10 dan migrasi_13–15 secara penuh** (`be/scripts/ddl.sql` dan
 > `seed-data.js` disinkronkan ulang — lihat catatan di [04-database.md](04-database.md#data-awal-seed)). **Instalasi
 > baru cukup mengimpor `puslatkp1a.sql` sekali saja**, tanpa perlu menjalankan berkas `migrasi_*.sql` satu per satu.
 > Tabel di atas hanya untuk **database lama** yang sudah terlanjur diimpor sebelum tanggal sinkronisasi ini.
@@ -90,6 +91,7 @@ node scripts/run-migration.mjs migrasi_09_opsi_bersyarat.sql
 node scripts/run-migration.mjs migrasi_10_permintaan_hapus.sql
 node scripts/run-migration.mjs migrasi_13_status_baris.sql
 node scripts/run-migration.mjs migrasi_14_tolak_baris.sql
+node scripts/run-migration.mjs migrasi_15_permintaan_edit.sql
 ```
 
 ## Mengubah skema database
@@ -192,6 +194,7 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 | Menu **Permintaan** kosong / "Tabel tidak dikenal: permintaan_hapus" | Jalankan `database/migrasi_10_permintaan_hapus.sql` lalu restart be |
 | Data yang UPT simpan langsung resmi (tidak ada badge "Menunggu Persetujuan", bagian "Persetujuan Baris Data" di menu Permintaan tidak muncul) | Jalankan `database/migrasi_13_status_baris.sql` lalu restart be (cek `GET /api/health` → `features.persetujuanBaris`) |
 | Tombol **"Tolak"** tidak muncul di Persetujuan Baris Data (hanya Setujui) | Jalankan `database/migrasi_14_tolak_baris.sql` lalu restart be (cek `GET /api/health` → `features.tolakBaris`) — Setujui tetap berfungsi normal tanpa ini |
+| Mengedit baris yang sudah disetujui selalu gagal 409 "Fitur Ajukan Edit belum aktif" | Jalankan `database/migrasi_15_permintaan_edit.sql` lalu restart be (cek `GET /api/health` → `features.permintaanEdit`) — sebelum ini, satu-satunya cara mengubah baris disetujui tetap Ajukan Hapus lalu isi ulang dari nol |
 | "Berkas fisik tidak ditemukan di server" | Folder `be/storage`/`STORAGE_DIR` tidak ikut dipulihkan dari backup |
 | "Kolom tidak dikenal: …" | Kolom baru belum didaftarkan di `be/src/schema.js` |
 | Jam/tanggal bergeser satu hari | Sesi MySQL dipaksa UTC; `DATE` dikirim sebagai teks tanpa konversi zona waktu, `DATETIME` sebagai ISO UTC |

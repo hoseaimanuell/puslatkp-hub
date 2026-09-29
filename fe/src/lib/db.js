@@ -155,7 +155,7 @@ export function getFeatures() {
   if (!featuresPromise) {
     featuresPromise = api('/health', { method: 'GET' }).then(({ data }) => {
       if (!data) featuresPromise = null
-      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, persetujuanBaris: false, tolakBaris: false }
+      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, persetujuanBaris: false, tolakBaris: false, permintaanEdit: false }
     })
   }
   return featuresPromise
@@ -176,9 +176,17 @@ export const db = {
     resetPassword: (userId, password) => api(`/auth/users/${userId}/password`, { method: 'PATCH', body: { password } }),
   },
   permintaanHapus: {
-    /** Admin: setujui (benar-benar menghapus, masuk Tempat Sampah) atau tolak permintaan hapus akun UPT. */
+    /** Admin: setujui (benar-benar menghapus, masuk Tempat Sampah; atau bila aksi='edit', menulis nilai baru)
+     *  atau tolak permintaan hapus/edit akun UPT. */
     setujui: id => api(`/permintaan-hapus/${id}/setujui`, { method: 'POST' }),
     tolak: (id, catatan_admin) => api(`/permintaan-hapus/${id}/tolak`, { method: 'POST', body: { catatan_admin } }),
+  },
+  permintaanEdit: {
+    /** UPT: ajukan nilai baru untuk satu baris_ke rekap_nilai yang sudah disetujui Admin. */
+    ajukanRekap: (jenis_data_id, period_id, baris_ke, upserts, clearedFields, alasan) =>
+      api('/permintaan-edit/rekap-nilai', { body: { jenis_data_id, period_id, baris_ke, upserts, clearedFields, alasan } }),
+    /** UPT: ajukan nilai baru untuk satu baris data_entries yang sudah disetujui Admin. */
+    ajukanEntry: (id, values, alasan) => api('/permintaan-edit/data-entries', { body: { id, values, alasan } }),
   },
   persetujuanBaris: {
     /** Admin: setujui satu baris rekap_nilai (semua field baris_ke itu sekaligus, status draft -> disetujui). */

@@ -249,6 +249,41 @@ bisa punya migrasi_13 tanpa migrasi_14, Setujui tetap jalan normal), kolom `cata
 (`detectRejectBaris()` di `be/src/lib/compat.js`), dan tombol **Tolak** disembunyikan di menu Permintaan (Setujui
 tetap muncul seperti biasa).
 
+### Permintaan Edit (migrasi 15) — melengkapi `permintaan_hapus` di atas
+Sebelum migrasi ini, satu-satunya cara mengubah baris `rekap_nilai`/`data_entries` yang sudah `disetujui` adalah
+**Ajukan Hapus** lalu memasukkan data baru dari nol (isian lama tidak terpakai lagi, semua kolom diketik ulang).
+**Migrasi 15** menambah kolom `aksi VARCHAR(10) DEFAULT 'hapus'` dan `data_baru_json JSON NULL` pada
+`permintaan_hapus`, memakai ulang tabel yang sama untuk aksi kedua: UPT menekan tombol **Edit** pada baris yang
+sudah disetujui (formnya tetap terisi nilai lama, tidak perlu mengetik ulang), dan menyimpan membuat satu baris
+`permintaan_hapus` dengan `aksi = 'edit'` alih-alih menulis langsung (server tetap menolak 403 tulisan langsung
+ke baris `disetujui` — lihat `rowApprovalGate` di atas; `editRequiresApproval` pada `def` `rekap_nilai`/
+`data_entries` di `be/src/schema.js` menandai tabel mana yang mendukung jalur ini, `dokumen_upload` sengaja
+**tidak** disertakan karena mengedit berkas yang sudah diunggah tetap lewat hapus-lalu-unggah-ulang).
+
+`data_baru_json` menyimpan nilai yang diajukan: untuk `rekap_nilai`, `{ values: [...baris field yang diubah],
+clearedFields: [...field_key yang dikosongkan] }` (satu baris_ke bisa berisi upsert DAN pengosongan sekaligus,
+mengikuti logika `saveBarisModal()` di `fe/src/views/InputData/PeriodeTabs.jsx`); untuk `data_entries`,
+`{ values: {nama, nik, data_json} }`. Endpoint pembuatannya terpisah dari `/api/db/query` generik —
+`POST /api/permintaan-edit/rekap-nilai` dan `POST /api/permintaan-edit/data-entries`
+(`be/src/routes/permintaan-edit.js`) — karena bentuk datanya (upsert + field yang dikosongkan sekaligus) tidak
+cocok dipetakan ke satu operasi CRUD tunggal; kedua endpoint menolak Admin (403, admin selalu menulis langsung)
+dan memverifikasi baris yang dituju memang berstatus `disetujui` sebelum membuat permintaan.
+
+Menyetujuinya tetap lewat endpoint yang sama seperti permintaan hapus — `POST /api/permintaan-hapus/:id/setujui`
+(`be/src/routes/permintaan-hapus.js`) — yang sekarang bercabang berdasar `aksi`: untuk `'hapus'` menjalankan
+`executeSoftDelete()` seperti biasa; untuk `'edit'` memanggil `runQuery()` dengan konteks Admin yang menyetujui
+(`req.user`), sehingga cabang admin di `prepareRow()` (`be/src/lib/query.js`) otomatis menstempel baris itu balik
+`status = 'disetujui'`, `disetujui_by`/`disetujui_by_label` = Admin penyetuju — **tidak perlu antre kedua kalinya**
+di Persetujuan Baris Data. Bagian `clearedFields` dieksekusi sebagai `delete()` terpisah dengan `liveEdit: true`
+(soft-delete biasa, masuk Tempat Sampah). Menolak (`POST /api/permintaan-hapus/:id/tolak`) tidak menyentuh data
+sama sekali — nilai lama & status `disetujui` tetap berlaku.
+
+Tanpa migrasi_15, `features.permintaanEdit` bernilai `false` (`detectEditRequest()` di `be/src/lib/compat.js`,
+butuh `features.permintaanHapus` aktif lebih dulu), kolom `aksi`/`data_baru_json` dilepas dari whitelist,
+`editRequiresApproval` dilepas dari `rekap_nilai`/`data_entries`, dan endpoint `/api/permintaan-edit/*` menolak
+dengan pesan jelas (409) — UPT kembali ke alur lama (Ajukan Hapus lalu isi ulang dari nol) untuk baris yang sudah
+disetujui.
+
 ### `dashboard_widgets` — Pengaturan Dashboard
 Satu baris = satu kartu/grafik (`tipe`, `judul`, `grup`, `gaya`, `ikon`, `warna`, `satuan`, `urutan`, `aktif`). Sumber angka ada di kolom JSON
 `konfigurasi` (`items`/`pembanding`/`series` berisi pasangan `{jd: kunci jenis data, field: field_key}`). Tabel kosong = tampilan bawaan

@@ -327,10 +327,12 @@ CREATE TABLE IF NOT EXISTS dokumen_resmi (
 CREATE TABLE IF NOT EXISTS permintaan_hapus (
   id                  CHAR(36)     NOT NULL,
   tabel               VARCHAR(30)  NOT NULL COMMENT 'rekap_nilai | data_entries | dokumen_upload',
+  aksi                VARCHAR(10)  NOT NULL DEFAULT 'hapus' COMMENT 'hapus | edit',
   upt_key             VARCHAR(50)  NOT NULL,
   period_id           CHAR(36)     NULL COMMENT 'Diisi dari baris yang diajukan, untuk pencarian cepat (mis. status buka kunci periode tertentu)',
   jenis_data_id       CHAR(36)     NULL,
   filter_json         JSON         NOT NULL COMMENT 'Filter WHERE (sudah termasuk upt_key) untuk dieksekusi ulang saat disetujui',
+  data_baru_json      JSON         NULL COMMENT 'Nilai baru yang diajukan UPT (hanya diisi saat aksi = edit)',
   ringkasan           VARCHAR(500) NULL,
   jumlah_baris        INT          NOT NULL DEFAULT 0,
   alasan              VARCHAR(500) NULL COMMENT 'Alasan opsional dari UPT saat mengajukan',
