@@ -43,50 +43,40 @@ Bila tetap dibutuhkan untuk uji coba lokal, buat lewat menu *Kelola Akun UPT* (U
 | | Admin | UPT | Publik |
 | :-- | :-- | :-- | :-- |
 | Melihat data | Semua UPT | Hanya UPT sendiri | Agregat jenis data publik |
-| Input/ubah data | Semua UPT, kapan saja, langsung **disetujui** (tidak antre) | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**); setiap baris yang disimpan otomatis **draft** (menunggu disetujui) sampai Admin menyetujuinya per baris — begitu disetujui, baris itu tidak bisa diedit langsung lagi. Periode juga bisa dikunci total lewat "Kirim" (lihat di bawah) | — |
-| Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | Bebas selagi baris/periode masih **draft**; **perlu persetujuan Admin** begitu baris ATAU periode itu **disetujui** (menu Permintaan) | — |
+| Input/ubah data | Semua UPT, kapan saja, langsung **disetujui** (tidak antre) | UPT sendiri; lewat deadline tetap boleh (ditandai **Terlambat**); setiap baris yang disimpan otomatis **draft** (menunggu disetujui) sampai Admin menyetujuinya per baris — begitu disetujui, baris itu tidak bisa diedit langsung lagi | — |
+| Hapus data (tombol Hapus/Kosongkan/Hapus Duplikat) | Langsung terhapus | Bebas selagi baris masih **draft/ditolak**; **perlu persetujuan Admin** begitu baris itu **disetujui** (menu Permintaan) | — |
 | Menyetujui/menolak baris data yang disimpan UPT (draft → disetujui/ditolak, per baris) | ✔ ("Setujui"/"Setujui Semua"/"Tolak" di menu Permintaan, bagian Persetujuan Baris Data) | — (UPT hanya bisa mengedit/menghapus draft/ditolak-nya sendiri) | — |
-| Menyetujui data yang dikirim UPT (draft → disetujui, per periode) | ✔ ("Setujui" di menu Permintaan, bagian Persetujuan Data) | — (UPT hanya bisa mengirim/membatalkan draft sendiri) | — |
-| Buka kunci periode yang sudah **disetujui** | Langsung (tidak pernah terkunci) | **Perlu persetujuan Admin** ("Ajukan Buka Kunci") | — |
 | Kelola akun UPT & daftar UPT | ✔ | — | — |
 | Kelola Jenis Data & kolom | ✔ | — | — |
 | Rekap & ekspor semua UPT | ✔ | — | — |
 
 Detail per tabel: [03-api-reference.md](03-api-reference.md#matriks-hak-akses-per-tabel).
 
-**Hapus data akun UPT perlu persetujuan Admin — kecuali periodenya masih draft.** Tombol Hapus/Kosongkan/Hapus
-Duplikat pada data mingguan, bulanan, dan berkas unggahan milik akun UPT langsung menghapus selagi periode terkait
-belum dikirim atau masih **draft** (menunggu disetujui). Begitu Admin **menyetujui** periode itu, hapus tidak lagi
-langsung — sistem membuat **permintaan hapus** yang harus disetujui Admin (menu **Permintaan**) sebelum data
+**Hapus data akun UPT perlu persetujuan Admin — kecuali barisnya masih draft/ditolak.** Tombol Hapus/Kosongkan/Hapus
+Duplikat pada data mingguan, bulanan, dan berkas unggahan milik akun UPT langsung menghapus selagi baris terkait
+masih **draft** atau **ditolak** (menunggu/belum disetujui). Begitu Admin **menyetujui** suatu baris, hapus tidak
+lagi langsung — sistem membuat **permintaan hapus** yang harus disetujui Admin (menu **Permintaan**) sebelum data
 benar-benar terhapus (dan masuk Tempat Sampah seperti biasa). Mengedit atau mengosongkan isian saat masih dalam
-sesi input mingguan/bulanan (tanpa menekan tombol Hapus) tetap tersimpan langsung seperti biasa selama periodenya
-belum disetujui — pembatas ini hanya berlaku untuk aksi hapus yang disengaja.
+sesi input mingguan/bulanan (tanpa menekan tombol Hapus) tetap tersimpan langsung seperti biasa — pembatas ini
+hanya berlaku untuk aksi hapus yang disengaja.
 
-**Kirim Data — draft menunggu persetujuan, baru terkunci setelah disetujui Admin.** Akun UPT dapat menekan
-**"Kirim"** pada suatu periode (minggu/bulan) di Input Mingguan/Bulanan setelah yakin datanya benar. Ini
-mengirimkan **semua** jenis data periode itu sekaligus sebagai **draft** — UPT masih bisa mengedit/menghapus data
-seperti biasa, dan bisa membatalkan pengiriman sendiri ("Batalkan Kirim") tanpa perlu izin Admin. Admin meninjau
-draft yang masuk di menu **Permintaan** (bagian "Persetujuan Data") dan menekan **Setujui**. Begitu disetujui,
-periode itu baru benar-benar terkunci — form input, tombol hapus, dan tombol tambah/edit disembunyikan, UPT hanya
-bisa melihat, dan server juga menolak permintaan tulis langsung ke data periode itu (bukan cuma disembunyikan di
-tampilan). Untuk mengedit lagi setelah terkunci, UPT menekan **"Ajukan Buka Kunci"**, yang masuk ke menu
-**Permintaan** yang sama seperti permintaan hapus — setelah Admin menyetujui, kunci dibuka dan UPT bisa mengedit
-sampai menekan "Kirim" lagi. Admin sendiri tidak pernah terkunci, kapan pun.
+**Persetujuan Baris Data — satu-satunya lapisan persetujuan, berlaku otomatis pada setiap baris yang disimpan.**
+Begitu UPT menekan **Simpan** pada form (mingguan, bulanan, maupun upload berkas), baris itu langsung berstatus
+**draft** ("Menunggu Persetujuan", badge kuning) — baris itu **masih bebas diedit/dihapus** oleh UPT sendiri, tapi
+belum dihitung di Dashboard/Rekap/halaman publik. Admin meninjau di menu **Permintaan** (bagian "Persetujuan
+Baris Data", dikelompokkan per UPT/Jenis Data/Periode, bisa disetujui satu-satu atau sekaligus) dan menekan
+**Setujui**. Begitu disetujui (badge hijau), baris itu **tidak bisa diedit langsung lagi** — tombol edit
+disembunyikan/field dinonaktifkan, satu-satunya cara mengubahnya adalah **"Ajukan Hapus untuk Edit"**, yang masuk
+antrean Admin sama seperti hapus data biasa; setelah disetujui, UPT bisa memasukkan data baru di posisi itu
+(mulai dari draft lagi). Selain Setujui, Admin juga bisa **Tolak** satu baris dengan catatan alasan (opsional) —
+baris itu TIDAK dihapus, hanya diberi badge merah "Ditolak" + catatan yang terlihat UPT; UPT tetap bebas
+memperbaiki & menyimpan ulang kapan saja (otomatis kembali ke draft, catatan lama ikut terhapus). Data yang
+Admin sendiri masukkan langsung (bukan lewat "Simpan" milik UPT) otomatis dianggap **disetujui** — Admin tidak
+pernah perlu menyetujui input dirinya sendiri.
 
-**Persetujuan Baris Data — setiap baris yang disimpan, bukan cuma saat Kirim.** Ini lapisan KEDUA, terpisah dari
-& berjalan berdampingan dengan Kirim Data di atas. Begitu UPT menekan **Simpan** pada form (mingguan, bulanan,
-maupun upload berkas), baris itu langsung berstatus **draft** ("Menunggu Persetujuan", badge kuning) — bukan
-menunggu Admin menyetujui, baris itu **masih bebas diedit/dihapus** oleh UPT sendiri, tapi belum dihitung di
-Dashboard/Rekap/halaman publik. Admin meninjau di menu **Permintaan** (bagian "Persetujuan Baris Data",
-dikelompokkan per UPT/Jenis Data/Periode, bisa disetujui satu-satu atau sekaligus) dan menekan **Setujui**.
-Begitu disetujui (badge hijau), baris itu **tidak bisa diedit langsung lagi** — tombol edit disembunyikan/field
-dinonaktifkan, satu-satunya cara mengubahnya adalah **"Ajukan Hapus untuk Edit"**, yang masuk antrean Admin sama
-seperti hapus data biasa; setelah disetujui, UPT bisa memasukkan data baru di posisi itu (mulai dari draft lagi).
-Selain Setujui, Admin juga bisa **Tolak** satu baris dengan catatan alasan (opsional) — baris itu TIDAK dihapus,
-hanya diberi badge merah "Ditolak" + catatan yang terlihat UPT; UPT tetap bebas memperbaiki & menyimpan ulang
-kapan saja (otomatis kembali ke draft, catatan lama ikut terhapus). Data yang Admin sendiri masukkan langsung
-(bukan lewat "Simpan" milik UPT) otomatis dianggap **disetujui** — Admin tidak pernah perlu menyetujui input
-dirinya sendiri.
+> **Riwayat: fitur "Kirim & Kunci Data" per periode (migrasi_11/12) sudah dihapus** karena dua lapisan persetujuan
+> sekaligus (per periode dan per baris) membingungkan UPT. Sekarang hanya Persetujuan Baris Data di atas yang
+> berlaku.
 
 ## Mengelola akun
 

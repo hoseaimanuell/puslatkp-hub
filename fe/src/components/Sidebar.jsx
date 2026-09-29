@@ -29,7 +29,6 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
     const feat = await getFeatures()
     if (!feat.permintaanHapus) return
     const counts = [db.from('permintaan_hapus').select('*', { head: true }).eq('status', 'pending')]
-    if (feat.periodeKirim) counts.push(db.from('periode_kirim').select('*', { head: true }).eq('status', 'draft'))
     const results = await Promise.all(counts)
     let total = results.reduce((a, r) => a + (r.count || 0), 0)
     if (feat.persetujuanBaris) {

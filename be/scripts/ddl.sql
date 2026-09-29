@@ -326,7 +326,7 @@ CREATE TABLE IF NOT EXISTS dokumen_resmi (
 -- 15. Permintaan Hapus & Buka Kunci (akun UPT tidak menghapus/membuka kunci langsung, perlu persetujuan Admin)
 CREATE TABLE IF NOT EXISTS permintaan_hapus (
   id                  CHAR(36)     NOT NULL,
-  tabel               VARCHAR(30)  NOT NULL COMMENT 'rekap_nilai | data_entries | dokumen_upload | periode_kirim',
+  tabel               VARCHAR(30)  NOT NULL COMMENT 'rekap_nilai | data_entries | dokumen_upload',
   upt_key             VARCHAR(50)  NOT NULL,
   period_id           CHAR(36)     NULL COMMENT 'Diisi dari baris yang diajukan, untuk pencarian cepat (mis. status buka kunci periode tertentu)',
   jenis_data_id       CHAR(36)     NULL,
@@ -349,31 +349,6 @@ CREATE TABLE IF NOT EXISTS permintaan_hapus (
   CONSTRAINT fk_permintaan_upt FOREIGN KEY (upt_key) REFERENCES upt_list(`key`) ON DELETE CASCADE,
   CONSTRAINT fk_permintaan_requested_by FOREIGN KEY (requested_by) REFERENCES profiles(id) ON DELETE SET NULL,
   CONSTRAINT fk_permintaan_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES profiles(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 16. Kirim & Kunci Data (UPT mengunci semua jenis data satu periode sekaligus; buka kunci lagi lewat baris di atas)
-CREATE TABLE IF NOT EXISTS periode_kirim (
-  id                 CHAR(36)     NOT NULL,
-  upt_key            VARCHAR(64)  NOT NULL,
-  period_id          CHAR(36)     NOT NULL,
-  status              VARCHAR(10)  NOT NULL DEFAULT 'draft' COMMENT 'draft | disetujui',
-  terkirim_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  terkirim_by        CHAR(36)     NULL,
-  terkirim_by_label  VARCHAR(190) NULL,
-  disetujui_at       DATETIME     NULL,
-  disetujui_by       CHAR(36)     NULL,
-  disetujui_by_label VARCHAR(190) NULL,
-  deleted_at         DATETIME     NULL COMMENT 'Tempat sampah: NULL = masih terkunci/menunggu. Baris terhapus = kunci dibuka atau draft dibatalkan',
-  deleted_by         CHAR(36)     NULL,
-  deleted_batch      CHAR(36)     NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_periode_kirim (upt_key, period_id),
-  KEY idx_periode_kirim_trash (deleted_at, deleted_batch),
-  KEY idx_periode_kirim_status (status),
-  CONSTRAINT fk_pk_upt        FOREIGN KEY (upt_key)      REFERENCES upt_list(`key`) ON DELETE CASCADE,
-  CONSTRAINT fk_pk_period     FOREIGN KEY (period_id)    REFERENCES periods(id)     ON DELETE CASCADE,
-  CONSTRAINT fk_pk_by         FOREIGN KEY (terkirim_by)  REFERENCES profiles(id)    ON DELETE SET NULL,
-  CONSTRAINT fk_pk_disetujui_by FOREIGN KEY (disetujui_by) REFERENCES profiles(id)  ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 17. View publik (agregat saja, tanpa data pribadi)

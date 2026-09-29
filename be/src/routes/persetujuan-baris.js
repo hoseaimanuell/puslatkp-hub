@@ -1,11 +1,10 @@
 /**
  * routes/persetujuan-baris.js
- * Admin: setujui/tolak baris data yang disimpan UPT ('draft' -> 'disetujui'/'ditolak'), lapisan KEDUA yang
- * terpisah dari & berjalan berdampingan dengan periode-kirim.js (Kirim Data per periode). Di sini
- * granularitasnya per baris — rekap_nilai per (jenis_data_id, upt_key, period_id, baris_ke), data_entries/
- * dokumen_upload per id. Tolak TIDAK menghapus/mengubah isi baris — hanya menandainya 'ditolak' + catatan
- * alasan (migrasi_14), terlihat UPT sebagai peringatan. UPT tetap bebas mengedit/menghapus baris 'draft' atau
- * 'ditolak' kapan saja tanpa perlu izin; menyimpan ulang otomatis mengembalikan status ke 'draft' (lihat
+ * Admin: setujui/tolak baris data yang disimpan UPT ('draft' -> 'disetujui'/'ditolak') — satu-satunya lapisan
+ * persetujuan. Granularitasnya per baris — rekap_nilai per (jenis_data_id, upt_key, period_id, baris_ke),
+ * data_entries/dokumen_upload per id. Tolak TIDAK menghapus/mengubah isi baris — hanya menandainya 'ditolak' +
+ * catatan alasan (migrasi_14), terlihat UPT sebagai peringatan. UPT tetap bebas mengedit/menghapus baris 'draft'
+ * atau 'ditolak' kapan saja tanpa perlu izin; menyimpan ulang otomatis mengembalikan status ke 'draft' (lihat
  * forceOnWrite di be/src/schema.js) dan mengosongkan catatan lama.
  */
 import { Router } from 'express'

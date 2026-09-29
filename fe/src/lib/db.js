@@ -155,7 +155,7 @@ export function getFeatures() {
   if (!featuresPromise) {
     featuresPromise = api('/health', { method: 'GET' }).then(({ data }) => {
       if (!data) featuresPromise = null
-      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, periodeKirim: false, persetujuanBaris: false, tolakBaris: false }
+      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, persetujuanBaris: false, tolakBaris: false }
     })
   }
   return featuresPromise
@@ -179,10 +179,6 @@ export const db = {
     /** Admin: setujui (benar-benar menghapus, masuk Tempat Sampah) atau tolak permintaan hapus akun UPT. */
     setujui: id => api(`/permintaan-hapus/${id}/setujui`, { method: 'POST' }),
     tolak: (id, catatan_admin) => api(`/permintaan-hapus/${id}/tolak`, { method: 'POST', body: { catatan_admin } }),
-  },
-  periodeKirim: {
-    /** Admin: setujui data yang UPT kirim (status draft -> disetujui) — baru saat ini periode terkunci bagi UPT. */
-    setujui: id => api(`/periode-kirim/${id}/setujui`, { method: 'POST' }),
   },
   persetujuanBaris: {
     /** Admin: setujui satu baris rekap_nilai (semua field baris_ke itu sekaligus, status draft -> disetujui). */

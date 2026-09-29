@@ -29,7 +29,7 @@ memfilter/menginput/menghapus.
 | **Rekap Triwulan & Tahun** | `/rekap-triwulan-tahun` | Semua | Hasil rekap **triwulan** dan **tahunan** (baca saja) |
 | **Dokumen & Arsip** | `/dokumen-arsip` | **Admin** | Dua tab: **Dokumen & Panduan** (pedoman, SOP, template Excel — tersimpan di database) dan **Arsip Data Historis** (berkas Excel/PDF tahun lalu) |
 | Kelola Akun UPT | `/kelola-upt` | Admin | Buat/hapus akun UPT, reset password, tambah/hapus UPT |
-| **Permintaan** | `/permintaan-hapus` | Admin | Setujui data yang dikirim UPT per periode (draft → disetujui), setujui baris data per baris (Persetujuan Baris Data), serta setujui/tolak permintaan hapus data dan buka kunci periode |
+| **Permintaan** | `/permintaan-hapus` | Admin | Setujui/tolak baris data per baris (Persetujuan Baris Data), serta setujui/tolak permintaan hapus data |
 | Kelola Jenis Data | `/kelola-jenis-data` | Admin | Form Builder: jenis data & kolom, termasuk wizard **Buat dari Excel** |
 | **Kelola Dashboard** | `/kelola-dashboard` | Admin | Mengatur kartu & grafik Dashboard tanpa coding |
 | **Pengaturan Lanjutan** (menu lipat) | — | Admin | Jarang dipakai: **Kelola Periode** (`/kelola-periode`), **Impor Data Historis** (`/impor-historis`), **Tempat Sampah** (`/tempat-sampah`) |
@@ -229,43 +229,18 @@ berlaku — hanya **menghapus** yang diatur di bawah ini.
   sambil masih mengisi form minggu/bulan berjalan (bukan lewat tombol Hapus) **tidak** kena aturan ini — tetap
   tersimpan langsung seperti biasa.
 * **Admin** menghapus langsung, kapan saja, tanpa perlu persetujuan siapa pun (baik data UPT tertentu maupun
-  "Semua UPT" sekaligus). Admin juga yang menyetujui/menolak permintaan dari UPT, lewat menu **Permintaan Hapus
-  & Buka Kunci** (lihat [Menu Admin](#menu-admin) di bawah).
+  "Semua UPT" sekaligus). Admin juga yang menyetujui/menolak permintaan dari UPT, lewat menu **Permintaan**,
+  bagian **Hapus** (lihat [Menu Admin](#menu-admin) di bawah).
 * **Memulihkan** data dari Tempat Sampah hanya dapat dilakukan **Admin**.
 
 Setelah disetujui (atau dihapus langsung oleh Admin), data masuk **Tempat Sampah** selama **30 hari** dan tercatat
 di log — bukan langsung permanen. Bila setelah dihapus Anda menyimpan data yang sama lagi (mis. mengisi ulang
 kolom mingguan atau memasukkan NIK yang sama), data yang baru otomatis menggantikan salinan di tempat sampah.
 
-## Kirim Data
-
-Selain menghapus, akun UPT juga dapat **mengirim** data suatu periode ke Admin untuk diperiksa & disetujui setelah
-yakin isiannya sudah benar — supaya tidak ada yang mengedit-edit lagi diam-diam setelah disetujui.
-
-1. Di **Input Mingguan** atau **Input Bulanan** (popup input), buka periode yang datanya sudah lengkap. Bila belum
-   dikirim, muncul kotak abu-abu **"Sudah yakin datanya benar? Kirim untuk diperiksa & disetujui Admin…"** dengan
-   tombol **Kirim**.
-2. Klik **Kirim** → **seluruh jenis data mingguan (atau bulanan) pada periode itu ikut terkirim sekaligus sebagai
-   draft** — bukan cuma jenis data yang sedang dibuka. Misalnya mengirim "Minggu ke-2 September" saat membuka
-   "Masyarakat" juga ikut mengirim "Aparatur", "Data Instruktur dan WI", dst. untuk minggu yang sama.
-3. Selagi **menunggu persetujuan Admin** (kotak biru), data **masih bisa diedit seperti biasa** — form input,
-   tombol Simpan, Tambah Baris, Upload Excel, dan Hapus tetap tersedia. Berubah pikiran? Klik **Batalkan Kirim**
-   untuk menarik kembali, bebas tanpa perlu izin Admin.
-4. Setelah Admin menekan **Setujui** (menu **Permintaan**, bagian "Persetujuan Data"), periode itu baru benar-benar
-   **terkunci** (kotak kuning) — form input, tombol Simpan, Tambah Baris, Upload Excel, dan Hapus untuk periode itu
-   **disembunyikan**, UPT hanya bisa melihat datanya, tidak bisa mengedit.
-5. Untuk mengedit lagi setelah terkunci, klik **Ajukan Buka Kunci** pada kotak kuning itu. Ini membuat permintaan
-   ke Admin (sama seperti permintaan hapus) — data tetap terkunci sampai disetujui di menu **Permintaan**, bagian
-   "Hapus & Buka Kunci". Setelah disetujui, periode itu terbuka lagi dan bisa diedit sampai Anda menekan "Kirim"
-   ulang.
-
-**Admin tidak pernah terkunci** — bisa mengedit data UPT mana pun, periode apa pun, kapan pun, tanpa perlu
-mengirim atau membuka kunci apa-apa.
-
 ## Persetujuan Baris Data
 
-Ini lapisan **kedua**, terpisah dari & berjalan berdampingan dengan Kirim Data di atas — berlaku otomatis pada
-**setiap baris** yang Anda simpan, bukan cuma saat menekan "Kirim".
+Setiap baris data yang Anda simpan menunggu persetujuan Admin sebelum dihitung resmi — berlaku otomatis pada
+**setiap baris**, tanpa perlu tombol "kirim" terpisah.
 
 1. Begitu Anda mengisi & menekan **Simpan** (mingguan, bulanan, atau upload berkas), baris/entri itu langsung
    muncul dengan badge kuning **"Menunggu Persetujuan"**. Anda masih bebas mengedit atau menghapusnya sendiri
@@ -300,32 +275,23 @@ dirinya sendiri.
   tidak lagi memuatnya. Aksi ini meminta konfirmasi dan **tidak dapat dibatalkan** (lakukan backup lebih dulu).
 
 ### Permintaan
-Ada tiga bagian berbeda di halaman ini:
+Ada dua bagian berbeda di halaman ini:
 
-**Persetujuan Data** – daftar periode yang dikirim UPT dan masih berstatus **draft**, menunggu ditinjau (lihat
-[Kirim Data](#kirim-data)). Menampilkan UPT pengirim, periode, dan waktu kirim. Satu-satunya aksi: **Setujui** —
-mengubah status jadi `disetujui` dan mengunci periode itu bagi UPT (semua jenis data periode itu ikut terkunci,
-bukan hanya satu). Tidak ada tombol tolak di sini — UPT yang ingin membatalkan drafnya cukup menekan **Batalkan
-Kirim** sendiri, tanpa perlu Admin.
+**Persetujuan Baris Data** (lihat [Persetujuan Baris Data](#persetujuan-baris-data)): daftar baris data
+mingguan/bulanan/berkas yang UPT simpan dan masih menunggu disetujui, dikelompokkan per UPT · Jenis Data ·
+Periode. Tiap grup menampilkan pratinjau ringkas tiap baris (nama pelatihan, nama orang, atau judul berkas)
+dengan tombol **Setujui** dan **Tolak** per baris, plus tombol **Setujui Semua** di judul grup untuk menyetujui
+banyak baris sekaligus. Menekan **Tolak** membuka kotak dialog untuk mengisi alasan (opsional) — baris itu TIDAK
+dihapus, hanya ditandai "Ditolak" dengan catatan yang terlihat UPT; mereka tetap bebas mengedit/menghapus baris
+draft maupun yang ditolak sendiri kapan saja.
 
-**Persetujuan Baris Data** – lapisan kedua, terpisah dari yang di atas (lihat [Persetujuan Baris
-Data](#persetujuan-baris-data)): daftar baris data mingguan/bulanan/berkas yang UPT simpan dan masih menunggu
-disetujui, dikelompokkan per UPT · Jenis Data · Periode. Tiap grup menampilkan pratinjau ringkas tiap baris
-(nama pelatihan, nama orang, atau judul berkas) dengan tombol **Setujui** dan **Tolak** per baris, plus tombol
-**Setujui Semua** di judul grup untuk menyetujui banyak baris sekaligus. Menekan **Tolak** membuka kotak dialog
-untuk mengisi alasan (opsional) — baris itu TIDAK dihapus, hanya ditandai "Ditolak" dengan catatan yang terlihat
-UPT; mereka tetap bebas mengedit/menghapus baris draft maupun yang ditolak sendiri kapan saja.
+**Hapus** – daftar permintaan hapus data (lihat [Koreksi & Penghapusan Data](#koreksi--penghapusan-data)),
+dikelompokkan **Menunggu Persetujuan** dan **Riwayat**. Tiap permintaan menampilkan UPT pengaju, jenis permintaan
+(data mingguan/bulanan/berkas), periode, jumlah baris, dan alasan (bila diisi UPT). Dua aksi:
 
-**Hapus & Buka Kunci** – daftar permintaan hapus data (lihat [Koreksi & Penghapusan
-Data](#koreksi--penghapusan-data)) maupun permintaan buka kunci periode yang sudah **disetujui** (lihat [Kirim
-Data](#kirim-data)), dikelompokkan **Menunggu Persetujuan** dan **Riwayat**. Tiap permintaan menampilkan UPT
-pengaju, jenis permintaan (data mingguan/bulanan/berkas, atau "Buka Kunci Periode"), periode, jumlah baris, dan
-alasan (bila diisi UPT). Dua aksi:
-
-* **Setujui** – untuk permintaan hapus: benar-benar menjalankan penghapusannya (masuk Tempat Sampah 30 hari
-  seperti penghapusan biasa, dapat dipulihkan). Untuk permintaan buka kunci: kunci periode itu dibuka, UPT bisa
-  mengedit lagi sampai menekan "Kirim" ulang.
-* **Tolak** – data/kunci tidak disentuh; boleh menambahkan catatan alasan penolakan (terlihat UPT di riwayat).
+* **Setujui** – benar-benar menjalankan penghapusannya (masuk Tempat Sampah 30 hari seperti penghapusan biasa,
+  dapat dipulihkan).
+* **Tolak** – data tidak disentuh; boleh menambahkan catatan alasan penolakan (terlihat UPT di riwayat).
 
 ### Kelola Periode
 Periode (1 tahun = 65: 1 tahun, 4 triwulan, 12 bulan, 48 minggu) **tahun berjalan dan tahun depan dibuat otomatis** oleh

@@ -1,30 +1,28 @@
 /**
  * views/admin/PermintaanHapus.jsx
- * Admin: setujui/tolak permintaan dari akun UPT — TIGA jenis, ditampilkan sebagai tiga daftar terpisah:
- * 1. Persetujuan Data — UPT menekan "Kirim" pada suatu periode (status 'draft' di tabel periode_kirim, BELUM
- *    mengunci apa pun). Admin meninjau lalu menyetujui di sini (POST /api/periode-kirim/:id/setujui) -> status
- *    'disetujui' -> BARU SAAT ITU periode terkunci bagi UPT. UPT bisa membatalkan draft sendiri kapan pun tanpa
- *    izin (belum ada yang terkunci), jadi tidak ada tombol "Tolak" di sini — cukup tidak disetujui saja.
- * 2. Persetujuan Baris Data — lapisan KEDUA, terpisah & berjalan berdampingan dengan #1: SETIAP baris yang
- *    disimpan UPT (rekap_nilai/data_entries/dokumen_upload) langsung berstatus 'draft' menunggu persetujuan,
- *    tidak menunggu "Kirim". Digerombolkan per (UPT, Jenis Data, Periode) supaya bisa disetujui satu-satu atau
- *    sekaligus (tombol "Setujui Semua"). "Tolak" di sini TIDAK menghapus baris — hanya menandainya 'ditolak' +
- *    catatan alasan (terlihat UPT), yang tetap bebas mengedit/menghapusnya sendiri seperti draft biasa.
- * 3. Hapus & Buka Kunci — permintaan pada `permintaan_hapus`: hapus data mingguan/bulanan/berkas (termasuk baris
- *    yang sudah disetujui di #2), atau buka kunci periode yang statusnya sudah 'disetujui' (tabel='periode_kirim').
- *    Disetujui = aksi aslinya benar-benar dijalankan; ditolak = data/kunci tidak disentuh.
+ * Admin: setujui/tolak permintaan dari akun UPT — DUA jenis, ditampilkan sebagai dua daftar terpisah:
+ * 1. Persetujuan Baris Data — SETIAP baris yang disimpan UPT (rekap_nilai/data_entries/dokumen_upload) langsung
+ *    berstatus 'draft' menunggu persetujuan. Digerombolkan per (UPT, Jenis Data, Periode) supaya bisa disetujui
+ *    satu-satu atau sekaligus (tombol "Setujui Semua"). "Tolak" di sini TIDAK menghapus baris — hanya
+ *    menandainya 'ditolak' + catatan alasan (terlihat UPT), yang tetap bebas mengedit/menghapusnya sendiri.
+ * 2. Hapus — permintaan pada `permintaan_hapus`: UPT menekan Hapus/Kosongkan pada baris yang sudah disetujui
+ *    di #1 (baris masih 'draft'/'ditolak' bebas dihapus langsung, tidak lewat sini). Disetujui = penghapusan
+ *    aslinya benar-benar dijalankan (masuk Tempat Sampah); ditolak = data tidak disentuh.
+ *
+ * (Riwayat historis di sini bisa memuat entri lama "Buka Kunci Periode" dari fitur Kirim & Kunci Data per-periode
+ * yang sudah dihapus — TABLE_LABEL/isUnlock tetap ada supaya baris riwayat lama itu masih terbaca dengan benar.)
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { db, getFeatures } from '../../lib/db'
 import InfoCard from '../../components/InfoCard'
-import { Inbox, Check, X, Loader2, CheckCircle2, XCircle, Clock, FileCheck, ListChecks } from 'lucide-react'
+import { Inbox, Check, X, Loader2, CheckCircle2, XCircle, Clock, ListChecks } from 'lucide-react'
 import { formatPeriodLabel } from '../../lib/periods'
 
 const TABLE_LABEL = {
   rekap_nilai: 'Data Mingguan/Bulanan',
   data_entries: 'Data Rincian (Nama)',
   dokumen_upload: 'Berkas Unggahan',
-  periode_kirim: 'Buka Kunci Periode',
+  periode_kirim: 'Buka Kunci Periode (fitur lama)',
 }
 
 const isUnlock = item => item.tabel === 'periode_kirim'
@@ -43,7 +41,6 @@ export default function PermintaanHapus() {
   const [enabled, setEnabled] = useState(true)
   const [loading, setLoading] = useState(true)
   const [items, setItems] = useState([])
-  const [drafts, setDrafts] = useState([])
   const [uptList, setUptList] = useState([])
   const [periods, setPeriods] = useState([])
   const [jenisDataList, setJenisDataList] = useState([])
@@ -60,17 +57,14 @@ export default function PermintaanHapus() {
     setLoading(true)
     const feat = await getFeatures()
     if (!feat.permintaanHapus) { setEnabled(false); setLoading(false); return }
-    const queries = [
+    const [{ data: reqs }, { data: upts }, { data: pers }] = await Promise.all([
       db.from('permintaan_hapus').select('*').order('created_at', { ascending: false }),
       db.from('upt_list').select('*'),
       db.from('periods').select('*'),
-    ]
-    if (feat.periodeKirim) queries.push(db.from('periode_kirim').select('*').eq('status', 'draft').order('terkirim_at', { ascending: false }))
-    const [{ data: reqs }, { data: upts }, { data: pers }, draftRes] = await Promise.all(queries)
+    ])
     setItems(reqs || [])
     setUptList(upts || [])
     setPeriods(pers || [])
-    setDrafts(draftRes?.data || [])
 
     setPersetujuanBarisEnabled(feat.persetujuanBaris)
     setTolakBarisEnabled(feat.tolakBaris)
@@ -209,15 +203,6 @@ export default function PermintaanHapus() {
     load()
   }
 
-  async function approveDraft(item) {
-    if (!confirm(`Setujui data ${item.upt_key ? uptLabel(item.upt_key) : ''} untuk ${periodLabel(item.period_id)}?\n\nSemua jenis data periode ini akan langsung terkunci bagi UPT setelah disetujui.`)) return
-    setBusy(item.id)
-    const { error } = await db.periodeKirim.setujui(item.id)
-    setBusy('')
-    setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: 'Data disetujui & periode terkunci.' })
-    load()
-  }
-
   async function approve(item) {
     const confirmMsg = isUnlock(item)
       ? `Buka kunci "${item.ringkasan}"?\n\nUPT bisa mengedit lagi seluruh jenis data periode ini sampai mereka "Kirim" ulang.`
@@ -251,7 +236,7 @@ export default function PermintaanHapus() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title="Permintaan"
-        description="Periode yang UPT kirim (Persetujuan Data) dan tiap baris yang mereka simpan (Persetujuan Baris Data) menunggu persetujuan Anda sebelum resmi/terkunci. Setelah disetujui — atau untuk menghapus data — UPT mengajukan permintaan lagi di sini (Hapus & Buka Kunci)."
+        description="Tiap baris yang UPT simpan menunggu persetujuan Anda di sini (Persetujuan Baris Data) sebelum dihitung resmi. Untuk baris yang sudah disetujui, UPT mengajukan permintaan hapus terpisah di bagian Hapus."
       />
 
       {toast && (
@@ -271,40 +256,6 @@ export default function PermintaanHapus() {
 
       {enabled && (
         <>
-          <InfoCard title={`Persetujuan Data (${drafts.length})`}>
-            {drafts.length === 0 ? (
-              <div className="text-center py-10 text-gray-400">
-                <FileCheck size={32} className="mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Tidak ada data yang menunggu persetujuan.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                {drafts.map(item => (
-                  <div key={item.id} className="py-3 flex items-start justify-between gap-4 flex-wrap">
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm text-gray-900 dark:text-white">
-                        {uptLabel(item.upt_key)} <span className="text-gray-400 font-normal">· {periodLabel(item.period_id)}</span>
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Seluruh jenis data periode ini akan ikut terkunci bila disetujui.</p>
-                      <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
-                        <Clock size={11} /> {item.terkirim_by_label || 'UPT'} · {fmtTime(item.terkirim_at)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        disabled={busy === item.id}
-                        onClick={() => approveDraft(item)}
-                        className="btn-primary text-xs !bg-emerald-600 hover:!bg-emerald-700"
-                      >
-                        {busy === item.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Setujui
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </InfoCard>
-
           {persetujuanBarisEnabled && (
             <InfoCard title={`Persetujuan Baris Data (${totalBarisPending})`}>
               {barisGroups.length === 0 ? (
@@ -390,7 +341,7 @@ export default function PermintaanHapus() {
             </InfoCard>
           )}
 
-          <InfoCard title={`Hapus & Buka Kunci (${pending.length})`}>
+          <InfoCard title={`Hapus (${pending.length})`}>
             {pending.length === 0 ? (
               <div className="text-center py-10 text-gray-400">
                 <Inbox size={32} className="mx-auto mb-2 opacity-40" />
@@ -433,7 +384,7 @@ export default function PermintaanHapus() {
           </InfoCard>
 
           <InfoCard
-            title={`Riwayat Hapus & Buka Kunci (${history.length})`}
+            title={`Riwayat Hapus (${history.length})`}
             action={
               <button className="text-xs text-sky-600 hover:underline" onClick={() => setShowHistory(s => !s)}>
                 {showHistory ? 'Sembunyikan' : 'Tampilkan'}

@@ -326,7 +326,7 @@ CREATE TABLE IF NOT EXISTS dokumen_resmi (
 -- 15. Permintaan Hapus & Buka Kunci (akun UPT tidak menghapus/membuka kunci langsung, perlu persetujuan Admin)
 CREATE TABLE IF NOT EXISTS permintaan_hapus (
   id                  CHAR(36)     NOT NULL,
-  tabel               VARCHAR(30)  NOT NULL COMMENT 'rekap_nilai | data_entries | dokumen_upload | periode_kirim',
+  tabel               VARCHAR(30)  NOT NULL COMMENT 'rekap_nilai | data_entries | dokumen_upload',
   upt_key             VARCHAR(50)  NOT NULL,
   period_id           CHAR(36)     NULL COMMENT 'Diisi dari baris yang diajukan, untuk pencarian cepat (mis. status buka kunci periode tertentu)',
   jenis_data_id       CHAR(36)     NULL,
@@ -349,31 +349,6 @@ CREATE TABLE IF NOT EXISTS permintaan_hapus (
   CONSTRAINT fk_permintaan_upt FOREIGN KEY (upt_key) REFERENCES upt_list(`key`) ON DELETE CASCADE,
   CONSTRAINT fk_permintaan_requested_by FOREIGN KEY (requested_by) REFERENCES profiles(id) ON DELETE SET NULL,
   CONSTRAINT fk_permintaan_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES profiles(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 16. Kirim & Kunci Data (UPT mengunci semua jenis data satu periode sekaligus; buka kunci lagi lewat baris di atas)
-CREATE TABLE IF NOT EXISTS periode_kirim (
-  id                 CHAR(36)     NOT NULL,
-  upt_key            VARCHAR(64)  NOT NULL,
-  period_id          CHAR(36)     NOT NULL,
-  status              VARCHAR(10)  NOT NULL DEFAULT 'draft' COMMENT 'draft | disetujui',
-  terkirim_at        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  terkirim_by        CHAR(36)     NULL,
-  terkirim_by_label  VARCHAR(190) NULL,
-  disetujui_at       DATETIME     NULL,
-  disetujui_by       CHAR(36)     NULL,
-  disetujui_by_label VARCHAR(190) NULL,
-  deleted_at         DATETIME     NULL COMMENT 'Tempat sampah: NULL = masih terkunci/menunggu. Baris terhapus = kunci dibuka atau draft dibatalkan',
-  deleted_by         CHAR(36)     NULL,
-  deleted_batch      CHAR(36)     NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_periode_kirim (upt_key, period_id),
-  KEY idx_periode_kirim_trash (deleted_at, deleted_batch),
-  KEY idx_periode_kirim_status (status),
-  CONSTRAINT fk_pk_upt        FOREIGN KEY (upt_key)      REFERENCES upt_list(`key`) ON DELETE CASCADE,
-  CONSTRAINT fk_pk_period     FOREIGN KEY (period_id)    REFERENCES periods(id)     ON DELETE CASCADE,
-  CONSTRAINT fk_pk_by         FOREIGN KEY (terkirim_by)  REFERENCES profiles(id)    ON DELETE SET NULL,
-  CONSTRAINT fk_pk_disetujui_by FOREIGN KEY (disetujui_by) REFERENCES profiles(id)  ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 17. View publik (agregat saja, tanpa data pribadi)
@@ -424,25 +399,25 @@ ON DUPLICATE KEY UPDATE `label` = VALUES(`label`), `aktif` = VALUES(`aktif`);
 -- AKUN AWAL (password di-hash bcrypt; lihat docs/05-akun-dan-keamanan.md)
 -- ==========================================================
 INSERT IGNORE INTO `profiles` (`id`, `email`, `password_hash`, `role`, `upt_key`, `nama_lengkap`, `created_at`) VALUES
-  ('0d0fcaf3-78a1-4ee0-8446-9a5c81167ffd', 'admin@puslatkp.kkp.go.id', '$2b$10$FFvJrSbvVNWsZIpBDeV7D.71bTdn1I7qPoQ5NdPHEZilkFZcVkCla', 'admin', NULL, 'Admin PUSLATKP', '2026-01-01 00:00:00'),
-  ('9802d06b-f2a0-4f6c-82e8-940d7e13a1df', 'bppp.jakarta@kkp.go.id', '$2b$10$o/CFFEdWjp2GrzccC3neaeIBdu3OvPVgSiP.F0K48N2XffXkWyH22', 'upt', 'upt_jakarta', 'BPPP Jakarta', '2026-01-01 00:00:00'),
-  ('d5ae756b-5036-45bd-8f57-a22ae970b179', 'bppp.medan@kkp.go.id', '$2b$10$JZuf.xMm/jEk901YbLkaI.cQRNxOh2Xm8vKAai5tfcjQmNLYqHE.G', 'upt', 'upt_medan', 'BPPP Medan', '2026-01-01 00:00:00'),
-  ('cb80a328-398c-4339-8e9b-a7c27db00701', 'bppp.banyuwangi@kkp.go.id', '$2b$10$narMNojiqZga.aFi5L/NuenbTLtWs1sRA5D.4U3fGwS2wLKgxODCC', 'upt', 'upt_banyuwangi', 'BPPP Banyuwangi', '2026-01-01 00:00:00'),
-  ('1d1c82c1-cc51-4431-8f3b-69487d0fc662', 'bppp.tegal@kkp.go.id', '$2b$10$HeQIBuT1w8GChMLOQV5OCOEjcbEo3PByqwM.aktwb/FbwE8pursCa', 'upt', 'upt_tegal', 'BPPP Tegal', '2026-01-01 00:00:00'),
-  ('66bcf275-7c59-45d7-8cc6-942667bcdfdf', 'bppp.bitung@kkp.go.id', '$2b$10$kxGA80qcSx.iuWIx0Nse7eKSg96Lgdb8Ghf9pqBA86E5vQsnq2qUG', 'upt', 'upt_bitung', 'BPPP Bitung', '2026-01-01 00:00:00'),
-  ('e8a1fe30-d2fe-47ee-85fd-429f76d696a7', 'bppp.ambon@kkp.go.id', '$2b$10$6HF6yq5MoO1X3YmPi1eGAOSMudYWKNGsLKrDIVLjyLny6Q59/URgG', 'upt', 'upt_ambon', 'BPPP Ambon', '2026-01-01 00:00:00'),
-  ('050b142e-809a-4212-800c-b90b91584fbd', 'bppp.padang@kkp.go.id', '$2b$10$Nojo6YP6F9dtuEC6XOvxEupJPD5e7y2.UM8OgQatRh7RLUG.EMFIa', 'upt', 'upt_padang', 'BPPP Padang', '2026-01-01 00:00:00'),
-  ('1357883c-c49d-4d5b-8c58-573713f9505d', 'bppp.pontianak@kkp.go.id', '$2b$10$t5tyuos8q1CAxF0rQfV.JuxLAlhvvGjhvL66JBYl1DOv0Y/S.Z.1q', 'upt', 'upt_pontianak', 'BPPP Pontianak', '2026-01-01 00:00:00'),
-  ('9a8aa809-b18e-48cb-86d8-fb903f4fa692', 'bppp.makassar@kkp.go.id', '$2b$10$cTyUoJd5x.D3gmLRTARKIepkqgaiM4apYeDEj79zMwVIwDJXYGbUe', 'upt', 'upt_makassar', 'BPPP Makassar', '2026-01-01 00:00:00'),
-  ('f380f850-fc65-4d66-817b-8f55abf1f172', 'bppp.sorong@kkp.go.id', '$2b$10$vTS7K2zdlD8.cOVL7xvCj.SCry4kIwnb.0pg9iiqq0qaxicGrjf5S', 'upt', 'upt_sorong', 'BPPP Sorong', '2026-01-01 00:00:00'),
-  ('ee1b6e4a-f626-433a-8d0b-9600433ff6eb', 'bda.sukamandi@kkp.go.id', '$2b$10$yxWyAsI9fJLPW99OIA1eoOM5Ajygs9J.StJayLO9qodaf.eq4VJ2y', 'upt', 'upt_bda_sukamandi', 'BDA Sukamandi', '2026-01-01 00:00:00'),
-  ('c0b8d846-19dd-43d9-8219-5bf006939c45', 'bpmpkp.buleleng@kkp.go.id', '$2b$10$qpy8Ftoz4ZPG5l2l.u4vLeZdZWa4BFkxbdibckRLwDLPy4JVvKa7K', 'upt', 'upt_bpmpkp_buleleng', 'BPMPKP Buleleng', '2026-01-01 00:00:00'),
-  ('2510dd49-e930-4261-8651-be4c75569456', 'bpppa.denpasar@kkp.go.id', '$2b$10$xAkFgN2T2ZKcqhUSrHE1deHw0to6AFg89wR5Vgphd8C0Za2z6Sh4.', 'upt', 'upt_bpppa_denpasar', 'BPPPA Denpasar', '2026-01-01 00:00:00'),
-  ('ab23b7ea-eb78-4171-8de8-bd919281fb73', 'bppsdmkp@kkp.go.id', '$2b$10$kVlo8KuPpbSQ3zKyeVW13esxZotpZ60CExuoEtbUVlkMMqPjAuVUa', 'upt', 'upt_bppsdmkp', 'BPPSDMKP', '2026-01-01 00:00:00'),
-  ('5a30deb4-52be-4c37-8564-a687129a743a', 'brbih.depok@kkp.go.id', '$2b$10$9o.gITNhKN9RdMPcldAnYOe1TuQCU8ca8N/4y9rcOEfPi0gLlKUbK', 'upt', 'upt_brbih_depok', 'BRBIH Depok', '2026-01-01 00:00:00'),
-  ('b80b2726-3b90-479a-815a-5ae7504c0bfc', 'brpbappp.maros@kkp.go.id', '$2b$10$kHvW99We3sgkJGoJ43uohezkD51sQWWGlfG/RVbaOgT8gXj.KOtp.', 'upt', 'upt_brpbappp_maros', 'BRPBAPPP Maros', '2026-01-01 00:00:00'),
-  ('2751bc4b-3b09-4d44-8274-79c6e3c6ffd9', 'brpi@kkp.go.id', '$2b$10$0gntNimo1WnY9WSg87xl4e2EYsh0g5ZovZiITRMWopgtrp4tN4G1G', 'upt', 'upt_brpi', 'BRPI', '2026-01-01 00:00:00'),
-  ('541309b9-7c84-44b1-8487-0357e27ae96b', 'pusat.pelatihan.kp@kkp.go.id', '$2b$10$pU65YszOhHxB5RtplRo.sOCL.Y.Gwqjqdp8OvS2jykSKxqx9fDUPW', 'upt', 'upt_pusat_pelatihan_kp', 'Pusat Pelatihan KP', '2026-01-01 00:00:00');
+  ('0d0fcaf3-78a1-4ee0-8446-9a5c81167ffd', 'admin@puslatkp.kkp.go.id', '$2b$10$sMPxZxRUPE0ntDHaQYY5iOSeZ5IsvsWPecJfXNL.VBkkjzvHjUnDC', 'admin', NULL, 'Admin PUSLATKP', '2026-01-01 00:00:00'),
+  ('9802d06b-f2a0-4f6c-82e8-940d7e13a1df', 'bppp.jakarta@kkp.go.id', '$2b$10$oeHV7U8L9N2K8ps5rmRttOsXpk.oxxNCKz9i1UA6HYyya.6/DPJMu', 'upt', 'upt_jakarta', 'BPPP Jakarta', '2026-01-01 00:00:00'),
+  ('d5ae756b-5036-45bd-8f57-a22ae970b179', 'bppp.medan@kkp.go.id', '$2b$10$2PVaf1jBbj8lux9AAU/tbesp7yzyNDXJMBau4LcXGrPjaHz69HR0.', 'upt', 'upt_medan', 'BPPP Medan', '2026-01-01 00:00:00'),
+  ('cb80a328-398c-4339-8e9b-a7c27db00701', 'bppp.banyuwangi@kkp.go.id', '$2b$10$XF9Y83kc2lZU03KUip0xBO/6fEpkFJJUG9RDjrKkR1DMddUZrg73S', 'upt', 'upt_banyuwangi', 'BPPP Banyuwangi', '2026-01-01 00:00:00'),
+  ('1d1c82c1-cc51-4431-8f3b-69487d0fc662', 'bppp.tegal@kkp.go.id', '$2b$10$N28pykYiut2b1wxlmea4b.DxhB8fM9TBnQVZhseGQvFdf8aIKy0pq', 'upt', 'upt_tegal', 'BPPP Tegal', '2026-01-01 00:00:00'),
+  ('66bcf275-7c59-45d7-8cc6-942667bcdfdf', 'bppp.bitung@kkp.go.id', '$2b$10$QoaD0mBezBqbW2J8kXmYIOZu0qBXrZvl3riwMxDj5U57wMdYhN1Bi', 'upt', 'upt_bitung', 'BPPP Bitung', '2026-01-01 00:00:00'),
+  ('e8a1fe30-d2fe-47ee-85fd-429f76d696a7', 'bppp.ambon@kkp.go.id', '$2b$10$fZ2JiNq5D8kR95d.JneKauMauiQRrLdZigw/KiBd846OKWoZ3SqY.', 'upt', 'upt_ambon', 'BPPP Ambon', '2026-01-01 00:00:00'),
+  ('050b142e-809a-4212-800c-b90b91584fbd', 'bppp.padang@kkp.go.id', '$2b$10$n7lUQnwD6B0yyz9YlDr5ou8nRxunJsnonND7XNhcZ5o8FWh9nSdrm', 'upt', 'upt_padang', 'BPPP Padang', '2026-01-01 00:00:00'),
+  ('1357883c-c49d-4d5b-8c58-573713f9505d', 'bppp.pontianak@kkp.go.id', '$2b$10$OIeyLZfUA4yKtJYZ4tJAyOSymV7KOluJkqrrsbjTtHWtSTJehjDgK', 'upt', 'upt_pontianak', 'BPPP Pontianak', '2026-01-01 00:00:00'),
+  ('9a8aa809-b18e-48cb-86d8-fb903f4fa692', 'bppp.makassar@kkp.go.id', '$2b$10$BqFKpJnpapnHVOxITpRFF.U.AdpYDmz8yRnxiYezr2/BV4HqkF7ku', 'upt', 'upt_makassar', 'BPPP Makassar', '2026-01-01 00:00:00'),
+  ('f380f850-fc65-4d66-817b-8f55abf1f172', 'bppp.sorong@kkp.go.id', '$2b$10$hQPxoVzpwXLt5MOy/knI4esJ2ZRZ9cyYsDDaJuweff3a8RL7fSSNy', 'upt', 'upt_sorong', 'BPPP Sorong', '2026-01-01 00:00:00'),
+  ('ee1b6e4a-f626-433a-8d0b-9600433ff6eb', 'bda.sukamandi@kkp.go.id', '$2b$10$IrZOziah.M2KoWvGwLuNDehdzoPyb19sPQTM/DZsmB2ps1MfIbO.m', 'upt', 'upt_bda_sukamandi', 'BDA Sukamandi', '2026-01-01 00:00:00'),
+  ('c0b8d846-19dd-43d9-8219-5bf006939c45', 'bpmpkp.buleleng@kkp.go.id', '$2b$10$M2YfxjfVZrTJ6FPO0wwXJ.tT8smyNNifd2iZrcm42g4GY8h7k.1MW', 'upt', 'upt_bpmpkp_buleleng', 'BPMPKP Buleleng', '2026-01-01 00:00:00'),
+  ('2510dd49-e930-4261-8651-be4c75569456', 'bpppa.denpasar@kkp.go.id', '$2b$10$2Ir.1Zx1IBMVcNGulUbm7O.5WfCHazmbPlOExeTPIj1Fp0UIT7ZKO', 'upt', 'upt_bpppa_denpasar', 'BPPPA Denpasar', '2026-01-01 00:00:00'),
+  ('ab23b7ea-eb78-4171-8de8-bd919281fb73', 'bppsdmkp@kkp.go.id', '$2b$10$FrzuIyjg7VItYxWANG6GM.XyrlhYlr0dCaEAQ5Tf7JWVVXkpOzQkC', 'upt', 'upt_bppsdmkp', 'BPPSDMKP', '2026-01-01 00:00:00'),
+  ('5a30deb4-52be-4c37-8564-a687129a743a', 'brbih.depok@kkp.go.id', '$2b$10$/7FC5GDNVCp7Ed8EdwfCZu700ARx.za0x6BEBlsamDJA6t03iAlAK', 'upt', 'upt_brbih_depok', 'BRBIH Depok', '2026-01-01 00:00:00'),
+  ('b80b2726-3b90-479a-815a-5ae7504c0bfc', 'brpbappp.maros@kkp.go.id', '$2b$10$6UHwQvkWlxYCmBQmQBjRqeeTFqaubGwZ5VcgbyjeFA90VjNfnBLTO', 'upt', 'upt_brpbappp_maros', 'BRPBAPPP Maros', '2026-01-01 00:00:00'),
+  ('2751bc4b-3b09-4d44-8274-79c6e3c6ffd9', 'brpi@kkp.go.id', '$2b$10$8vTdM2lpPcxkEl0Dnceee.NwHtMUm4cPxkI3ct9djhTaG0NeivLT6', 'upt', 'upt_brpi', 'BRPI', '2026-01-01 00:00:00'),
+  ('541309b9-7c84-44b1-8487-0357e27ae96b', 'pusat.pelatihan.kp@kkp.go.id', '$2b$10$/THqOwbC4XzVDjwY9u5Y8ecRZHwUzEMSgOqYbbJCmtpOGiL6m4/Ha', 'upt', 'upt_pusat_pelatihan_kp', 'Pusat Pelatihan KP', '2026-01-01 00:00:00');
 
 -- ==========================================================
 -- DATA MASTER — 9 JENIS DATA

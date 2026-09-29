@@ -24,19 +24,20 @@ Base URL: `http://localhost:4000/api` (ubah lewat `NEXT_PUBLIC_API_URL` di front
 Cek server & koneksi database. Tanpa autentikasi.
 
 ```json
-{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "periodeKirim": true, "arsip": true, "fieldFiles": true } }
+{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "persetujuanBaris": true, "tolakBaris": true, "arsip": true, "fieldFiles": true } }
 ```
 
-`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 11 / 12 / 13 / 14).
+`trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 13 / 14).
 Bila belum, fiturnya nonaktif dan aplikasi tetap berjalan. `kumulatifBulanan` = kolom `jenis_data.kumulatif_bulanan`
 (migrasi_07), `dokumenResmi` = tabel `dokumen_resmi` (migrasi_08), `opsiBersyarat` = kolom
 `field_definitions.opsi_bersyarat` (migrasi_09), `permintaanHapus` = tabel `permintaan_hapus` (migrasi_10),
-`periodeKirim` = tabel `periode_kirim` + kolom `permintaan_hapus.period_id` (migrasi_11) + kolom
-`periode_kirim.status` (migrasi_12, alur draft→disetujui per periode), `persetujuanBaris` = kolom
-`rekap_nilai.status` dkk. (migrasi_13, alur draft→disetujui per baris — lapisan kedua, terpisah dari
-`periodeKirim`), `tolakBaris` = kolom `rekap_nilai.catatan_admin` dkk. (migrasi_14, tombol Tolak pada Persetujuan
-Baris Data — independen dari `persetujuanBaris`: bisa punya migrasi_13 tanpa migrasi_14, Setujui tetap jalan) —
-bila `false`, akun UPT tetap menghapus/mengedit data secara langsung seperti sebelumnya (tidak diblokir diam-diam).
+`persetujuanBaris` = kolom `rekap_nilai.status` dkk. (migrasi_13, alur draft→disetujui per baris — satu-satunya
+lapisan persetujuan; migrasi_11/12 pernah menambahkan lapisan kedua per-periode lewat tabel `periode_kirim`, tapi
+itu sudah dihapus total karena dua lapisan sekaligus membingungkan UPT — lihat
+[04-database.md](04-database.md#permintaan_hapus--menu-permintaan-bagian-hapus-persetujuan-admin)), `tolakBaris` =
+kolom `rekap_nilai.catatan_admin` dkk. (migrasi_14, tombol Tolak pada Persetujuan Baris Data — independen dari
+`persetujuanBaris`: bisa punya migrasi_13 tanpa migrasi_14, Setujui tetap jalan) — bila `false`, akun UPT tetap
+menghapus/mengedit data secara langsung seperti sebelumnya (tidak diblokir diam-diam).
 
 ## `POST /api/auth/login`
 
@@ -232,43 +233,32 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 | `v_publik_rekap` (view) | ✔ baca | ✔ | — | ✔ |
 | `periods`, `field_definitions` | — | semua | — | baca/tulis |
 | `upt_list` | — | **own** (hanya UPT-nya) | — | baca/tulis (semua UPT) |
-| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat), status dipaksa `draft`; **ditolak (403)** bila periodenya `disetujui` (migrasi_12) ATAU baris itu sendiri sudah `disetujui` (migrasi_13); **hapus own** → permintaan bila salah satu dari keduanya `disetujui`, bebas bila belum/`draft` (butuh migrasi_10; lihat di bawah) | semua (tulis langsung = otomatis `disetujui`) |
+| `rekap_nilai`, `data_entries` | — | own | own (+ penanda terlambat), status dipaksa `draft`; **ditolak (403)** bila baris itu sendiri sudah `disetujui` (migrasi_13); **hapus own** → permintaan bila `disetujui`, bebas bila belum/`draft`/`ditolak` (butuh migrasi_10; lihat di bawah) | semua (tulis langsung = otomatis `disetujui`) |
 | `daily_activity` | — | own | own | semua |
-| `dokumen_upload` | — | own | own, status dipaksa `draft`; sama seperti di atas — ditolak/digerbang mengikuti status `periode_kirim` ATAU status baris itu sendiri | semua |
+| `dokumen_upload` | — | own | own, status dipaksa `draft`; sama seperti di atas — ditolak/digerbang mengikuti status baris itu sendiri | semua |
 | `dashboard_widgets` | — | semua (baca) | — | baca/tulis (menu Kelola Dashboard; butuh migrasi_05) |
 | `dokumen_resmi` | — | ✔ (lewat API; menu **disembunyikan** untuk UPT) | — | baca/tulis (menu Dokumen & Arsip; butuh migrasi_08) |
-| `permintaan_hapus` | — | own (baca saja) | — (dibuat server saat UPT hapus data/buka kunci periode) | baca semua; setujui/tolak lewat `/api/permintaan-hapus/:id/...` (butuh migrasi_10) |
-| `periode_kirim` | — | own (baca saja) | own (kirim = upsert, status dipaksa `draft`; **kirim ulang saat sudah `disetujui`** ditolak 403); **batalkan draft** → langsung; **buka kunci setelah `disetujui`** → permintaan (butuh migrasi_11+12; lihat di bawah) | own (`/api/periode-kirim/:id/setujui` = `draft`→`disetujui`) |
+| `permintaan_hapus` | — | own (baca saja) | — (dibuat server saat UPT hapus data) | baca semua; setujui/tolak lewat `/api/permintaan-hapus/:id/...` (butuh migrasi_10) |
 | `field_files` | — | own | — (lewat `/api/field-files`) | baca semua |
 | `audit_log` | — | — | hanya aksi `import_kolom_tidak_dikenal` (kolom `oleh` dicap server) | baca + `import_kolom_tidak_dikenal`, `impor_historis` |
 | `profiles` | — | self | — | baca, ubah, hapus (buat akun lewat `/auth/users`) |
 
 > **Hapus akun UPT (migrasi_10).** Tombol Hapus/Kosongkan pada `rekap_nilai`, `data_entries`, `dokumen_upload` milik
 > akun UPT tidak langsung menghapus — server membuat baris `permintaan_hapus`, dan data baru benar-benar terhapus
-> setelah Admin menyetujuinya (menu **Permintaan**, bagian "Hapus & Buka Kunci"). Mengedit/mengosongkan isian biasa saat
+> setelah Admin menyetujuinya (menu **Permintaan**, bagian "Hapus"). Mengedit/mengosongkan isian biasa saat
 > masih dalam sesi input (tanpa lewat tombol Hapus) tetap langsung tersimpan seperti biasa — lihat `spec.liveEdit`
 > di `be/src/lib/query.js`. Tanpa migrasi_10, akun UPT kembali menghapus langsung seperti sebelumnya (tidak
 > diblokir diam-diam — lihat `features.permintaanHapus` di atas).
 
-> **Kirim Data — draft menunggu persetujuan (migrasi_11 + migrasi_12).** Akun UPT dapat menekan "Kirim" pada suatu
-> periode (minggu/bulan) di Input Mingguan/Bulanan — ini membuat baris `periode_kirim` berstatus **`draft`** untuk
-> **semua** jenis data periode itu sekaligus (bukan cuma satu jenis data). Selagi `draft`, data **masih bebas
-> diedit/dihapus** oleh UPT — belum ada yang terkunci — dan UPT bisa membatalkannya sendiri kapan saja (delete
-> langsung, tanpa persetujuan). Baru setelah Admin menekan **Setujui** (`POST /api/periode-kirim/:id/setujui`,
-> admin-only) statusnya berubah jadi **`disetujui`**, dan barulah periode itu benar-benar terkunci: form input
-> disembunyikan di UI, dan di server setiap insert/upsert/update pada `rekap_nilai`/`data_entries`/`dokumen_upload`
-> untuk periode itu **ditolak (403)**, sementara hapus **digerbang jadi permintaan** (`permintaan_hapus`). Membuka
-> kunci lagi memerlukan tombol "Ajukan Buka Kunci", yang membuat baris `permintaan_hapus` (`tabel: 'periode_kirim'`)
-> dan baru benar-benar membuka kunci setelah Admin menyetujuinya. `forceOnWrite`/`periodLockCheck` di
-> `be/src/schema.js` juga mencegah UPT "kirim ulang" (upsert) periode yang sudah `disetujui` untuk diam-diam
-> menurunkan statusnya balik ke `draft`. Admin tidak pernah terkunci. Tanpa migrasi_11, tombol Kirim tidak muncul
-> dan periode tidak pernah terkunci; tanpa migrasi_12 (kolom `status` belum ada), fitur ini nonaktif total dan
-> semua baris `periode_kirim` lama diperlakukan seperti sebelum revisi ini (lihat `features.periodeKirim` di atas).
+> **Riwayat: Kirim Data / Kunci Periode (migrasi_11+12, dihapus).** Aplikasi sempat punya lapisan persetujuan KEDUA
+> di level periode: UPT menekan "Kirim" untuk mengunci SEMUA jenis data satu periode sekaligus lewat tabel
+> `periode_kirim`, berjalan berdampingan dengan Persetujuan Baris Data di bawah. Dua sistem persetujuan sekaligus
+> ini membingungkan UPT, sehingga **dihapus total** — sekarang hanya Persetujuan Baris Data (migrasi_13/14) yang
+> berlaku. Endpoint `/api/periode-kirim/*` sudah tidak ada.
 
-> **Persetujuan Baris Data (migrasi_13) — lapisan KEDUA, terpisah dari & berjalan berdampingan dengan Kirim
-> Data di atas.** Bukan cuma saat "Kirim", tapi **setiap kali UPT menyimpan data** (`rekap_nilai`, `data_entries`,
-> `dokumen_upload`), baris itu langsung dipaksa berstatus `draft` ("menunggu persetujuan") lewat `forceOnWrite`.
-> Satuan "satu baris": untuk `rekap_nilai` (disimpan per-field/EAV) adalah satu grup `baris_ke` — semua
+> **Persetujuan Baris Data (migrasi_13) — satu-satunya lapisan persetujuan.** **Setiap kali UPT menyimpan data**
+> (`rekap_nilai`, `data_entries`, `dokumen_upload`), baris itu langsung dipaksa berstatus `draft` ("menunggu
+> persetujuan") lewat `forceOnWrite`. Satuan "satu baris": untuk `rekap_nilai` (disimpan per-field/EAV) adalah satu grup `baris_ke` — semua
 > `field_key` grup itu selalu disimpan & disetujui bersamaan (`rowApprovalGate.groupBy` di `be/src/schema.js`);
 > untuk `data_entries`/`dokumen_upload`, satu baris DB = satu satuan approval. Selagi `draft`, baris itu **bebas
 > diedit/dihapus** oleh UPT (tidak digerbang), tapi **tidak dihitung** di rekap/dashboard/grafik/halaman publik

@@ -59,16 +59,22 @@ Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut
 | `database/migrasi_07_kumulatif_bulanan.sql` | Menambah `jenis_data.kumulatif_bulanan` (toggle "Data kumulatif" di Kelola Jenis Data). Jalankan setelah migrasi_06, lalu restart be |
 | `database/migrasi_08_dokumen_resmi.sql` | Membuat tabel `dokumen_resmi` (menu Dokumen & Panduan) dan menyemai 3 dokumen bawaan. Jalankan setelah migrasi_07, lalu restart be |
 | `database/migrasi_09_opsi_bersyarat.sql` | Menambah `field_definitions.opsi_bersyarat` (kolom Pilihan dengan opsi tergantung kolom lain). Jalankan setelah migrasi_08, lalu restart be |
-| `database/migrasi_10_permintaan_hapus.sql` | Membuat tabel `permintaan_hapus` (menu Permintaan, bagian "Hapus & Buka Kunci") — akun UPT tidak lagi langsung menghapus data, perlu persetujuan Admin. Jalankan setelah migrasi_09, lalu restart be |
-| `database/migrasi_11_periode_kirim.sql` | Membuat tabel `periode_kirim` (fitur "Kirim Data") dan menambah kolom `permintaan_hapus.period_id`/`jenis_data_id`. Akun UPT bisa mengirim/mengunci periode. Jalankan setelah migrasi_10, lalu restart be |
-| `database/migrasi_12_status_kirim.sql` | Menambah `periode_kirim.status`/`disetujui_at`/`disetujui_by`/`disetujui_by_label` — "Kirim" kini membuat status **draft** (masih bebas diedit/dihapus UPT), baru terkunci setelah Admin **Setujui** (menu Permintaan, bagian "Persetujuan Data"). Baris lama dibackfill jadi `disetujui`. Jalankan setelah migrasi_11, lalu restart be |
-| `database/migrasi_13_status_baris.sql` | Menambah `status`/`disetujui_at`/`disetujui_by`/`disetujui_by_label` pada `rekap_nilai`, `data_entries`, `dokumen_upload` — lapisan KEDUA persetujuan, terpisah dari migrasi_12: setiap baris yang UPT **simpan** (bukan cuma saat Kirim) langsung **draft**, dihitung di rekap/dashboard/publik baru setelah Admin **Setujui** per baris (menu Permintaan, bagian "Persetujuan Baris Data"). Baris lama dibackfill jadi `disetujui`; `v_publik_rekap` diperbarui untuk hanya menghitung baris `disetujui`. Jalankan setelah migrasi_12, lalu restart be |
+| `database/migrasi_10_permintaan_hapus.sql` | Membuat tabel `permintaan_hapus` (menu Permintaan, bagian "Hapus") — akun UPT tidak lagi langsung menghapus data, perlu persetujuan Admin. Jalankan setelah migrasi_09, lalu restart be |
+| `database/migrasi_13_status_baris.sql` | Menambah `status`/`disetujui_at`/`disetujui_by`/`disetujui_by_label` pada `rekap_nilai`, `data_entries`, `dokumen_upload` — setiap baris yang UPT **simpan** langsung **draft**, dihitung di rekap/dashboard/publik baru setelah Admin **Setujui** per baris (menu Permintaan, bagian "Persetujuan Baris Data"). Baris lama dibackfill jadi `disetujui`; `v_publik_rekap` diperbarui untuk hanya menghitung baris `disetujui`. Jalankan setelah migrasi_10, lalu restart be |
 | `database/migrasi_14_tolak_baris.sql` | Menambah `catatan_admin` pada `rekap_nilai`, `data_entries`, `dokumen_upload` — melengkapi migrasi_13: Admin sekarang bisa **Tolak** satu baris (bukan cuma Setujui), baris TIDAK dihapus, hanya ditandai status `ditolak` + catatan alasan yang terlihat UPT. Jalankan setelah migrasi_13, lalu restart be |
 
-> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–14 secara penuh** (`be/scripts/ddl.sql` dan `seed-data.js`
-> disinkronkan ulang — lihat catatan di [04-database.md](04-database.md#data-awal-seed)). **Instalasi baru cukup
-> mengimpor `puslatkp1a.sql` sekali saja**, tanpa perlu menjalankan berkas `migrasi_*.sql` satu per satu. Tabel di
-> atas hanya untuk **database lama** yang sudah terlanjur diimpor sebelum tanggal sinkronisasi ini.
+> **Riwayat: `migrasi_11_periode_kirim.sql` / `migrasi_12_status_kirim.sql` (tidak lagi dipakai).** Kedua berkas ini
+> pernah menambahkan fitur "Kirim & Kunci Data" (persetujuan per-periode, terpisah dari Persetujuan Baris Data di
+> atas). Fitur itu dihapus total karena dua lapisan persetujuan sekaligus membingungkan UPT — lihat catatan di
+> [04-database.md](04-database.md#permintaan_hapus--menu-permintaan-bagian-hapus-persetujuan-admin). Berkasnya
+> sengaja **dibiarkan** di `database/` untuk database lama yang sudah terlanjur menjalankannya (tabel
+> `periode_kirim` tidak di-`DROP` otomatis), tapi **jangan dijalankan lagi di instalasi baru** — `ddl.sql`/
+> `puslatkp1a.sql` sudah tidak memuat tabel ini.
+
+> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–10 dan migrasi_13–14 secara penuh** (`be/scripts/ddl.sql` dan
+> `seed-data.js` disinkronkan ulang — lihat catatan di [04-database.md](04-database.md#data-awal-seed)). **Instalasi
+> baru cukup mengimpor `puslatkp1a.sql` sekali saja**, tanpa perlu menjalankan berkas `migrasi_*.sql` satu per satu.
+> Tabel di atas hanya untuk **database lama** yang sudah terlanjur diimpor sebelum tanggal sinkronisasi ini.
 
 Jalankan setiap berkas **sekali saja** (menjalankan ulang sebagian besar menghasilkan galat "Duplicate column"/"Table
 already exists" yang tidak berbahaya). Backend tetap berjalan sebelum migrasi_02 dijalankan — tempat sampah otomatis
@@ -82,8 +88,6 @@ node scripts/run-migration.mjs migrasi_07_kumulatif_bulanan.sql
 node scripts/run-migration.mjs migrasi_08_dokumen_resmi.sql
 node scripts/run-migration.mjs migrasi_09_opsi_bersyarat.sql
 node scripts/run-migration.mjs migrasi_10_permintaan_hapus.sql
-node scripts/run-migration.mjs migrasi_11_periode_kirim.sql
-node scripts/run-migration.mjs migrasi_12_status_kirim.sql
 node scripts/run-migration.mjs migrasi_13_status_baris.sql
 node scripts/run-migration.mjs migrasi_14_tolak_baris.sql
 ```
@@ -186,8 +190,6 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
 | Kolom pilihan bersyarat tidak berfungsi (opsi tidak berubah) | Jalankan `database/migrasi_09_opsi_bersyarat.sql` lalu restart be; pastikan juga `field_definitions.opsi_bersyarat` sudah diisi untuk kolom tersebut |
 | Akun UPT masih bisa menghapus data langsung (tidak masuk Permintaan) | Jalankan `database/migrasi_10_permintaan_hapus.sql` lalu restart be (cek `GET /api/health` → `features.permintaanHapus`) |
 | Menu **Permintaan** kosong / "Tabel tidak dikenal: permintaan_hapus" | Jalankan `database/migrasi_10_permintaan_hapus.sql` lalu restart be |
-| Tombol **"Kirim"** tidak muncul di Input Mingguan/Bulanan | Jalankan `database/migrasi_11_periode_kirim.sql` lalu restart be (cek `GET /api/health` → `features.periodeKirim`) |
-| "Kirim" langsung mengunci (tidak ada status draft/persetujuan) | Jalankan `database/migrasi_12_status_kirim.sql` lalu restart be — tanpa ini, `periode_kirim.status` belum ada dan fitur draft/disetujui nonaktif total |
 | Data yang UPT simpan langsung resmi (tidak ada badge "Menunggu Persetujuan", bagian "Persetujuan Baris Data" di menu Permintaan tidak muncul) | Jalankan `database/migrasi_13_status_baris.sql` lalu restart be (cek `GET /api/health` → `features.persetujuanBaris`) |
 | Tombol **"Tolak"** tidak muncul di Persetujuan Baris Data (hanya Setujui) | Jalankan `database/migrasi_14_tolak_baris.sql` lalu restart be (cek `GET /api/health` → `features.tolakBaris`) — Setujui tetap berfungsi normal tanpa ini |
 | "Berkas fisik tidak ditemukan di server" | Folder `be/storage`/`STORAGE_DIR` tidak ikut dipulihkan dari backup |

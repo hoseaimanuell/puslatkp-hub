@@ -9,7 +9,6 @@ import authRoutes from './routes/auth.js'
 import dbRoutes from './routes/db.js'
 import trashRoutes from './routes/trash.js'
 import permintaanHapusRoutes from './routes/permintaan-hapus.js'
-import periodeKirimRoutes from './routes/periode-kirim.js'
 import persetujuanBarisRoutes from './routes/persetujuan-baris.js'
 import periodRoutes from './routes/periods.js'
 import arsipRoutes, { detectArsip, arsipEnabled, sweepArsipFiles } from './routes/arsip.js'
@@ -38,7 +37,6 @@ app.use('/api/auth', authRoutes)
 app.use('/api/db', dbRoutes)
 app.use('/api/trash', trashRoutes)
 app.use('/api/permintaan-hapus', permintaanHapusRoutes)
-app.use('/api/periode-kirim', periodeKirimRoutes)
 app.use('/api/persetujuan-baris', persetujuanBarisRoutes)
 app.use('/api/periods', periodRoutes)
 app.use('/api/arsip', arsipRoutes)

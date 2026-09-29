@@ -42,14 +42,11 @@ export const TABLES = {
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'baris_ke', 'field_key'],
     stamp: { updated_by: 'id' },
-    // Gerbang bersyarat: hapus/ubah bebas selagi periode belum 'disetujui' (draft/belum dikirim), digerbang jadi
-    // permintaan (hapus) atau ditolak (ubah/simpan) begitu periode itu sudah disetujui Admin & terkunci.
+    // Setiap baris yang UPT simpan dipaksa jadi 'draft' ("menunggu persetujuan") -- lihat forceOnWrite di
+    // query.js -- dan `catatan_admin` (catatan penolakan lama, bila ada) ikut dikosongkan karena sudah
+    // diperbaiki UPT. Begitu Admin menyetujui satu baris (endpoint khusus, bukan lewat sini), rowApprovalGate
+    // menolak tulis langsung & menggerbang hapusnya (draft/ditolak tetap bebas dihapus/diedit UPT sendiri).
     deleteRequiresApproval: true,
-    periodLockCheck: true,
-    // Lapisan kedua, per baris (baris_ke), terpisah dari periodLockCheck di atas: setiap Simpan dipaksa jadi
-    // 'draft' ("menunggu persetujuan") -- lihat forceOnWrite di query.js -- dan `catatan_admin` (catatan
-    // penolakan lama, bila ada) ikut dikosongkan karena sudah diperbaiki UPT. Begitu Admin menyetujui satu baris
-    // (endpoint khusus, bukan lewat sini), rowApprovalGate menolak tulis langsung & menggerbang hapusnya.
     forceOnWrite: { status: 'draft', catatan_admin: null, disetujui_at: null, disetujui_by: null, disetujui_by_label: null },
     rowApprovalGate: { column: 'status', values: ['disetujui'], groupBy: ['jenis_data_id', 'upt_key', 'period_id', 'baris_ke'] },
   }),
@@ -60,7 +57,6 @@ export const TABLES = {
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'], unique: ['jenis_data_id', 'upt_key', 'period_id', 'nik'],
     stamp: { created_by: 'id' },
     deleteRequiresApproval: true,
-    periodLockCheck: true,
     forceOnWrite: { status: 'draft', catatan_admin: null, disetujui_at: null, disetujui_by: null, disetujui_by_label: null },
     rowApprovalGate: { column: 'status', values: ['disetujui'] },
   }),
@@ -76,7 +72,6 @@ export const TABLES = {
     scope: 'upt', late: true, write: 'auth',
     soft: true, ctx: ['upt_key', 'jenis_data_id', 'period_id'],
     deleteRequiresApproval: true,
-    periodLockCheck: true,
     forceOnWrite: { status: 'draft', catatan_admin: null, disetujui_at: null, disetujui_by: null, disetujui_by_label: null },
     rowApprovalGate: { column: 'status', values: ['disetujui'] },
   }),
@@ -92,25 +87,6 @@ export const TABLES = {
     json: ['filter_json'],
     scope: 'upt', // UPT hanya melihat permintaan miliknya sendiri; Admin melihat semua
     read: 'auth', write: 'none',
-  }),
-  periode_kirim: table({
-    // "Kirim & Kunci Data": UPT menekan "Kirim" pada satu periode (minggu/bulan) -> baris di sini dibuat dengan
-    // status 'draft' (dipaksa server, lihat forceOnWrite — klien tidak bisa mengatur status sendiri). Status
-    // 'draft' BELUM mengunci apa pun (UPT masih bebas edit/hapus/batal kirim). Admin meninjau lalu menyetujui
-    // lewat POST /api/periode-kirim/:id/setujui -> status 'disetujui' -> BARU SEMUA jenis data periode itu
-    // terkunci. Selagi 'disetujui', UPT membuka kunci lewat delete() seperti biasa — approvalGate memastikan ini
-    // hanya digerbang (jadi permintaan di `permintaan_hapus`) bila statusnya sudah 'disetujui'; membatalkan draft
-    // yang belum disetujui tetap bebas tanpa persetujuan Admin.
-    cols: ['id', 'upt_key', 'period_id', 'status', 'terkirim_at', 'terkirim_by', 'terkirim_by_label', 'disetujui_at', 'disetujui_by', 'disetujui_by_label'],
-    scope: 'upt', write: 'auth',
-    soft: true, ctx: ['upt_key', 'period_id'], unique: ['upt_key', 'period_id'],
-    stamp: { terkirim_by: 'id', terkirim_by_label: 'email' },
-    forceOnWrite: { status: 'draft' },
-    deleteRequiresApproval: true,
-    approvalGate: { column: 'status', values: ['disetujui'] },
-    // Juga cegah UPT "kirim ulang" (upsert) periode yang sudah 'disetujui' agar diam-diam turun jadi 'draft' lagi
-    // lewat ON DUPLICATE KEY UPDATE — begitu terkunci, satu-satunya jalan adalah ajukan buka kunci (delete di atas).
-    periodLockCheck: true,
   }),
   dashboard_widgets: table({
     cols: ['id', 'tipe', 'judul', 'grup', 'gaya', 'ikon', 'warna', 'satuan', 'konfigurasi', 'urutan', 'aktif', 'created_at'],

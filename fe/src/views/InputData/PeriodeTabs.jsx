@@ -22,7 +22,7 @@ import { readExcelFile, exportDataEntries, exportRekapNilai, generateTemplateExc
 import {
   Upload, Plus, Download, CheckCircle2, AlertTriangle, AlertCircle,
   Trash2, Eye, Edit, Search, X, FileSpreadsheet, Loader2,
-  TrendingUp, Calendar, Calculator, Check, ArrowRight, Layers, Copy, Lock, Send
+  TrendingUp, Calendar, Calculator, Check, ArrowRight, Layers, Copy
 } from 'lucide-react'
 import BulanAgregatView from './BulanAgregatView'
 import BulanUploadView from './BulanUploadView'
@@ -53,7 +53,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
   const [barisList, setBarisList] = useState([{ baris_ke: 1, values: {} }])
   const [savedSnap, setSavedSnap] = useState({})
   const [lateRekap, setLateRekap] = useState(false)
-  const [features, setFeatures] = useState({ multiBaris: false, agregasi: false, periodeKirim: false })
+  const [features, setFeatures] = useState({ multiBaris: false, agregasi: false })
   useEffect(() => { getFeatures().then(setFeatures) }, [])
   const multiBaris = features.multiBaris && !!jenisData.multi_baris
   const [entries, setEntries] = useState([])
@@ -129,53 +129,6 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
 
   // Deadline TIDAK mengunci: UPT tetap boleh mengisi, tetapi datanya ditandai "Terlambat" (merah).
   const pastDeadline = !!activePeriod && !isAdmin && isPeriodLocked(activePeriod.deadline)
-
-  // "Kirim & Kunci Data": UPT menekan "Kirim" pada periode ini (SEMUA jenis data periode itu, bukan cuma
-  // jenisData saat ini) -> status 'draft', BELUM terkunci, UPT masih bebas mengedit/membatalkan. Admin meninjau
-  // lalu menyetujui (POST /api/periode-kirim/:id/setujui) -> status 'disetujui' -> BARU periode ini terkunci.
-  // Selagi 'disetujui', membuka kunci lagi perlu persetujuan Admin — memakai jalur yang sama seperti Permintaan
-  // Hapus (delete() pada baris kuncinya otomatis jadi permintaan, lihat be/src/lib/query.js: approvalGate).
-  const [periodeLock, setPeriodeLock] = useState(undefined) // undefined = belum dimuat, null = belum dikirim
-  const [pendingUnlock, setPendingUnlock] = useState(null)
-  const canLock = !isAdmin && !isAllUpt && features.periodeKirim && !!currentUptKey
-
-  const loadLockStatus = useCallback(async () => {
-    if (!canLock || !activePeriod?.id) { setPeriodeLock(null); setPendingUnlock(null); return }
-    const [{ data: lockRows }, { data: reqRows }] = await Promise.all([
-      db.from('periode_kirim').select('*').eq('upt_key', currentUptKey).eq('period_id', activePeriod.id),
-      db.from('permintaan_hapus').select('*').eq('upt_key', currentUptKey).eq('period_id', activePeriod.id).eq('tabel', 'periode_kirim').eq('status', 'pending'),
-    ])
-    setPeriodeLock(lockRows?.[0] || null)
-    setPendingUnlock(reqRows?.[0] || null)
-  }, [canLock, currentUptKey, activePeriod?.id])
-
-  useEffect(() => { loadLockStatus() }, [loadLockStatus])
-
-  const isDraft = !isAdmin && periodeLock?.status === 'draft'
-  const locked = !isAdmin && periodeLock?.status === 'disetujui'
-
-  async function kirimData() {
-    const levelLabel = activeLevel === 'minggu' ? 'minggu' : 'bulan'
-    if (!confirm(`Kirim data ${levelLabel} ini untuk disetujui Admin?\n\nSemua jenis data ${levelLabel === 'minggu' ? 'mingguan' : 'bulanan'} untuk periode ini (bukan hanya "${jenisData.judul}") akan menunggu persetujuan. Selagi menunggu, Anda masih bisa mengedit — baru terkunci setelah Admin menyetujui.`)) return
-    const { error } = await db.from('periode_kirim').upsert({ period_id: activePeriod.id }, { onConflict: 'upt_key,period_id' })
-    if (error) { alert('Gagal mengirim: ' + error.message); return }
-    loadLockStatus()
-  }
-
-  async function batalkanKirim() {
-    if (!confirm('Batalkan pengiriman? Data belum disetujui Admin, jadi bisa dibatalkan bebas.')) return
-    const { error } = await db.from('periode_kirim').delete().eq('upt_key', currentUptKey).eq('period_id', activePeriod.id)
-    if (error) { alert('Gagal membatalkan: ' + error.message); return }
-    loadLockStatus()
-  }
-
-  async function ajukanBukaKunci() {
-    if (!confirm('Ajukan buka kunci periode ini ke Admin?\n\nData tetap terkunci sampai Admin menyetujui.')) return
-    const { error, pending } = await db.from('periode_kirim').delete().eq('upt_key', currentUptKey).eq('period_id', activePeriod.id)
-    if (error) { alert('Gagal mengajukan: ' + error.message); return }
-    if (pending) alert('Permintaan buka kunci terkirim ke Admin.')
-    loadLockStatus()
-  }
 
   // Cari pasangan Jenis Data jika ada
   const partnerJd = isMonthOnly && jenisData.pasangan_mingguan_id
@@ -706,62 +659,6 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
         </div>
       )}
 
-      {/* Kirim & Kunci Data: belum dikirim (biru) / draft menunggu persetujuan (kuning, masih bisa diedit) / disetujui & terkunci (oranye) */}
-      {canLock && periodeLock !== undefined && (
-        locked ? (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex-shrink-0">
-                <Lock size={16} />
-              </span>
-              <div>
-                <p className="font-semibold text-amber-800 dark:text-amber-300 text-sm">
-                  Data {activeLevel === 'minggu' ? 'minggu' : 'bulan'} ini sudah disetujui Admin & terkunci
-                </p>
-                <p className="text-xs text-amber-700 dark:text-amber-400">
-                  Berlaku untuk semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini, bukan hanya &quot;{jenisData.judul}&quot;.
-                  {pendingUnlock ? ' Menunggu persetujuan Admin untuk membuka kunci.' : ' Perlu persetujuan Admin untuk mengedit lagi.'}
-                </p>
-              </div>
-            </div>
-            {!pendingUnlock && (
-              <button type="button" onClick={ajukanBukaKunci} className="btn-secondary text-xs whitespace-nowrap">
-                Ajukan Buka Kunci
-              </button>
-            )}
-          </div>
-        ) : isDraft ? (
-          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex-shrink-0">
-                <Send size={16} />
-              </span>
-              <div>
-                <p className="font-semibold text-blue-800 dark:text-blue-300 text-sm">
-                  Terkirim, menunggu persetujuan Admin
-                </p>
-                <p className="text-xs text-blue-700 dark:text-blue-400">
-                  Berlaku untuk semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini. Masih bisa diedit sampai Admin menyetujui — setelah itu baru terkunci.
-                </p>
-              </div>
-            </div>
-            <button type="button" onClick={batalkanKirim} className="btn-secondary text-xs whitespace-nowrap">
-              Batalkan Kirim
-            </button>
-          </div>
-        ) : (
-          <div className="bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Sudah yakin datanya benar? Kirim untuk diperiksa & disetujui Admin — semua jenis data {activeLevel === 'minggu' ? 'mingguan' : 'bulanan'} periode ini ikut terkirim.
-              Anda masih bisa mengedit selagi menunggu, baru terkunci setelah disetujui.
-            </p>
-            <button type="button" onClick={kirimData} className="btn-primary text-xs whitespace-nowrap">
-              <Send size={13} /> Kirim
-            </button>
-          </div>
-        )
-      )}
-
       {/* BANNER 4 MINGGU & VALIDASI PASANGAN (Sesuai Koreksi Bagian C) */}
       {isMonthOnly && validation && (
         <div className="space-y-2">
@@ -855,7 +752,6 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
               activePeriod={activePeriod}
               currentUptKey={currentUptKey}
               currentUptLabel={currentUptLabel}
-              locked={locked}
               isAdmin={isAdmin}
             />
           ) : (
@@ -888,7 +784,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                   <FileSpreadsheet size={14} />
                   Template Excel
                 </button>
-                {!locked && !isAllUpt && (
+                {!isAllUpt && (
                   <>
                     <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileUpload} />
                     <button onClick={() => fileRef.current?.click()} className="btn-secondary text-xs">
@@ -916,7 +812,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                     Hapus {duplicateEntryIds.length} Duplikat
                   </button>
                 )}
-                {!locked && entries.length > 0 && (
+                {entries.length > 0 && (
                   <button
                     onClick={() => openClear('entries')}
                     className="btn-secondary text-xs text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/30"
@@ -967,10 +863,10 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
               <div className="text-center py-14 text-gray-400 dark:text-gray-500">
                 <FileSpreadsheet size={40} className="mx-auto mb-3 opacity-30" />
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {locked ? 'Tidak ada data pada periode ini.' : 'Belum ada rincian data per-orang.'}
+                  Belum ada rincian data per-orang.
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {!locked && (isAllUpt ? 'Pilih satu UPT untuk menambah/mengunggah data.' : 'Klik tombol "Tambah Baris" atau "Upload Excel" untuk melengkapi data.')}
+                  {isAllUpt ? 'Pilih satu UPT untuk menambah/mengunggah data.' : 'Klik tombol "Tambah Baris" atau "Upload Excel" untuk melengkapi data.'}
                 </p>
               </div>
             ) : (
@@ -1009,26 +905,22 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                           >
                             <Eye size={15} />
                           </button>
-                          {!locked && (
-                            <>
-                              {!isAllUpt && entry.status !== 'disetujui' && (
-                                <button
-                                  onClick={() => { setEditEntry(entry); setFormValues(entry.data_json || {}); setAddEntryModal(true) }}
-                                  className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-                                  title="Edit Baris"
-                                >
-                                  <Edit size={15} />
-                                </button>
-                              )}
-                              <button
-                                onClick={() => deleteEntry(entry.id)}
-                                className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                                title={entry.status === 'disetujui' ? 'Sudah disetujui — ajukan hapus untuk mengedit ulang' : 'Hapus Baris'}
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            </>
+                          {!isAllUpt && entry.status !== 'disetujui' && (
+                            <button
+                              onClick={() => { setEditEntry(entry); setFormValues(entry.data_json || {}); setAddEntryModal(true) }}
+                              className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                              title="Edit Baris"
+                            >
+                              <Edit size={15} />
+                            </button>
                           )}
+                          <button
+                            onClick={() => deleteEntry(entry.id)}
+                            className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                            title={entry.status === 'disetujui' ? 'Sudah disetujui — ajukan hapus untuk mengedit ulang' : 'Hapus Baris'}
+                          >
+                            <Trash2 size={15} />
+                          </button>
                         </div>
                       </div>
                     )
@@ -1098,7 +990,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                 <p className="text-sm text-gray-500 dark:text-gray-400">{formatPeriodLabel(activePeriod)}</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                {!locked && (isAllUpt || Object.keys(savedSnap).length > 0) && (
+                {(isAllUpt || Object.keys(savedSnap).length > 0) && (
                   <button
                     onClick={() => openClear('rekap')}
                     className="btn-secondary text-xs text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/30"
@@ -1141,7 +1033,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {existingBaris.length} {multiBaris ? 'pelatihan' : 'baris'} tersimpan pada {formatPeriodLabel(activePeriod)}
                   </p>
-                  {!locked && (multiBaris || existingBaris.length === 0) && (
+                  {(multiBaris || existingBaris.length === 0) && (
                     <button type="button" onClick={openAddBaris} className="btn-primary text-xs">
                       <Plus size={14} /> {multiBaris ? 'Tambah Pelatihan' : 'Isi Data Minggu Ini'}
                     </button>
@@ -1152,13 +1044,11 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                   <div className="text-center py-14 text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
                     <FileSpreadsheet size={36} className="mx-auto mb-3 opacity-30" />
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {locked ? 'Tidak ada data pada periode ini.' : 'Belum ada data mingguan untuk periode ini.'}
+                      Belum ada data mingguan untuk periode ini.
                     </p>
-                    {!locked && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        Klik tombol "{multiBaris ? 'Tambah Pelatihan' : 'Isi Data Minggu Ini'}" di atas untuk mulai mengisi.
-                      </p>
-                    )}
+                    <p className="text-xs text-gray-400 mt-1">
+                      Klik tombol "{multiBaris ? 'Tambah Pelatihan' : 'Isi Data Minggu Ini'}" di atas untuk mulai mengisi.
+                    </p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-xl">
@@ -1218,36 +1108,34 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                                 </div>
                               </td>
                               <td className="px-3 py-2 text-right whitespace-nowrap border-l border-gray-100 dark:border-gray-800">
-                                {!locked && (
-                                  isApproved ? (
+                                {isApproved ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteBaris(b)}
+                                    className="p-1.5 rounded text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                                    title="Sudah disetujui — ajukan hapus untuk mengedit ulang"
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditBaris(b)}
+                                      className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                                      title="Edit"
+                                    >
+                                      <Edit size={15} />
+                                    </button>
                                     <button
                                       type="button"
                                       onClick={() => deleteBaris(b)}
-                                      className="p-1.5 rounded text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-                                      title="Sudah disetujui — ajukan hapus untuk mengedit ulang"
+                                      className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                                      title="Hapus"
                                     >
                                       <Trash2 size={15} />
                                     </button>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => openEditBaris(b)}
-                                        className="p-1.5 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-                                        title="Edit"
-                                      >
-                                        <Edit size={15} />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => deleteBaris(b)}
-                                        className="p-1.5 rounded text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                                        title="Hapus"
-                                      >
-                                        <Trash2 size={15} />
-                                      </button>
-                                    </span>
-                                  )
+                                  </span>
                                 )}
                               </td>
                             </tr>
@@ -1257,7 +1145,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
                     </table>
                   </div>
                 )}
-                {multiBaris && !locked && existingBaris.length > 0 && (
+                {multiBaris && existingBaris.length > 0 && (
                   <button type="button" onClick={openAddBaris} className="btn-secondary text-xs">
                     <Plus size={14} /> Tambah pelatihan lain
                   </button>

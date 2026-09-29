@@ -14,8 +14,8 @@ export const trashEnabled = () => enabled
  * (database sudah menjalankan database/migrasi_02_tempat_sampah.sql). Jika belum, soft delete
  * dimatikan supaya aplikasi tetap berjalan (penghapusan menjadi permanen) dan peringatan dicetak.
  *
- * Beberapa tabel ber-`soft:true` (mis. `periode_kirim`, migrasi_11) ditambahkan belakangan lewat migrasi
- * opsional dan mungkin belum ada sama sekali di database ini — itu BUKAN masalah tempat sampah (jangan sampai
+ * Bila suatu saat ada tabel ber-`soft:true` yang ditambahkan lewat migrasi opsional dan mungkin belum ada
+ * sama sekali di database ini, itu BUKAN masalah tempat sampah (jangan sampai
  * membuat trash nonaktif untuk tabel lain yang sudah lengkap), jadi tabel yang belum ada dikeluarkan dari
  * SOFT_TABLES di sini (sebelum detectOptionalTables() menghapusnya dari whitelist TABLES juga).
  */
