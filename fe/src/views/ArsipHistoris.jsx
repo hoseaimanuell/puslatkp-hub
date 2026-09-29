@@ -9,6 +9,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import { db, arsip, getFeatures } from '../lib/db'
+import { confirmDialog } from '../lib/dialog'
 import { useAuth } from '../AuthContext'
 import InfoCard from '../components/InfoCard'
 import { Loader2, Upload, Trash2, FileText, FileSpreadsheet, CheckCircle2, Info, X, Download, Search } from 'lucide-react'
@@ -87,7 +88,7 @@ export default function ArsipHistoris() {
   }
 
   async function remove(item) {
-    if (!window.confirm(`Hapus arsip "${item.judul}"? Berkas akan dihapus permanen dari server.`)) return
+    if (!await confirmDialog(`Hapus arsip "${item.judul}"? Berkas akan dihapus permanen dari server.`)) return
     const { error } = await arsip.remove(item.id)
     if (error) return setMsg({ type: 'error', text: error.message })
     if (viewer?.item.id === item.id) setViewer(null)

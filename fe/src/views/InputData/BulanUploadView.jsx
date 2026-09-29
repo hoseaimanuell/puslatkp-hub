@@ -5,6 +5,7 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import { db, getFeatures } from '../../lib/db'
+import { notify, confirmDialog } from '../../lib/dialog'
 import { formatPeriodLabel } from '../../lib/periods'
 import Modal from '../../components/Modal'
 import Badge from '../../components/Badge'
@@ -152,7 +153,7 @@ export default function BulanUploadView({
   }
 
   async function handleDeleteDoc(id, title) {
-    if (!confirm(`Hapus berkas "${title}"?\n\nBerkas masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.`)) return
+    if (!await confirmDialog(`Hapus berkas "${title}"?\n\nBerkas masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.`)) return
 
     try {
       const { error, pending } = await db
@@ -161,10 +162,10 @@ export default function BulanUploadView({
         .eq('id', id)
 
       if (error) throw error
-      if (pending) alert('Permintaan hapus berkas terkirim ke Admin. Berkas baru benar-benar terhapus setelah Admin menyetujuinya di menu Permintaan Hapus.')
+      if (pending) notify('Permintaan hapus berkas terkirim ke Admin. Berkas baru benar-benar terhapus setelah Admin menyetujuinya di menu Permintaan Hapus.')
       await loadDocuments()
     } catch (err) {
-      alert('Gagal menghapus berkas: ' + err.message)
+      notify('Gagal menghapus berkas: ' + err.message)
     }
   }
 
@@ -173,7 +174,7 @@ export default function BulanUploadView({
     if (doc.file_data) return doc.file_data
     const { data, error } = await db.from('dokumen_upload').select('file_data').eq('id', doc.id).single()
     if (error || !data?.file_data) {
-      alert('Data berkas tidak tersedia.')
+      notify('Data berkas tidak tersedia.')
       return null
     }
     return data.file_data

@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useMemo } from 'react'
 import { db, getFeatures } from '../../lib/db'
+import { confirmDialog } from '../../lib/dialog'
 import InfoCard from '../../components/InfoCard'
 import { DEFAULT_WIDGETS, ICON_NAMES, COLORS, CHART_COLORS, toRow } from '../../lib/dashboardWidgets'
 import { Loader2, Plus, Trash2, ArrowUp, ArrowDown, Pencil, Copy, Eye, EyeOff, X } from 'lucide-react'
@@ -117,12 +118,12 @@ export default function KelolaDashboard() {
   }
   async function toggle(w) { const { error } = await db.from('dashboard_widgets').update({ aktif: !w.aktif }).eq('id', w.id); if (error) fail(error); else load() }
   async function remove(w) {
-    if (!window.confirm(`Hapus "${w.judul}" dari Dashboard?`)) return
+    if (!await confirmDialog(`Hapus "${w.judul}" dari Dashboard?`)) return
     const { error } = await db.from('dashboard_widgets').delete().eq('id', w.id)
     if (error) fail(error); else load()
   }
   async function resetAll() {
-    if (!window.confirm('Hapus SEMUA pengaturan dan kembali ke tampilan bawaan?')) return
+    if (!await confirmDialog('Hapus SEMUA pengaturan dan kembali ke tampilan bawaan?')) return
     for (const w of saved) await db.from('dashboard_widgets').delete().eq('id', w.id)
     setMsg({ type: 'success', text: 'Kembali ke tampilan bawaan.' }); load()
   }

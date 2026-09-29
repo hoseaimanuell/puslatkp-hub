@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { db, getFeatures } from '../../lib/db'
+import { notify, confirmDialog } from '../../lib/dialog'
 import { weekValues, applyAgregasi, agregasiOf, AGREGASI_SHORT } from '../../lib/agregasi'
 import { useAuth } from '../../AuthContext'
 import PeriodSelector from '../../components/PeriodSelector'
@@ -428,7 +429,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
       if (!error) {
         setSaving(false)
         closeBarisModal()
-        alert('Permintaan edit terkirim ke Admin. Nilai lama tetap berlaku sampai disetujui.')
+        notify('Permintaan edit terkirim ke Admin. Nilai lama tetap berlaku sampai disetujui.')
         await loadData()
         onSaved?.()
         return
@@ -447,7 +448,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
     }
 
     setSaving(false)
-    if (error) { alert('Gagal menyimpan: ' + error.message); return }
+    if (error) { notify('Gagal menyimpan: ' + error.message); return }
     closeBarisModal()
     await loadData()
     onSaved?.()
@@ -461,11 +462,11 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
     const msg = isApproved
       ? 'Baris ini sudah disetujui Admin.\n\nAjukan hapus ke Admin? Setelah disetujui, Anda bisa memasukkan data baru di posisi ini.'
       : 'Hapus baris ini?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.'
-    if (!confirm(msg)) return
+    if (!await confirmDialog(msg, { danger: true, confirmLabel: isApproved ? 'Ajukan hapus' : 'Ya, hapus' })) return
     const { error, pending } = await db.from('rekap_nilai').delete()
       .eq('jenis_data_id', jenisData.id).eq('upt_key', currentUptKey).eq('period_id', activePeriod.id).eq('baris_ke', baris.baris_ke)
-    if (error) { alert('Gagal menghapus: ' + error.message); return }
-    if (pending) alert(PENDING_MSG)
+    if (error) { notify('Gagal menghapus: ' + error.message); return }
+    if (pending) notify(PENDING_MSG)
     loadData()
   }
 
@@ -485,11 +486,11 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
     if (editEntry && !isAdmin && editEntry.status === 'disetujui') {
       const { error } = await db.permintaanEdit.ajukanEntry(editEntry.id, values)
       setSaving(false)
-      if (error) { alert('Gagal mengajukan: ' + error.message); return }
+      if (error) { notify('Gagal mengajukan: ' + error.message); return }
       setAddEntryModal(false)
       setEditEntry(null)
       setFormValues({})
-      alert('Permintaan edit terkirim ke Admin. Nilai lama tetap berlaku sampai disetujui.')
+      notify('Permintaan edit terkirim ke Admin. Nilai lama tetap berlaku sampai disetujui.')
       loadData()
       return
     }
@@ -510,10 +511,10 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
   }
 
   async function deleteEntry(id) {
-    if (!confirm('Hapus baris data ini?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.')) return
+    if (!await confirmDialog('Hapus baris data ini?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.')) return
     const { error, pending } = await db.from('data_entries').delete().eq('id', id)
-    if (error) alert('Gagal menghapus: ' + error.message)
-    else if (pending) alert(PENDING_MSG)
+    if (error) notify('Gagal menghapus: ' + error.message)
+    else if (pending) notify(PENDING_MSG)
     loadData()
   }
 
@@ -545,10 +546,10 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
   }, [entries, fieldDefs])
 
   async function deleteDuplicates() {
-    if (!confirm(`Hapus ${duplicateEntryIds.length} baris duplikat?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.`)) return
+    if (!await confirmDialog(`Hapus ${duplicateEntryIds.length} baris duplikat?\n\nData masuk Tempat Sampah 30 hari dan hanya Admin yang dapat memulihkannya.`)) return
     const { error, pending } = await db.from('data_entries').delete().in('id', duplicateEntryIds)
-    if (error) { alert('Gagal menghapus: ' + error.message); return }
-    if (pending) alert(PENDING_MSG)
+    if (error) { notify('Gagal menghapus: ' + error.message); return }
+    if (pending) notify(PENDING_MSG)
     loadData()
   }
 
@@ -562,7 +563,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
     const { error, pending } = await clearQuery(kind, db.from(CLEAR_TABLE[kind]).delete())
     if (error) return { error }
     setClearDialog(null)
-    if (pending) alert(PENDING_MSG)
+    if (pending) notify(PENDING_MSG)
     await loadData()
     return {}
   }
@@ -576,7 +577,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
       setMappingData({ headers, rows, initialMapping })
       setUploadModal(true)
     } catch (err) {
-      alert('Gagal membaca file: ' + err.message)
+      notify('Gagal membaca file: ' + err.message)
     }
     e.target.value = ''
   }
@@ -604,7 +605,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
     }
     if (importError) {
       setSaving(false)
-      alert('Impor berhenti: ' + importError.message + '\n\nBatch sebelumnya sudah tersimpan. Mengimpor ulang berkas yang sama aman: NIK yang sama diperbarui, bukan digandakan.')
+      notify('Impor berhenti: ' + importError.message + '\n\nBatch sebelumnya sudah tersimpan. Mengimpor ulang berkas yang sama aman: NIK yang sama diperbarui, bukan digandakan.')
       loadData()
       return
     }

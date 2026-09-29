@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react'
 import { api, db } from '../../lib/db'
+import { confirmDialog } from '../../lib/dialog'
 import InfoCard from '../../components/InfoCard'
 import { Trash2, RotateCcw, Loader2, CheckCircle2, XCircle, AlertTriangle, ScrollText } from 'lucide-react'
 
@@ -113,7 +114,7 @@ export default function TempatSampah() {
     const text = kind === 'restore'
       ? `Pulihkan ${item.jumlah} data (${item.tabel_label}${item.upt ? ' · ' + item.upt : ''})?`
       : `HAPUS PERMANEN ${item.jumlah} data (${item.tabel_label}${item.upt ? ' · ' + item.upt : ''})?\n\nTindakan ini tidak bisa dibatalkan.`
-    if (!confirm(text)) return
+    if (!await confirmDialog(text, { confirmLabel: kind === 'restore' ? 'Pulihkan' : 'Hapus permanen' })) return
     setBusy(item.batch)
     const { error } = await api(`/trash/${kind === 'restore' ? 'restore' : 'purge'}`, { body: { batch: item.batch } })
     setBusy('')

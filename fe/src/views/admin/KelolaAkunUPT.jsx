@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from 'react'
 import { db } from '../../lib/db'
+import { confirmDialog, promptDialog } from '../../lib/dialog'
 import InfoCard from '../../components/InfoCard'
 import Modal from '../../components/Modal'
 import { Plus, Trash2, Loader2, CheckCircle2, XCircle, KeyRound, Copy, RefreshCw } from 'lucide-react'
@@ -121,8 +122,15 @@ export default function KelolaAkunUPT() {
   }
 
   async function handleAddUPT() {
-    const key = prompt('Masukkan key UPT (huruf kecil, underscore):')?.trim()
-    const label = prompt('Masukkan nama UPT:')?.trim()
+    const input = await promptDialog('Tambah UPT', {
+      confirmLabel: 'Tambah',
+      fields: [
+        { name: 'key', label: 'Key UPT', placeholder: 'huruf kecil & underscore, mis. upt_kupang' },
+        { name: 'label', label: 'Nama UPT', placeholder: 'mis. BPPP Kupang' },
+      ],
+    })
+    const key = input?.key?.trim()
+    const label = input?.label?.trim()
     if (!key || !label) return
     await db.from('upt_list').upsert({ key, label, aktif: true })
     showToast(`UPT "${label}" berhasil ditambahkan`)
@@ -134,7 +142,7 @@ export default function KelolaAkunUPT() {
     const warn = userCount > 0
       ? `UPT "${upt.label}" punya ${userCount} akun terdaftar. Menghapus UPT ini akan MENGHAPUS PERMANEN seluruh akun, data input mingguan/bulanan, berkas, dan aktivitas milik UPT tersebut. Lanjutkan?`
       : `Hapus UPT "${upt.label}"? Seluruh data input mingguan/bulanan, berkas, dan aktivitas milik UPT ini ikut terhapus permanen dan tidak bisa dibatalkan.`
-    if (!confirm(warn)) return
+    if (!(await confirmDialog(warn, { confirmLabel: 'Ya, hapus UPT' }))) return
     try {
       const { error } = await db.from('upt_list').delete().eq('key', upt.key)
       if (error) throw error
@@ -245,8 +253,8 @@ export default function KelolaAkunUPT() {
                         <KeyRound size={14} />
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm(`Hapus akun ${user.nama_lengkap}? (akun tidak dapat login lagi)`)) {
+                        onClick={async () => {
+                          if (await confirmDialog(`Hapus akun ${user.nama_lengkap}?\n\nAkun ini tidak dapat login lagi.`)) {
                             db.from('profiles').delete().eq('id', user.id).then(({ error }) => {
                               if (error) return showToast(error.message || 'Gagal menghapus akun', 'error')
                               showToast(`Akun ${user.nama_lengkap} berhasil dihapus`)

@@ -8,6 +8,7 @@ import InfoCard from '../components/InfoCard'
 import Modal from '../components/Modal'
 import { useAuth } from '../AuthContext'
 import { db } from '../lib/db'
+import { notify, confirmDialog } from '../lib/dialog'
 import { generateTemplateExcel } from '../lib/excelExport'
 import {
   FileText, Download, FileSpreadsheet,
@@ -108,7 +109,7 @@ export default function Documents() {
       mime: ext === 'csv' ? 'text/csv;charset=utf-8;' : 'text/plain;charset=utf-8;',
     })
     setSaving(false)
-    if (error) { alert('Gagal menyimpan dokumen: ' + error.message); return }
+    if (error) { notify('Gagal menyimpan dokumen: ' + error.message); return }
 
     setNewDoc({ title: '', desc: '', category: 'Pedoman', format: 'TXT', content: '' })
     setModalOpen(false)
@@ -116,9 +117,9 @@ export default function Documents() {
   }
 
   async function handleDeleteDoc(id, title) {
-    if (!confirm(`Hapus dokumen "${title}" dari repositori?`)) return
+    if (!await confirmDialog(`Hapus dokumen "${title}" dari repositori?`)) return
     const { error } = await db.from('dokumen_resmi').delete().eq('id', id)
-    if (error) { alert('Gagal menghapus dokumen: ' + error.message); return }
+    if (error) { notify('Gagal menghapus dokumen: ' + error.message); return }
     loadDocs()
   }
 

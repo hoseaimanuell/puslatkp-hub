@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { agregasiOf } from '../lib/agregasi'
 import { db, fieldFiles } from '../lib/db'
+import { notify } from '../lib/dialog'
 
 const FILE_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx'
 const FILE_MAX_MB = 10
@@ -49,7 +50,7 @@ export function FileValueDisplay({ id, className = '' }) {
     <button
       type="button"
       disabled={busy}
-      onClick={async () => { setBusy(true); try { await fieldFiles.download(id) } catch (e) { alert(e.message) } finally { setBusy(false) } }}
+      onClick={async () => { setBusy(true); try { await fieldFiles.download(id) } catch (e) { notify(e.message, 'error') } finally { setBusy(false) } }}
       className={`inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 ${className}`}
       title={`${meta.file_name} (${formatFileSize(meta.file_size)})`}
     >

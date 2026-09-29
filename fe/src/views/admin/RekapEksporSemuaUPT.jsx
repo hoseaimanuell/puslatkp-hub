@@ -5,6 +5,7 @@
  */
 import { useState, useEffect } from 'react'
 import { db } from '../../lib/db'
+import { notify } from '../../lib/dialog'
 import InfoCard from '../../components/InfoCard'
 import Badge from '../../components/Badge'
 import { exportGabunganSemuaUPT } from '../../lib/excelExport'
@@ -227,7 +228,7 @@ export default function RekapEksporSemuaUPT() {
         tahun,
       })
     } catch (err) {
-      alert('Gagal mengekspor file: ' + err.message)
+      notify('Gagal mengekspor file: ' + err.message)
     }
 
     setExporting(false)

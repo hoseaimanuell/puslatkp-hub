@@ -5,6 +5,7 @@
  */
 import { useState, useEffect } from 'react'
 import { db } from '../../lib/db'
+import { confirmDialog } from '../../lib/dialog'
 import { AGREGASI_LABEL, AGREGASI_SHORT, agregasiOf, defaultAgregasi } from '../../lib/agregasi'
 import { useAuth } from '../../AuthContext'
 import InfoCard from '../../components/InfoCard'
@@ -346,7 +347,7 @@ export default function KelolaJenisData() {
   }
 
   async function deleteField(field) {
-    if (!confirm(`Hapus kolom "${field.label}"? Kolom ini tidak akan ditampilkan lagi.`)) return
+    if (!await confirmDialog(`Hapus kolom "${field.label}"? Kolom ini tidak akan ditampilkan lagi.`)) return
     try {
       const { error } = await db.from('field_definitions').delete().eq('id', field.id)
       if (error) throw error
@@ -384,7 +385,7 @@ export default function KelolaJenisData() {
   async function deleteJenisData(jd) {
     if (!jd) return
     const confirmMessage = `Apakah Anda yakin ingin menghapus Jenis Data "${jd.judul}" secara permanen?\n\nSemua definisi kolom dan data terkait jenis data ini akan dihapus dari sistem.`
-    if (!window.confirm(confirmMessage)) return
+    if (!await confirmDialog(confirmMessage)) return
 
     try {
       setLoading(true)

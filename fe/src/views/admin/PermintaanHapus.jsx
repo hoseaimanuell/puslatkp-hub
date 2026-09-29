@@ -17,8 +17,9 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { db, getFeatures } from '../../lib/db'
+import { notify, confirmDialog, promptDialog } from '../../lib/dialog'
 import InfoCard from '../../components/InfoCard'
-import { Inbox, Check, X, Loader2, CheckCircle2, XCircle, Clock, ListChecks, Pencil } from 'lucide-react'
+import { Inbox, Check, X, Loader2, Clock, ListChecks, Pencil } from 'lucide-react'
 import { formatPeriodLabel } from '../../lib/periods'
 
 const TABLE_LABEL = {
@@ -69,7 +70,7 @@ export default function PermintaanHapus() {
   const [persetujuanBarisEnabled, setPersetujuanBarisEnabled] = useState(false)
   const [tolakBarisEnabled, setTolakBarisEnabled] = useState(false)
   const [busy, setBusy] = useState('')
-  const [toast, setToast] = useState(null)
+  const setToast = t => notify(t.message, t.type)
   const [showHistory, setShowHistory] = useState(false)
 
   const load = useCallback(async () => {
@@ -105,12 +106,6 @@ export default function PermintaanHapus() {
   }, [])
 
   useEffect(() => { load() }, [load])
-
-  useEffect(() => {
-    if (!toast) return
-    const t = setTimeout(() => setToast(null), 3500)
-    return () => clearTimeout(t)
-  }, [toast])
 
   const uptLabel = key => uptList.find(u => u.key === key)?.label || key
   const periodLabel = id => { const p = periods.find(x => x.id === id); return p ? formatPeriodLabel(p) : id }
@@ -175,8 +170,13 @@ export default function PermintaanHapus() {
     load()
   }
 
+  // Dialog alasan penolakan (opsional). null = dibatalkan.
+  const askAlasan = (judul, keterangan) => promptDialog(`${judul}\n\n${keterangan}`, {
+    placeholder: 'Alasan penolakan (opsional)', confirmLabel: 'Tolak', danger: true,
+  })
+
   async function rejectRekapBaris(g) {
-    const catatan = prompt('Alasan penolakan (opsional, akan terlihat UPT pada baris ini):', '')
+    const catatan = await askAlasan('Tolak baris ini?', 'Baris tidak dihapus — hanya ditandai "Ditolak". Alasan yang Anda tulis akan terlihat oleh UPT.')
     if (catatan === null) return // batal
     setBusy(`r-${g.jenis_data_id}-${g.upt_key}-${g.period_id}-${g.baris_ke}`)
     const { error } = await db.persetujuanBaris.tolakRekap(g.jenis_data_id, g.upt_key, g.period_id, g.baris_ke, catatan)
@@ -186,7 +186,7 @@ export default function PermintaanHapus() {
   }
 
   async function rejectEntryBaris(e) {
-    const catatan = prompt('Alasan penolakan (opsional, akan terlihat UPT pada baris ini):', '')
+    const catatan = await askAlasan('Tolak baris ini?', 'Baris tidak dihapus — hanya ditandai "Ditolak". Alasan yang Anda tulis akan terlihat oleh UPT.')
     if (catatan === null) return
     setBusy(`e-${e.id}`)
     const { error } = await db.persetujuanBaris.tolakEntry(e.id, catatan)
@@ -196,7 +196,7 @@ export default function PermintaanHapus() {
   }
 
   async function rejectDokumenBaris(d) {
-    const catatan = prompt('Alasan penolakan (opsional, akan terlihat UPT pada berkas ini):', '')
+    const catatan = await askAlasan('Tolak berkas ini?', 'Berkas tidak dihapus — hanya ditandai "Ditolak". Alasan yang Anda tulis akan terlihat oleh UPT.')
     if (catatan === null) return
     setBusy(`d-${d.id}`)
     const { error } = await db.persetujuanBaris.tolakDokumen(d.id, catatan)
@@ -207,7 +207,7 @@ export default function PermintaanHapus() {
 
   async function approveGroupAll(g) {
     const total = g.rekap.length + g.entries.length + g.dokumen.length
-    if (!confirm(`Setujui ${total} baris untuk ${uptLabel(g.upt_key)} · ${jenisDataJudul(g.jenis_data_id)} · ${periodLabel(g.period_id)}?`)) return
+    if (!(await confirmDialog(`Setujui ${total} baris sekaligus?\n\n${uptLabel(g.upt_key)} · ${jenisDataJudul(g.jenis_data_id)} · ${periodLabel(g.period_id)}`, { confirmLabel: 'Setujui semua' }))) return
     setBusy(g.key)
     let error = null
     if (g.rekap.length) {
@@ -228,7 +228,8 @@ export default function PermintaanHapus() {
       : isEdit(item)
       ? `Terapkan perubahan "${item.ringkasan}"?\n\nNilai baru akan langsung ditulis dan baris kembali berstatus Disetujui.`
       : `Setujui penghapusan "${item.ringkasan || TABLE_LABEL[item.tabel]}"?\n\nData akan benar-benar terhapus (masuk Tempat Sampah, dapat dipulihkan 30 hari).`
-    if (!confirm(confirmMsg)) return
+    const confirmLabel = isUnlock(item) ? 'Buka kunci' : isEdit(item) ? 'Terapkan' : 'Ya, hapus'
+    if (!(await confirmDialog(confirmMsg, { confirmLabel }))) return
     setBusy(item.id)
     const { error, data } = await db.permintaanHapus.setujui(item.id)
     setBusy('')
@@ -239,9 +240,9 @@ export default function PermintaanHapus() {
   }
 
   async function reject(item) {
-    const catatan = prompt(
-      isUnlock(item) ? 'Alasan menolak buka kunci (opsional, akan terlihat oleh UPT):' : 'Alasan penolakan (opsional, akan terlihat oleh UPT):',
-      '',
+    const catatan = await askAlasan(
+      isEdit(item) ? 'Tolak permintaan edit ini?' : isUnlock(item) ? 'Tolak buka kunci ini?' : 'Tolak permintaan hapus ini?',
+      isEdit(item) ? 'Nilai lama tetap berlaku. Alasan yang Anda tulis akan terlihat oleh UPT.' : 'Data tidak disentuh. Alasan yang Anda tulis akan terlihat oleh UPT.',
     )
     if (catatan === null) return // batal
     setBusy(item.id)
@@ -259,13 +260,6 @@ export default function PermintaanHapus() {
         title="Permintaan"
         description="Tiap baris yang UPT simpan menunggu persetujuan Anda di sini (Persetujuan Baris Data) sebelum dihitung resmi. Untuk baris yang sudah disetujui, UPT mengajukan permintaan hapus atau edit terpisah di bagian Hapus & Edit."
       />
-
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white animate-fade-in ${toast.type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'}`}>
-          {toast.type === 'error' ? <XCircle size={18} /> : <CheckCircle2 size={18} />}
-          {toast.message}
-        </div>
-      )}
 
       {!enabled && (
         <div className="card p-6 text-sm text-amber-700 dark:text-amber-300">

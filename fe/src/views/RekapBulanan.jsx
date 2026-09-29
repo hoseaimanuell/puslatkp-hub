@@ -6,6 +6,7 @@
  */
 import { Fragment, useState, useEffect, useMemo } from 'react'
 import { db } from '../lib/db'
+import { notify } from '../lib/dialog'
 import { useAuth } from '../AuthContext'
 import Badge from '../components/Badge'
 import { FileValueDisplay } from '../components/DynamicForm'
@@ -1115,7 +1116,7 @@ function RekapByNama({ jenisData, fields = [], entries = [], uptList = [], selec
     if (error) return { error }
     setDeleteDialog(null)
     setCurrentPage(1)
-    if (pending) alert(PENDING_MSG)
+    if (pending) notify(PENDING_MSG)
     await onChanged?.()
     return {}
   }
