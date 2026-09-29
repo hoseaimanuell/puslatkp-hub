@@ -8,12 +8,11 @@ import {
   LayoutDashboard, Zap, ClipboardList, Database,
   Users, Settings, BarChart2, FileText,
   ChevronRight, ChevronLeft, ChevronDown,
-  Building2, Globe, CalendarDays, Trash2, CalendarRange, Upload, LayoutGrid, SlidersHorizontal, Inbox
+  Building2, Globe, CalendarDays, Trash2, CalendarRange, Upload, LayoutGrid, SlidersHorizontal, Inbox, Waves
 } from 'lucide-react'
 import { useAuth } from '../AuthContext'
 import { db, getFeatures } from '../lib/db'
 
-const LOGO_MARK = 'P'
 const PERMINTAAN_POLL_MS = 60000 // cek permintaan baru (persetujuan data + hapus/buka kunci) tiap 1 menit
 
 export default function Sidebar({ activePage, onNavigate, collapsed, onToggle }) {
@@ -65,12 +64,12 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
       >
         <Icon size={18} className="flex-shrink-0" />
         {collapsed && badge && (
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500" />
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400" />
         )}
         {!collapsed && (
           <>
             <span className="flex-1 text-left">{label}</span>
-            {badge && <span className="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{badge}</span>}
+            {badge && <span className="bg-amber-400 text-[#0B1830] text-[10px] font-bold px-1.5 py-0.5 rounded-full">{badge}</span>}
           </>
         )}
       </button>
@@ -89,18 +88,19 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
   return (
     <aside
       className={`fixed top-0 left-0 h-screen z-30 flex flex-col transition-all duration-300 ease-in-out
-        bg-[#0B1830] border-r border-white/10
+        bg-gradient-to-b from-[#0B1830] to-[#0E1F3D] border-r border-white/10
         ${collapsed ? 'w-16 -translate-x-full md:translate-x-0' : 'w-64'}`}
     >
+      <div className="h-1 flex-shrink-0 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500" />
       {/* Logo */}
-      <div className={`flex items-center gap-3 px-4 py-5 border-b border-white/10 ${collapsed ? 'justify-center' : ''}`}>
-        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-lg flex-shrink-0">
-          {LOGO_MARK}
+      <div className={`flex items-center gap-3 px-4 py-4 border-b border-white/10 ${collapsed ? 'justify-center' : ''}`}>
+        <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-amber-300 flex-shrink-0">
+          <Waves size={18} />
         </div>
         {!collapsed && (
-          <div>
-            <div className="text-white font-bold text-sm leading-tight">PUSLATKP</div>
-            <div className="text-white/40 text-[10px] leading-tight">Management Hub</div>
+          <div className="min-w-0">
+            <div className="text-white font-bold text-sm leading-tight tracking-wide">PUSLATKP</div>
+            <div className="text-white/45 text-[10px] leading-tight truncate">Kementerian Kelautan dan Perikanan</div>
           </div>
         )}
       </div>

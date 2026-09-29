@@ -9,7 +9,7 @@ export default function InfoCard({ children, className = '', title, action }) {
       {(title || action) && (
         <div className="flex items-center justify-between mb-4">
           {title && (
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{title}</h3>
+            <h3 className="font-semibold text-base text-[#0B1830] dark:text-white">{title}</h3>
           )}
           {action && <div>{action}</div>}
         </div>

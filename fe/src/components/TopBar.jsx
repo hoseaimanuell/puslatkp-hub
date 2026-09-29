@@ -25,8 +25,8 @@ export default function TopBar({ pageTitle, onNavigate, onToggleSidebar }) {
   const isOffline = online === false
 
   return (
-    <header className="sticky top-0 z-20 h-14 flex items-center justify-between px-4 sm:px-6 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-20 h-14 flex items-center justify-between px-4 sm:px-6 bg-white/90 backdrop-blur dark:bg-gray-950 border-b border-[#E3E8EF] dark:border-gray-800">
+      <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onToggleSidebar}
           className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -36,6 +36,11 @@ export default function TopBar({ pageTitle, onNavigate, onToggleSidebar }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
+        <div className="hidden sm:flex items-center gap-2 text-sm min-w-0">
+          <span className="text-gray-400">PUSLATKP</span>
+          <span className="text-gray-300">/</span>
+          <span className="font-semibold text-[#0B1830] truncate">{pageTitle}</span>
+        </div>
       </div>
 
       {/* Right actions */}
@@ -71,7 +76,7 @@ export default function TopBar({ pageTitle, onNavigate, onToggleSidebar }) {
               {profile?.role} {profile?.upt_key ? `• ${profile.upt_key}` : ''}
             </div>
           </div>
-          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[#0B1830] ring-2 ring-amber-300/70 flex items-center justify-center text-amber-300 text-xs font-bold flex-shrink-0">
             {(profile?.nama_lengkap || 'P')[0].toUpperCase()}
           </div>
           <button
