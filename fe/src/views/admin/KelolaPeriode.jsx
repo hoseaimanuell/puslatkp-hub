@@ -95,7 +95,7 @@ export default function KelolaPeriode() {
                 {years.map(([y, n]) => (
                   <tr key={y} className={Number(tahun) === y ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}>
                     <td className="py-2 px-2 font-semibold">{y}</td>
-                    <td className="py-2 px-2 font-mono">{n} / {EXPECTED}</td>
+                    <td className="py-2 px-2 tabular-nums">{n} / {EXPECTED}</td>
                     <td className="py-2 px-2 text-xs">
                       {n >= EXPECTED ? <span className="text-emerald-600 dark:text-emerald-400">Lengkap</span> : <span className="text-amber-600">Belum lengkap</span>}
                     </td>

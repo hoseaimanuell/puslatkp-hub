@@ -183,7 +183,7 @@ export default function BulanAgregatView({
                   className="card p-4 border border-gray-100 dark:border-gray-800 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/60 dark:to-gray-900 shadow-sm"
                 >
                   <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">{field.label}</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  <p className="text-2xl font-bold font-display tabular-nums text-gray-900 dark:text-white mt-1">
                     {isRupiah(field.field_key)
                       ? `Rp ${Number(val).toLocaleString('id-ID')}`
                       : Number(val).toLocaleString('id-ID')
@@ -268,7 +268,7 @@ export default function BulanAgregatView({
                         </div>
                       </td>
                       {angkaFields.map(f => (
-                        <td key={f.field_key} className="px-4 py-3 text-right text-gray-700 dark:text-gray-300 font-mono">
+                        <td key={f.field_key} className="px-4 py-3 text-right text-gray-700 dark:text-gray-300 tabular-nums">
                           {formatVal(f, row.values[f.field_key])}
                         </td>
                       ))}
@@ -287,7 +287,7 @@ export default function BulanAgregatView({
                         Total Bulan
                       </td>
                       {angkaFields.map(f => (
-                        <td key={f.field_key} className="px-4 py-3 text-right font-bold text-blue-800 dark:text-blue-300 font-mono">
+                        <td key={f.field_key} className="px-4 py-3 text-right font-bold text-blue-800 dark:text-blue-300 tabular-nums">
                           {isRupiah(f.field_key)
                             ? `Rp ${Number(totals[f.field_key] ?? 0).toLocaleString('id-ID')}`
                             : Number(totals[f.field_key] ?? 0).toLocaleString('id-ID')

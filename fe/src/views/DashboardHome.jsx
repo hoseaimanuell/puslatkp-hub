@@ -247,7 +247,7 @@ export default function DashboardHome() {
                 return (
                   <div key={w.id} className="card p-4">
                     <p className="text-xs text-gray-500">{w.judul}</p>
-                    <p className={`text-2xl font-bold tabular-nums ${c.sorot ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
+                    <p className={`text-2xl font-bold font-display tabular-nums ${c.sorot ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
                       {loadingRekap ? '…' : has ? fmt(w.satuan, value) : '–'}
                     </p>
                     <p className="text-[11px] text-gray-400 mt-0.5">

@@ -936,7 +936,7 @@ export default function KelolaJenisData() {
                 <div key={jd.id} className="py-4 flex items-center justify-between gap-4 flex-wrap hover:bg-gray-50/50 dark:hover:bg-gray-800/30 px-3 rounded-xl transition-colors">
                   <div className="flex-1 min-w-[280px]">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-mono text-gray-400 font-bold">{idx + 1}.</span>
+                      <span className="text-xs tabular-nums text-gray-400 font-bold">{idx + 1}.</span>
                       <h3 className="font-bold text-gray-900 dark:text-white text-base">{jd.judul}</h3>
 
                       <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${

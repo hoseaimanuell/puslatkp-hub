@@ -345,13 +345,13 @@ export default function RekapEksporSemuaUPT() {
                         {item.status}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums text-gray-800 dark:text-gray-200">
+                    <td className="py-3 px-4 text-right tabular-nums text-gray-800 dark:text-gray-200">
                       {isMonth
                         ? `${item.total_entri_bulan.toLocaleString('id-ID')} baris`
                         : `${item.filled_weeks} minggu`
                       }
                     </td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums text-gray-800 dark:text-gray-200">
+                    <td className="py-3 px-4 text-right tabular-nums text-gray-800 dark:text-gray-200">
                       {isMonth
                         ? (item.total_entri_bulan > 0 ? '✓ Aktif mengisi' : 'Belum isi')
                         : item.total_nilai_rekap.toLocaleString('id-ID')

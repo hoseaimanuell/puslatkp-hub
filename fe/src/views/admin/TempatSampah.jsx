@@ -189,7 +189,7 @@ export default function TempatSampah() {
                         <p className="text-xs text-gray-400">{[it.jenis_data, it.periode].filter(Boolean).join(' · ') || '-'}</p>
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">{it.upt || '-'}</td>
-                      <td className="py-2.5 px-3 text-right font-mono">{it.jumlah}</td>
+                      <td className="py-2.5 px-3 text-right tabular-nums">{it.jumlah}</td>
                       <td className="py-2.5 px-3 text-xs">{it.dihapus_oleh || <span className="text-gray-400">(akun sudah dihapus)</span>}</td>
                       <td className="py-2.5 px-3 text-xs whitespace-nowrap">{fmtTime(it.dihapus_pada)}</td>
                       <td className="py-2.5 px-3 text-right text-xs whitespace-nowrap">{it.sisa_hari} hari</td>

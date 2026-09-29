@@ -11,8 +11,8 @@
    * ================================================ */
 
   /* Font Families */
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
   /* Identitas KKP: navy laut dalam + aksen emas. */
   --color-navy-900: #0B1830;
@@ -50,7 +50,7 @@
   }
 
   html {
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans);
     scroll-behavior: smooth;
   }
 
@@ -58,7 +58,29 @@
     background-color: #F5F7FA;
     color: #0f172a;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Inter: angka 1/4/6/9 & huruf l/a yang lebih jelas dibedakan (penting untuk NIK, nominal, kode) */
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Semua judul halaman, kartu, dan dialog memakai font judul — tanpa mengubah tiap halaman satu per satu. */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-feature-settings: normal;
+    letter-spacing: -0.015em;
+  }
+  h1 {
+    letter-spacing: -0.025em;
+  }
+
+  /* Angka di tabel rata lebar, supaya kolom nominal & jumlah sejajar ke bawah. */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  input, select, textarea, button {
+    font-family: inherit;
   }
 
   html.dark body {

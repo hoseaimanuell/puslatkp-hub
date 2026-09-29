@@ -186,7 +186,7 @@ export default function RekapByNama({ jenisData, fields = [], entries = [], uptL
             ) : (
               paginated.map((e, i) => (
                 <tr key={e.id} className="hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors">
-                  <td className="px-3 py-2.5 text-center font-mono text-gray-400">{(page - 1) * pageSize + i + 1}</td>
+                  <td className="px-3 py-2.5 text-center tabular-nums text-gray-400">{(page - 1) * pageSize + i + 1}</td>
                   {showUptColumn && (
                     <td className="px-3 py-2.5 whitespace-nowrap font-medium text-gray-700 dark:text-gray-300">{uptLabelOf(e.upt_key)}</td>
                   )}

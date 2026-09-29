@@ -99,7 +99,7 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="text-white font-bold text-sm leading-tight tracking-wide">PUSLATKP</div>
+            <div className="text-white font-bold font-display text-sm leading-tight tracking-wide">PUSLATKP</div>
             <div className="text-white/45 text-[10px] leading-tight truncate">Kementerian Kelautan dan Perikanan</div>
           </div>
         )}

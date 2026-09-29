@@ -233,7 +233,7 @@ export default function Documents() {
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                     {doc.kategori}
                   </span>
-                  <span className="text-xs font-mono text-gray-400 font-semibold">
+                  <span className="text-xs tabular-nums text-gray-400 font-semibold">
                     {doc.format} • {Math.max(1, Math.round((doc.isi?.length || 0) / 1024))} KB
                   </span>
                 </div>

@@ -909,7 +909,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
                     const globalIdx = (currentPage - 1) * pageSize + idx + 1
                     return (
                       <div key={entry.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
-                        <span className="text-xs text-gray-400 w-9 flex-shrink-0 font-mono text-right">{globalIdx}.</span>
+                        <span className="text-xs text-gray-400 w-9 flex-shrink-0 tabular-nums text-right">{globalIdx}.</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                             {entry.nama || entry.data_json?.nama || `Baris #${globalIdx}`}{entry.terlambat ? <> {<span title="Disimpan setelah deadline" className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}</> : null}
@@ -1104,7 +1104,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
                           const isRejected = b.status === 'ditolak'
                           return (
                             <tr key={b.baris_ke} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
-                              {multiBaris && <td className="px-3 py-2 text-center font-mono text-gray-500 dark:text-gray-400">{i + 1}</td>}
+                              {multiBaris && <td className="px-3 py-2 text-center tabular-nums text-gray-500 dark:text-gray-400">{i + 1}</td>}
                               {fieldDefs.map(f => {
                                 const val = b.values[f.field_key]
                                 if (f.tipe === 'file') {
@@ -1121,7 +1121,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
                                 return (
                                   <td
                                     key={f.field_key}
-                                    className={`px-3 py-2 whitespace-nowrap ${f.tipe === 'angka' ? 'text-right font-mono text-gray-800 dark:text-gray-200' : 'text-left text-gray-700 dark:text-gray-300'}`}
+                                    className={`px-3 py-2 whitespace-nowrap ${f.tipe === 'angka' ? 'text-right tabular-nums text-gray-800 dark:text-gray-200' : 'text-left text-gray-700 dark:text-gray-300'}`}
                                     style={{ maxWidth: 220 }}
                                     title={display || ''}
                                   >
@@ -1263,7 +1263,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
                                 const val = w.values[f.field_key]
                                 const isRupiah = f.field_key.includes('anggaran') || f.field_key.includes('belanja')
                                 return (
-                                  <td key={f.field_key} className="py-2.5 px-3 text-right font-mono">
+                                  <td key={f.field_key} className="py-2.5 px-3 text-right tabular-nums">
                                     {val !== undefined && val !== null
                                       ? (isRupiah ? `Rp ${Number(val).toLocaleString('id-ID')}` : Number(val).toLocaleString('id-ID'))
                                     : '-'

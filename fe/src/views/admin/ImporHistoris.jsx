@@ -291,7 +291,7 @@ export default function ImporHistoris() {
                 ].map(([label, val, cls]) => (
                   <div key={label} className="card p-3">
                     <p className="text-xs text-gray-500">{label}</p>
-                    <p className={`text-2xl font-bold tabular-nums ${cls}`}>{val.toLocaleString('id-ID')}</p>
+                    <p className={`text-2xl font-bold font-display tabular-nums ${cls}`}>{val.toLocaleString('id-ID')}</p>
                   </div>
                 ))}
               </div>
@@ -313,7 +313,7 @@ export default function ImporHistoris() {
                   <p className="text-sm font-semibold text-rose-600 dark:text-rose-400 mb-1">{result.errors.length} baris bermasalah (baris Excel):</p>
                   <div className="max-h-56 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-800 text-xs">
                     {result.errors.slice(0, 200).map((e, i) => (
-                      <p key={i} className="px-3 py-1.5"><span className="font-mono text-gray-400 mr-2">baris {e.baris}</span>{e.pesan}</p>
+                      <p key={i} className="px-3 py-1.5"><span className="tabular-nums text-gray-400 mr-2">baris {e.baris}</span>{e.pesan}</p>
                     ))}
                     {result.errors.length > 200 && <p className="px-3 py-1.5 text-gray-400">… dan {result.errors.length - 200} lainnya</p>}
                   </div>

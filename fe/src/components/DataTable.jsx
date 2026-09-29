@@ -85,7 +85,7 @@ export default function DataTable({ data = [], onView, onEdit, onDelete, isAdmin
               </tr>
             ) : filtered.map(row => (
               <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
-                <td className="px-4 py-3 text-gray-700 dark:text-gray-400 whitespace-nowrap font-mono text-xs">
+                <td className="px-4 py-3 text-gray-700 dark:text-gray-400 whitespace-nowrap tabular-nums text-xs">
                   {new Date(row.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </td>
                 <td className="px-4 py-3 text-gray-900 dark:text-gray-100 max-w-xs">

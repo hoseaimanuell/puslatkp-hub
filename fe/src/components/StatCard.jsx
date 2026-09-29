@@ -31,7 +31,7 @@ export default function StatCard({ icon: Icon, color, label, value, note, classN
             </div>
           )}
         </div>
-        <div className="tabular-nums font-bold text-3xl leading-none mb-1.5">
+        <div className="tabular-nums font-bold font-display text-3xl leading-none mb-1.5">
           {value ?? 0}
         </div>
         <div className="text-sm font-semibold text-white/90">{label}</div>

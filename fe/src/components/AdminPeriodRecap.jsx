@@ -390,15 +390,15 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="card p-4">
           <p className="text-xs text-gray-500">Total Pelatihan</p>
-          <p className="text-2xl font-bold tabular-nums">{totals.pelatihan.toLocaleString('id-ID')}</p>
+          <p className="text-2xl font-bold font-display tabular-nums">{totals.pelatihan.toLocaleString('id-ID')}</p>
         </div>
         <div className="card p-4">
           <p className="text-xs text-gray-500">Total Peserta</p>
-          <p className="text-2xl font-bold tabular-nums">{totals.peserta.toLocaleString('id-ID')}</p>
+          <p className="text-2xl font-bold font-display tabular-nums">{totals.peserta.toLocaleString('id-ID')}</p>
         </div>
         <div className="card p-4">
           <p className="text-xs text-gray-500">Total Realisasi Anggaran</p>
-          <p className="text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{formatRp(totals.realisasi)}</p>
+          <p className="text-2xl font-bold font-display tabular-nums text-emerald-700 dark:text-emerald-300">{formatRp(totals.realisasi)}</p>
         </div>
       </div>
 
@@ -459,10 +459,10 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                     </span>
                   </td>
                   <td className="py-2.5 px-3 text-gray-600 dark:text-gray-300">{r.jenis}</td>
-                  <td className="py-2.5 px-3 text-right font-mono">{r.pelatihan}</td>
-                  <td className="py-2.5 px-3 text-right font-mono">{r.peserta.toLocaleString('id-ID')}</td>
-                  <td className="py-2.5 px-3 text-right font-mono">{formatRp(r.pagu)}</td>
-                  <td className="py-2.5 px-3 text-right font-mono">{formatRp(r.realisasi)}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">{r.pelatihan}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">{r.peserta.toLocaleString('id-ID')}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">{formatRp(r.pagu)}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">{formatRp(r.realisasi)}</td>
                   <td className="py-2.5 px-3">
                     <Badge variant={r.status === 'Approved' ? 'success' : 'draft'}>{r.status === 'Approved' ? 'Disetujui' : 'Draft'}</Badge>{r.terlambat && <span className="ml-1 inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
                   </td>
@@ -483,10 +483,10 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
               <tr className="bg-gray-50 dark:bg-gray-800/50 font-semibold">
                 <td className="py-2.5 px-3">TOTAL</td>
                 <td className="py-2.5 px-3">-</td>
-                <td className="py-2.5 px-3 text-right font-mono">{totals.pelatihan}</td>
-                <td className="py-2.5 px-3 text-right font-mono">{totals.peserta.toLocaleString('id-ID')}</td>
-                <td className="py-2.5 px-3 text-right font-mono">{formatRp(totals.pagu)}</td>
-                <td className="py-2.5 px-3 text-right font-mono">{formatRp(totals.realisasi)}</td>
+                <td className="py-2.5 px-3 text-right tabular-nums">{totals.pelatihan}</td>
+                <td className="py-2.5 px-3 text-right tabular-nums">{totals.peserta.toLocaleString('id-ID')}</td>
+                <td className="py-2.5 px-3 text-right tabular-nums">{formatRp(totals.pagu)}</td>
+                <td className="py-2.5 px-3 text-right tabular-nums">{formatRp(totals.realisasi)}</td>
                 <td className="py-2.5 px-3">-</td>
                 {onEditRow && <td className="py-2.5 px-3">-</td>}
               </tr>
@@ -558,7 +558,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                       </span>
                     </td>
                     {detailHasMultiBaris && (
-                      <td className="px-3 py-2 text-center font-mono text-gray-500 border-r border-gray-100 dark:border-gray-800">
+                      <td className="px-3 py-2 text-center tabular-nums text-gray-500 border-r border-gray-100 dark:border-gray-800">
                         {row.baris_ke}
                       </td>
                     )}
@@ -578,7 +578,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                       return (
                         <td
                           key={f.field_key}
-                          className={`px-3 py-2 whitespace-nowrap ${f.tipe === 'angka' ? 'text-right font-mono text-gray-800 dark:text-gray-200' : 'text-left text-gray-700 dark:text-gray-300'}`}
+                          className={`px-3 py-2 whitespace-nowrap ${f.tipe === 'angka' ? 'text-right tabular-nums text-gray-800 dark:text-gray-200' : 'text-left text-gray-700 dark:text-gray-300'}`}
                           style={{ maxWidth: 220 }}
                           title={display || ''}
                         >

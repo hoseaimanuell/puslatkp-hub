@@ -316,7 +316,7 @@ export default function RekapPeriodik() {
               {summary.slice(3).map(m => (
                 <div key={m.id} className="card p-4">
                   <p className="text-xs text-gray-500">{m.label}</p>
-                  <p className={`text-2xl font-bold tabular-nums ${m.bold ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
+                  <p className={`text-2xl font-bold font-display tabular-nums ${m.bold ? 'text-emerald-700 dark:text-emerald-300' : ''}`}>
                     {m.has ? formatRp(m.total) : '–'}
                   </p>
                 </div>
@@ -350,8 +350,8 @@ export default function RekapPeriodik() {
                       {summary.map(m => (
                         <tr key={m.id} className={m.bold ? 'bg-gray-50 dark:bg-gray-800/50 font-semibold' : ''}>
                           <td className="py-2.5 px-3">{m.label}</td>
-                          {m.perSub.map((v, i) => <td key={i} className="py-2.5 px-3 text-right font-mono whitespace-nowrap">{m.has ? fmt(v, m.rp) : '–'}</td>)}
-                          <td className="py-2.5 px-3 text-right font-mono font-semibold whitespace-nowrap">{m.has ? fmt(m.total, m.rp) : '–'}</td>
+                          {m.perSub.map((v, i) => <td key={i} className="py-2.5 px-3 text-right tabular-nums whitespace-nowrap">{m.has ? fmt(v, m.rp) : '–'}</td>)}
+                          <td className="py-2.5 px-3 text-right tabular-nums font-semibold whitespace-nowrap">{m.has ? fmt(m.total, m.rp) : '–'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -406,15 +406,15 @@ export default function RekapPeriodik() {
                           {t.perUpt.map(p => (
                             <tr key={p.upt.key} className="hover:bg-gray-50/80 dark:hover:bg-gray-800/40">
                               <td className="py-2.5 px-3 font-medium whitespace-nowrap">{p.upt.label}</td>
-                              <td className="py-2.5 px-3 text-right font-mono">{p.filled}/{weeks.length}</td>
-                              {t.fields.map(f => <td key={f.id} className="py-2.5 px-3 text-right font-mono whitespace-nowrap">{fmt(p.totals[f.field_key], isRp(f))}</td>)}
+                              <td className="py-2.5 px-3 text-right tabular-nums">{p.filled}/{weeks.length}</td>
+                              {t.fields.map(f => <td key={f.id} className="py-2.5 px-3 text-right tabular-nums whitespace-nowrap">{fmt(p.totals[f.field_key], isRp(f))}</td>)}
                             </tr>
                           ))}
                           {t.perUpt.length > 1 && (
                             <tr className="bg-gray-50 dark:bg-gray-800/50 font-semibold">
                               <td className="py-2.5 px-3">TOTAL</td>
                               <td className="py-2.5 px-3" />
-                              {t.fields.map(f => <td key={f.id} className="py-2.5 px-3 text-right font-mono whitespace-nowrap">{fmt(t.grand[f.field_key], isRp(f))}</td>)}
+                              {t.fields.map(f => <td key={f.id} className="py-2.5 px-3 text-right tabular-nums whitespace-nowrap">{fmt(t.grand[f.field_key], isRp(f))}</td>)}
                             </tr>
                           )}
                         </tbody>

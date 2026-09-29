@@ -603,7 +603,7 @@ export default function RekapBulanan({ onNavigate }) {
             {currentWeeks.map(w => (
               <span
                 key={w.id}
-                className="px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 font-mono text-[11px]"
+                className="px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 font-medium tabular-nums text-[11px]"
               >
                 Mg {w.minggu_ke} ({new Date(w.tanggal_mulai).getDate()}–{new Date(w.tanggal_selesai).getDate()} {namaBulan(bulan).slice(0,3)})
               </span>
@@ -880,7 +880,7 @@ export default function RekapBulanan({ onNavigate }) {
                                           <span className="text-[11px] leading-tight">{ub.upt_label}</span>
                                         </div>
                                         <div className="mt-1">
-                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-medium ${
+                                          <span className={`px-1.5 py-0.5 rounded text-[10px] tabular-nums font-semibold ${
                                             ub.filledWeeksCount >= 4
                                               ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
                                               : ub.filledWeeksCount > 0
@@ -892,7 +892,7 @@ export default function RekapBulanan({ onNavigate }) {
                                         </div>
                                       </td>
                                     )}
-                                    <td className="px-3 py-2 text-center font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">
+                                    <td className="px-3 py-2 text-center tabular-nums font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap border-r border-gray-100 dark:border-gray-800">
                                       M{wd.period?.minggu_ke || (wIdx + 1)}
                                     </td>
                                     {item.jFields.map(f => {
@@ -918,7 +918,7 @@ export default function RekapBulanan({ onNavigate }) {
                                           key={f.field_key}
                                           className={`px-3 py-2 whitespace-nowrap ${
                                             f.tipe === 'angka'
-                                              ? 'text-right font-mono text-gray-800 dark:text-gray-200'
+                                              ? 'text-right tabular-nums text-gray-800 dark:text-gray-200'
                                               : 'text-left text-gray-700 dark:text-gray-300'
                                           }`}
                                           style={{ maxWidth: 220 }}
@@ -959,7 +959,7 @@ export default function RekapBulanan({ onNavigate }) {
                                         key={f.field_key}
                                         className={`px-3 py-2 whitespace-nowrap font-semibold ${
                                           f.tipe === 'angka'
-                                            ? 'text-right font-mono text-blue-700 dark:text-blue-300'
+                                            ? 'text-right tabular-nums text-blue-700 dark:text-blue-300'
                                             : 'text-center text-gray-300 dark:text-gray-600'
                                         }`}
                                       >
