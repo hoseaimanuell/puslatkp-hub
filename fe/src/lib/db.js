@@ -155,7 +155,7 @@ export function getFeatures() {
   if (!featuresPromise) {
     featuresPromise = api('/health', { method: 'GET' }).then(({ data }) => {
       if (!data) featuresPromise = null
-      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, persetujuanBaris: false, tolakBaris: false, permintaanEdit: false }
+      return data?.features || { multiBaris: false, agregasi: false, terlambat: false, arsip: false, dashboard: false, fieldFiles: false, kumulatifBulanan: false, dokumenResmi: false, opsiBersyarat: false, permintaanHapus: false, persetujuanBaris: false, tolakBaris: false, permintaanEdit: false, peranRekap: false }
     })
   }
   return featuresPromise

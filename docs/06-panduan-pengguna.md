@@ -394,6 +394,17 @@ Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun hal
   cara lama mengetik link (mis. "Link Laporan Pelatihan"). Di tabel rekap, sel ini menampilkan tombol **📎 unduh**
   berisi nama berkas asli, bukan teks link. Mengganti berkas otomatis membuang berkas lama. **Tidak bisa** diisi
   lewat Excel — kolom bertipe Berkas dikecualikan dari template & impor Excel (termasuk Impor Data Historis).
+* **Dihitung di rekap sebagai** (jenis data mingguan) — menentukan angka ringkasan mana di Rekap UPT/Balai dan
+  Rekap Bulanan yang diisi sebuah kolom: **Judul baris** → Pelatihan (tiap baris yang kolom ini terisi dihitung
+  1 pelatihan), **Jumlah peserta** → Peserta, **Pagu anggaran** → Pagu, **Realisasi anggaran** → Realisasi (ketiganya
+  dijumlahkan), atau **Tidak dihitung**. Dengan ini jenis data buatan Admin bebas memakai nama kolom apa pun dan
+  tetap terhitung di rekap. Saat mengetik nama kolom baru, peran ditebak otomatis (mis. "Jumlah Peserta" →
+  Peserta) dan tetap bisa diganti. Panel **"Cara data ini dihitung di rekap"** di atas daftar kolom merangkum
+  kolom mana yang mengisi tiap angka; kotak bertanda *Belum diatur* berarti angka itu selalu 0 di rekap (untuk
+  Pelatihan: dihitung 1 per UPT bila ada isian). Pilih satu kolom saja sebagai Judul baris agar pelatihan tidak
+  terhitung dua kali.
+* Kode kolom (*field key*) dibuat otomatis dari nama kolom dan ada di bagian **Lanjutan**. Setelah kolom dibuat,
+  kodenya tidak bisa diubah lagi (sudah dipakai menyimpan data) — nama kolom tetap bisa diganti bebas.
 * Untuk kolom **angka** pada jenis data mingguan tersedia **Cara Rekap** (jumlahkan / nilai terakhir / rata-rata /
   maksimum). **Bawaan kolom baru: Nilai terakhir** (angka dianggap berjalan/kumulatif — mis. minggu 1 = 10, minggu 2
   = 30 → rekap bulan pakai 30, bukan 10 + 30). Ganti ke *Jumlahkan* hanya untuk kolom yang memang mencatat tambahan

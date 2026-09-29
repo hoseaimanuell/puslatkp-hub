@@ -20,6 +20,7 @@ import {
 } from 'recharts'
 import { ChevronLeft, ChevronRight, Loader2, Building2, Download, Pencil } from 'lucide-react'
 import { exportTabelRekapRingkasan, exportRekapNilai } from '../lib/excelExport'
+import { buatPetaPeran, peranKolom } from '../lib/peranRekap'
 
 function num(v) {
   const n = Number(v)
@@ -153,7 +154,11 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
   }
 
 
+  const petaPeran = useMemo(() => buatPetaPeran(fieldDefs), [fieldDefs])
+
   const tableRows = useMemo(() => {
+    const peranOf = r => peranKolom(petaPeran, r.jenis_data_id, r.field_key)
+    const jumlahPeran = (recs, peran) => recs.filter(r => peranOf(r) === peran).reduce((a, r) => a + num(r.value), 0)
     const jds = selectedJd ? [selectedJd] : jenisDataList.filter(j => j.level_utama === 'minggu')
     const upts = uptFilter === 'all' ? uptList : uptList.filter(u => u.key === uptFilter)
     const rows = []
@@ -174,10 +179,11 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
         // Total resmi (kartu & grafik) hanya menghitung baris yang sudah disetujui Admin — baris yang masih
         // menunggu persetujuan tetap terlihat di tabel rincian (badge 3-status), tapi tidak ikut dijumlah di sini.
         const approvedRecs = recs.filter(r => !r.status || r.status === 'disetujui')
-        const peserta = approvedRecs.filter(r => r.field_key === 'jumlah_peserta').reduce((a, r) => a + num(r.value), 0)
-        const pagu = approvedRecs.filter(r => r.field_key.includes('pagu')).reduce((a, r) => a + num(r.value), 0)
-        const realisasi = approvedRecs.filter(r => r.field_key.includes('realisasi_anggaran') || r.field_key === 'realisasi_anggaran').reduce((a, r) => a + num(r.value), 0)
-        const pelatihanKeys = approvedRecs.filter(r => r.field_key === 'nama_pelatihan' && (r.value_text || r.value))
+        // Peran tiap kolom (Judul/Peserta/Pagu/Realisasi) diatur Admin di Kelola Jenis Data — lib/peranRekap.js
+        const peserta = jumlahPeran(approvedRecs, 'peserta')
+        const pagu = jumlahPeran(approvedRecs, 'pagu')
+        const realisasi = jumlahPeran(approvedRecs, 'realisasi')
+        const pelatihanKeys = approvedRecs.filter(r => peranOf(r) === 'judul' && (r.value_text || r.value))
         const pelatihan = pelatihanKeys.length || (approvedRecs.length ? 1 : 0)
         const hasData = recs.length > 0 || entCount > 0
         // Selaras dengan Persetujuan Baris Data: resmi ("Approved") hanya bila SEMUA baris/entri yang tersimpan
@@ -200,7 +206,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
       })
     })
     return rows
-  }, [rekapRows, entries, jenisDataList, uptList, selectedJd, uptFilter])
+  }, [rekapRows, entries, jenisDataList, uptList, selectedJd, uptFilter, petaPeran])
 
   const totals = useMemo(() => ({
     pelatihan: tableRows.reduce((a, r) => a + r.pelatihan, 0),

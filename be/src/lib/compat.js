@@ -7,17 +7,19 @@ import { TABLES } from '../schema.js'
  * lewat GET /api/health -> features.
  */
 const OPTIONAL = [
-  { table: 'rekap_nilai', col: 'baris_ke', feature: 'multiBaris' },
-  { table: 'jenis_data', col: 'multi_baris', feature: 'multiBaris' },
-  { table: 'field_definitions', col: 'agregasi', feature: 'agregasi' },
-  { table: 'rekap_nilai', col: 'terlambat', feature: 'terlambat' },
-  { table: 'data_entries', col: 'terlambat', feature: 'terlambat' },
-  { table: 'dokumen_upload', col: 'terlambat', feature: 'terlambat' },
-  { table: 'jenis_data', col: 'kumulatif_bulanan', feature: 'kumulatifBulanan' },
-  { table: 'field_definitions', col: 'opsi_bersyarat', feature: 'opsiBersyarat' },
+  { table: 'rekap_nilai', col: 'baris_ke', feature: 'multiBaris', migrasi: 'migrasi_03_baris_dan_agregasi.sql' },
+  { table: 'jenis_data', col: 'multi_baris', feature: 'multiBaris', migrasi: 'migrasi_03_baris_dan_agregasi.sql' },
+  { table: 'field_definitions', col: 'agregasi', feature: 'agregasi', migrasi: 'migrasi_03_baris_dan_agregasi.sql' },
+  { table: 'rekap_nilai', col: 'terlambat', feature: 'terlambat', migrasi: 'migrasi_04_terlambat_dan_arsip.sql' },
+  { table: 'data_entries', col: 'terlambat', feature: 'terlambat', migrasi: 'migrasi_04_terlambat_dan_arsip.sql' },
+  { table: 'dokumen_upload', col: 'terlambat', feature: 'terlambat', migrasi: 'migrasi_04_terlambat_dan_arsip.sql' },
+  { table: 'jenis_data', col: 'kumulatif_bulanan', feature: 'kumulatifBulanan', migrasi: 'migrasi_07_kumulatif_bulanan.sql' },
+  { table: 'field_definitions', col: 'opsi_bersyarat', feature: 'opsiBersyarat', migrasi: 'migrasi_09_opsi_bersyarat.sql' },
+  // Tanpa kolom ini, rekap kembali menebak peran dari nama kolom (lihat fe/src/lib/peranRekap.js: peranLama).
+  { table: 'field_definitions', col: 'peran_rekap', feature: 'peranRekap', migrasi: 'migrasi_16_peran_rekap.sql' },
 ]
 
-export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, persetujuanBaris: true, tolakBaris: true, permintaanEdit: true }
+export const features = { multiBaris: true, agregasi: true, terlambat: true, dashboard: true, kumulatifBulanan: true, dokumenResmi: true, opsiBersyarat: true, permintaanHapus: true, persetujuanBaris: true, tolakBaris: true, permintaanEdit: true, peranRekap: true }
 
 /** Tabel opsional (migrasi_05/06/08). Bila belum ada, tabel dibuang dari whitelist dan fiturnya nonaktif. */
 export async function detectOptionalTables() {
@@ -114,10 +116,12 @@ export async function detectEditRequest() {
 
 export async function detectOptionalColumns() {
   const missing = []
-  for (const { table, col, feature } of OPTIONAL) {
+  const migrasiPerlu = new Set()
+  for (const { table, col, feature, migrasi } of OPTIONAL) {
     const [found] = await pool.query(`SHOW COLUMNS FROM \`${table}\` LIKE ?`, [col])
     if (found.length) continue
     missing.push(`${table}.${col}`)
+    migrasiPerlu.add(migrasi)
     features[feature] = false
     const def = TABLES[table]
     for (const key of ['cols', 'writable', 'bool', 'json']) def[key] = def[key].filter(c => c !== col)
@@ -125,7 +129,7 @@ export async function detectOptionalColumns() {
   }
   if (missing.length) {
     console.warn(`PERINGATAN: kolom migrasi belum ada: ${missing.join(', ')}.`)
-    console.warn('  Jalankan database/migrasi_03_baris_dan_agregasi.sql dan database/migrasi_04_terlambat_dan_arsip.sql di phpMyAdmin.')
+    console.warn(`  Jalankan di phpMyAdmin: ${[...migrasiPerlu].map(m => `database/${m}`).join(', ')}.`)
   }
   return features
 }

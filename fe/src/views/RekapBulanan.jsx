@@ -7,6 +7,7 @@
 import { Fragment, useState, useEffect, useMemo } from 'react'
 import { db } from '../lib/db'
 import { notify } from '../lib/dialog'
+import { buatPetaPeran, peranKolom } from '../lib/peranRekap'
 import { useAuth } from '../AuthContext'
 import Badge from '../components/Badge'
 import { FileValueDisplay } from '../components/DynamicForm'
@@ -226,17 +227,16 @@ export default function RekapBulanan({ onNavigate }) {
 
     const uptKeys = new Set(effectiveUptList.map(u => u.key))
 
-    // Rekap tiap kolom sesuai cara rekapnya (pagu/realisasi kumulatif = nilai terakhir; peserta = dijumlahkan)
+    // Rekap tiap kolom sesuai cara rekapnya (pagu/realisasi kumulatif = nilai terakhir; peserta = dijumlahkan).
+    // Peran kolom (Judul/Peserta/Pagu/Realisasi) diatur Admin di Kelola Jenis Data — lib/peranRekap.js.
+    const petaPeran = buatPetaPeran(fieldDefs)
     aggregateRows(approvedRekapRows, currentWeeks.map(w => w.id), fieldDefs).forEach(r => {
       if (!uptKeys.has(r.upt_key)) return
-      if (r.field_key === 'jumlah_peserta') totalPeserta += num(r.value)
-      if (r.field_key.includes('pagu')) totalPagu += num(r.value)
-      if (r.field_key.includes('realisasi_anggaran') || r.field_key === 'realisasi_anggaran') {
-        totalRealisasi += num(r.value)
-      }
-      if (r.field_key === 'nama_pelatihan' && (r.value_text || r.value)) {
-        totalPelatihan++
-      }
+      const peran = peranKolom(petaPeran, r.jenis_data_id, r.field_key)
+      if (peran === 'peserta') totalPeserta += num(r.value)
+      if (peran === 'pagu') totalPagu += num(r.value)
+      if (peran === 'realisasi') totalRealisasi += num(r.value)
+      if (peran === 'judul' && (r.value_text || r.value)) totalPelatihan++
     })
 
     approvedUploadedDocs.forEach(d => {

@@ -24,7 +24,7 @@ Base URL: `http://localhost:4000/api` (ubah lewat `NEXT_PUBLIC_API_URL` di front
 Cek server & koneksi database. Tanpa autentikasi.
 
 ```json
-{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "persetujuanBaris": true, "tolakBaris": true, "permintaanEdit": true, "arsip": true, "fieldFiles": true } }
+{ "status": "ok", "database": "Puslatkp1a", "trash": true, "features": { "multiBaris": true, "agregasi": true, "terlambat": true, "dashboard": true, "kumulatifBulanan": true, "dokumenResmi": true, "opsiBersyarat": true, "permintaanHapus": true, "persetujuanBaris": true, "tolakBaris": true, "permintaanEdit": true, "peranRekap": true, "arsip": true, "fieldFiles": true } }
 ```
 
 `trash` dan `features` menunjukkan migrasi database yang sudah dijalankan (migrasi_02 / 03 / 04 / 05 / 06 / 07 / 08 / 09 / 10 / 13 / 14 / 15).
@@ -41,6 +41,8 @@ kolom `rekap_nilai.catatan_admin` dkk. (migrasi_14, tombol Tolak pada Persetujua
 baru ke Admin alih-alih harus dihapus dulu — lihat
 [04-database.md](04-database.md#permintaan-edit-migrasi-15--melengkapi-permintaan_hapus-di-atas)) — bila `false`,
 akun UPT tetap menghapus/mengedit data secara langsung seperti sebelumnya (tidak diblokir diam-diam).
+`peranRekap` = kolom `field_definitions.peran_rekap` (migrasi_16, pilihan "Dihitung di rekap sebagai" di Kelola
+Jenis Data) — bila `false`, pilihan itu disembunyikan dan rekap memakai aturan nama kolom lama.
 
 ## `POST /api/auth/login`
 

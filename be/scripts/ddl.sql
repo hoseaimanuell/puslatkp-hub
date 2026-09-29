@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS field_definitions (
   opsi_pilihan  JSON         NULL,
   opsi_bersyarat JSON        NULL COMMENT 'Kolom pilihan: opsi tergantung nilai kolom lain — {depends_on, options: {nilai: [opsi...]}}',
   agregasi      ENUM('sum','last','avg','max') NOT NULL DEFAULT 'sum' COMMENT 'Cara rekap bulan/triwulan/tahun dari data mingguan (last = nilai kumulatif terakhir)',
+  peran_rekap   VARCHAR(20)  NULL COMMENT 'judul | peserta | pagu | realisasi — cara kolom ini dihitung di tabel rekap',
   wajib         TINYINT(1)   NOT NULL DEFAULT 0,
   is_identitas  TINYINT(1)   NOT NULL DEFAULT 0,
   urutan        INT          NOT NULL DEFAULT 0,

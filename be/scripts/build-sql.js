@@ -81,6 +81,15 @@ const MULTI_BARIS = new Set(['masyarakat', 'aparatur', 'data_belanja_modal', 'da
 // mencatat tambahan baru tiap minggu secara terpisah (bukan angka berjalan).
 const agregasiDefault = f => (f.level === 'minggu' && f.tipe === 'angka' ? 'last' : 'sum')
 
+// Peran di rekap (Pelatihan/Peserta/Pagu/Realisasi) — sama persis dengan database/migrasi_16_peran_rekap.sql.
+const peranDefault = f => {
+  if (f.field_key === 'nama_pelatihan') return 'judul'
+  if (f.field_key === 'jumlah_peserta') return 'peserta'
+  if (f.field_key.includes('pagu')) return 'pagu'
+  if (f.field_key.includes('realisasi_anggaran')) return 'realisasi'
+  return null
+}
+
 const jenisData = [...seed.DEFAULT_JENIS_DATA]
   .sort((a, b) => (a.pasangan_mingguan_id ? 1 : 0) - (b.pasangan_mingguan_id ? 1 : 0)) // induk dulu, agar FK terpenuhi
   .map(j => ({ ...j, mode_bulanan: j.mode_bulanan ?? null, multi_baris: MULTI_BARIS.has(j.key), kumulatif_bulanan: false }))
@@ -97,10 +106,11 @@ const fields = seed.DEFAULT_FIELDS.map(f => ({
   wajib: !!f.wajib,
   is_identitas: !!f.is_identitas,
   agregasi: agregasiDefault(f),
+  peran_rekap: peranDefault(f),
 }))
 master += section('DATA MASTER — DEFINISI KOLOM (FORM BUILDER)')
 master += insert('field_definitions',
-  ['id', 'jenis_data_id', 'level', 'field_key', 'label', 'tipe', 'opsi_pilihan', 'opsi_bersyarat', 'agregasi', 'wajib', 'is_identitas', 'urutan', 'aktif'],
+  ['id', 'jenis_data_id', 'level', 'field_key', 'label', 'tipe', 'opsi_pilihan', 'opsi_bersyarat', 'agregasi', 'peran_rekap', 'wajib', 'is_identitas', 'urutan', 'aktif'],
   fields)
 
 const docs = seed.DEFAULT_DOCS.map(d => ({ ...d, id: uid(d.id) }))

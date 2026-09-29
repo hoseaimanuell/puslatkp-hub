@@ -31,7 +31,7 @@ export const TABLES = {
     stamp: { dibuat_oleh: 'id' },
   }),
   field_definitions: table({
-    cols: ['id', 'jenis_data_id', 'level', 'field_key', 'label', 'tipe', 'opsi_pilihan', 'opsi_bersyarat', 'agregasi', 'wajib', 'is_identitas', 'urutan', 'aktif', 'dibuat_oleh', 'created_at'],
+    cols: ['id', 'jenis_data_id', 'level', 'field_key', 'label', 'tipe', 'opsi_pilihan', 'opsi_bersyarat', 'agregasi', 'peran_rekap', 'wajib', 'is_identitas', 'urutan', 'aktif', 'dibuat_oleh', 'created_at'],
     json: ['opsi_pilihan', 'opsi_bersyarat'],
     bool: ['wajib', 'is_identitas', 'aktif'],
     stamp: { dibuat_oleh: 'id' },
