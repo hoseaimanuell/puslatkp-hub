@@ -1,8 +1,8 @@
 # PUSLATKP Management Hub
 
-Portal pelaporan aktivitas dan kinerja tim **Pusat Pelatihan Kelautan dan Perikanan (PUSLATKP)** – KKP.
+Portal pelaporan aktivitas dan kinerja tim **Pusat Pelatihan Kelautan dan Perikanan (PUSLATKP)**, unit di bawah KKP.
 Mencakup Jenis Data dinamis (Form Builder), pelaporan mingguan/bulanan/triwulan/tahunan, validasi silang
-mingguan vs bulanan, penanda **terlambat** setelah deadline, Arsip Data Historis (Excel/PDF), impor/ekspor Excel, dan 3 tingkat akses (Admin, UPT, Publik).
+mingguan vs bulanan, penanda terlambat setelah deadline, Arsip Data Historis (Excel/PDF), impor/ekspor Excel, dan 3 tingkat akses (Admin, UPT, Publik).
 
 | Lapisan | Teknologi | Servis |
 | :-- | :-- | :-- |
@@ -10,7 +10,7 @@ mingguan vs bulanan, penanda **terlambat** setelah deadline, Arsip Data Historis
 | Backend | **Express 5** (Node.js) + JWT + bcrypt | `be` (port 4000) |
 | Database | **MySQL** – nama database **`Puslatkp1a`** (dikelola lewat phpMyAdmin) | – |
 
-> Tampilan aplikasi **sama persis** dengan versi sebelumnya. Yang berubah adalah mesin di belakangnya:
+> Tampilan aplikasi sama persis dengan versi sebelumnya. Yang berubah adalah mesin di belakangnya:
 > Supabase/Local Storage diganti backend Express + MySQL.
 
 ## Struktur proyek
