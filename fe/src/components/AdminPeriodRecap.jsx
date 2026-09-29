@@ -30,7 +30,7 @@ function formatRp(n) {
   return `Rp ${Number(n || 0).toLocaleString('id-ID')}`
 }
 
-export default function AdminPeriodRecap({ compact = false, levelFilter = null, userUptKey = null, onEditRow = null }) {
+export default function AdminPeriodRecap({ compact = false, levelFilter = null, userUptKey = null, onEditRow = null, onFilterChange = null, refreshToken = 0 }) {
   const [periods, setPeriods] = useState([])
   const [jenisDataList, setJenisDataList] = useState([])
   const [uptList, setUptList] = useState([])
@@ -90,9 +90,20 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePeriod?.id])
 
+  // refreshToken: induk memintanya memuat ulang angka (mis. setelah popup input ditutup) tanpa me-reset filter.
   useEffect(() => {
     if (activePeriod) loadValues()
-  }, [activePeriod?.id, jdId])
+  }, [activePeriod?.id, jdId, refreshToken])
+
+  // Laporkan filter yang sedang dipilih ke induk, supaya popup input bisa dibuka langsung ke pilihan yang sama.
+  useEffect(() => {
+    onFilterChange?.({
+      jenisDataId: selectedJd?.id,
+      periodId: activePeriod?.id,
+      uptKey: uptFilter !== 'all' ? uptFilter : undefined,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedJd?.id, activePeriod?.id, uptFilter])
 
   async function loadMeta() {
     setLoading(true)

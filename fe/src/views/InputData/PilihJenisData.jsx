@@ -136,8 +136,8 @@ export default function PilihJenisData({ onSaved, tipe = 'mingguan', initialJeni
           jenisData={selected}
           allJenisData={jenisDataList}
           onSaved={onSaved}
-          initialPeriodId={selected.id === initialJenisDataId ? initialPeriodId : undefined}
-          initialUptKey={selected.id === initialJenisDataId ? initialUptKey : undefined}
+          initialPeriodId={initialPeriodId}
+          initialUptKey={initialUptKey}
         />
       )}
     </div>

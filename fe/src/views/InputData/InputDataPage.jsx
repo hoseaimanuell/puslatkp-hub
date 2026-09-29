@@ -15,15 +15,16 @@ import { Plus } from 'lucide-react'
 export default function InputMingguanPage() {
   const { isAdmin, uptKey } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
-  // Diisi saat modal dibuka lewat ikon Edit di tabel Rekap UPT/Balai, supaya popup langsung terbuka ke
-  // Jenis Data + Periode + UPT baris itu (bukan pilihan bawaan). null = dibuka lewat tombol "+ Input Mingguan" biasa.
+  // Jenis Data + Periode + UPT yang dipakai popup saat dibuka: dari baris yang di-Edit, atau (tombol
+  // "+ Input Mingguan") dari filter yang sedang dipilih di halaman, supaya tidak perlu memilih ulang.
   const [editTarget, setEditTarget] = useState(null)
-  // Berubah setiap popup ditutup (baik karena disimpan maupun ditutup manual)
-  // supaya AdminPeriodRecap remount dan menarik data terbaru dari database.
+  const [pageFilter, setPageFilter] = useState(null)
+  // Berubah setiap popup ditutup (baik karena disimpan maupun ditutup manual) supaya AdminPeriodRecap
+  // memuat ulang angkanya dari database — tanpa me-reset filter yang sedang dipilih.
   const [refreshKey, setRefreshKey] = useState(0)
 
   function openAdd() {
-    setEditTarget(null)
+    setEditTarget(pageFilter)
     setModalOpen(true)
   }
 
@@ -58,7 +59,13 @@ export default function InputMingguanPage() {
         </button>
       </div>
 
-      <AdminPeriodRecap key={refreshKey} levelFilter="minggu" userUptKey={isAdmin ? null : uptKey} onEditRow={openEditRow} />
+      <AdminPeriodRecap
+        refreshToken={refreshKey}
+        levelFilter="minggu"
+        userUptKey={isAdmin ? null : uptKey}
+        onEditRow={openEditRow}
+        onFilterChange={setPageFilter}
+      />
 
       <Modal
         open={modalOpen}
