@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useAuth } from '../AuthContext'
 import { Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react'
 import LogoKKP from '../components/LogoKKP'
+import LautBergerak from '../components/LautBergerak'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -29,11 +30,8 @@ export default function Login() {
     <div className="min-h-screen bg-kkp-ocean flex flex-col lg:flex-row">
       {/* Panel institusi — identitas KKP, disembunyikan di layar sempit demi keringkasan */}
       <div className="hidden lg:flex lg:w-[44%] relative overflow-hidden bg-gradient-to-br from-[#0B1830] via-[#10233F] to-[#0B1830] flex-col justify-between p-12">
-        {/* Motif gelombang dekoratif */}
-        <svg className="absolute inset-x-0 bottom-0 w-full text-white/[0.04]" viewBox="0 0 500 200" fill="none" preserveAspectRatio="none">
-          <path d="M0 120 Q125 60 250 120 T500 120 V200 H0 Z" fill="currentColor" />
-          <path d="M0 160 Q125 100 250 160 T500 160 V200 H0 Z" fill="currentColor" />
-        </svg>
+        {/* Gelombang bergerak + siluet ikan */}
+        <LautBergerak />
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500" />
 
         <div className="relative">

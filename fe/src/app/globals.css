@@ -423,3 +423,55 @@ html.dark ::-webkit-scrollbar-thumb {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Laut bergerak di panel biru halaman Login (components/LautBergerak.jsx) */
+@keyframes laut-geser {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes laut-renang {
+  from { transform: translateX(-35%); }
+  to { transform: translateX(105%); }
+}
+@keyframes laut-ayun {
+  from { transform: translateY(-6px) rotate(-1.5deg); }
+  to { transform: translateY(6px) rotate(1.5deg); }
+}
+@keyframes laut-naik {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 0.6; }
+  100% { transform: translateY(-55vh); opacity: 0; }
+}
+
+.laut-gelombang {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  display: flex;
+  animation: laut-geser 20s linear infinite;
+}
+.laut-renang {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  animation: laut-renang 40s linear infinite;
+}
+.laut-ayun {
+  display: inline-block;
+  animation: laut-ayun 6s ease-in-out infinite alternate;
+}
+.laut-gelembung {
+  position: absolute;
+  bottom: 10%;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  animation: laut-naik 10s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .laut-gelombang, .laut-ayun, .laut-gelembung { animation: none; }
+  .laut-gelembung { display: none; }
+  .laut-renang { animation: none; transform: translateX(30%); }
+  .laut-renang-lambat { transform: translateX(60%); }
+}
