@@ -28,6 +28,8 @@ const JD_SUMBER_DANA = 'data_capaian_anggaran_per_sumber_dana'
 
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : 0)
 const formatRp = n => `Rp ${num(n).toLocaleString('id-ID')}`
+const COMPACT = new Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 })
+const compactNumber = (satuan, v) => (satuan === 'rupiah' ? 'Rp ' : '') + COMPACT.format(num(v))
 
 
 import PageHeader from '../components/PageHeader'
@@ -286,6 +288,7 @@ export default function DashboardHome() {
           {charts.map(w => {
             const view = chartView[w.id] || 'grafik'
             const series = w.konfigurasi?.series || []
+            const data = chartData(w)
             return (
               <div key={w.id} className="card p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -319,7 +322,7 @@ export default function DashboardHome() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                        {chartData(w).map((row, i) => (
+                        {data.map((row, i) => (
                           <tr key={i}>
                             <td className="py-2 px-2">{row.name}</td>
                             {series.map((sr, j) => <td key={j} className="py-2 px-2 text-right tabular-nums">{fmt(w.satuan, row[sr.label])}</td>)}
@@ -329,15 +332,17 @@ export default function DashboardHome() {
                     </table>
                   </div>
                 ) : (
-                  <div className="h-64">
+                  // Batang horizontal: nama UPT di sumbu kiri (terbaca utuh, tidak miring/bertumpuk); tinggi
+                  // mengikuti jumlah UPT supaya 18 UPT tidak berdesakan.
+                  <div style={{ height: Math.max(160, data.length * (14 + series.length * 12) + 70) }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData(w)}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-25} textAnchor="end" height={60} />
-                        <YAxis />
-                        <Tooltip formatter={v => fmt(w.satuan, v)} />
-                        <Legend />
-                        {series.map((sr, i) => <Bar key={i} dataKey={sr.label} name={sr.label} fill={sr.warna || '#1B5FA8'} />)}
+                      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 4 }} barCategoryGap="22%">
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E3E8EF" />
+                        <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={v => compactNumber(w.satuan, v)} axisLine={false} tickLine={false} />
+                        <YAxis type="category" dataKey="name" width={132} tick={{ fontSize: 11, fill: '#334155' }} interval={0} axisLine={false} tickLine={false} />
+                        <Tooltip formatter={v => fmt(w.satuan, v)} cursor={{ fill: 'rgba(15, 82, 166, 0.06)' }} />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        {series.map((sr, i) => <Bar key={i} dataKey={sr.label} name={sr.label} fill={sr.warna || '#1B5FA8'} radius={[0, 4, 4, 0]} maxBarSize={14} />)}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
