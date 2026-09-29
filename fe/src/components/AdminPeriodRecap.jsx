@@ -18,7 +18,7 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { ChevronLeft, ChevronRight, Loader2, Building2, Download } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Building2, Download, Pencil } from 'lucide-react'
 import { exportTabelRekapRingkasan, exportRekapNilai } from '../lib/excelExport'
 
 function num(v) {
@@ -30,7 +30,7 @@ function formatRp(n) {
   return `Rp ${Number(n || 0).toLocaleString('id-ID')}`
 }
 
-export default function AdminPeriodRecap({ compact = false, levelFilter = null, userUptKey = null }) {
+export default function AdminPeriodRecap({ compact = false, levelFilter = null, userUptKey = null, onEditRow = null }) {
   const [periods, setPeriods] = useState([])
   const [jenisDataList, setJenisDataList] = useState([])
   const [uptList, setUptList] = useState([])
@@ -177,6 +177,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
         rows.push({
           upt_key: upt.key,
           upt_label: upt.label,
+          jenis_data_id: jd.id,
           jenis: jd.judul,
           pelatihan,
           peserta: peserta || entCountApproved,
@@ -429,6 +430,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                 <th className="text-right py-2.5 px-3">Pagu</th>
                 <th className="text-right py-2.5 px-3">Realisasi</th>
                 <th className="text-left py-2.5 px-3">Status</th>
+                {onEditRow && <th className="text-right py-2.5 px-3">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -447,6 +449,18 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                   <td className="py-2.5 px-3">
                     <Badge variant={r.status === 'Approved' ? 'success' : 'draft'}>{r.status === 'Approved' ? 'Disetujui' : 'Draft'}</Badge>{r.terlambat && <span className="ml-1 inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
                   </td>
+                  {onEditRow && (
+                    <td className="py-2.5 px-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => onEditRow({ jenisDataId: r.jenis_data_id, periodId: activePeriod?.id, uptKey: r.upt_key })}
+                        className="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+                        title={`Edit ${r.jenis} — ${r.upt_label}`}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
               <tr className="bg-gray-50 dark:bg-gray-800/50 font-semibold">
@@ -457,6 +471,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                 <td className="py-2.5 px-3 text-right font-mono">{formatRp(totals.pagu)}</td>
                 <td className="py-2.5 px-3 text-right font-mono">{formatRp(totals.realisasi)}</td>
                 <td className="py-2.5 px-3">-</td>
+                {onEditRow && <td className="py-2.5 px-3">-</td>}
               </tr>
             </tbody>
           </table>

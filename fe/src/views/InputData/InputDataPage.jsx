@@ -15,9 +15,22 @@ import { Plus } from 'lucide-react'
 export default function InputMingguanPage() {
   const { isAdmin, uptKey } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
+  // Diisi saat modal dibuka lewat ikon Edit di tabel Rekap UPT/Balai, supaya popup langsung terbuka ke
+  // Jenis Data + Periode + UPT baris itu (bukan pilihan bawaan). null = dibuka lewat tombol "+ Input Mingguan" biasa.
+  const [editTarget, setEditTarget] = useState(null)
   // Berubah setiap popup ditutup (baik karena disimpan maupun ditutup manual)
   // supaya AdminPeriodRecap remount dan menarik data terbaru dari database.
   const [refreshKey, setRefreshKey] = useState(0)
+
+  function openAdd() {
+    setEditTarget(null)
+    setModalOpen(true)
+  }
+
+  function openEditRow(target) {
+    setEditTarget(target)
+    setModalOpen(true)
+  }
 
   function closeAndRefresh() {
     setModalOpen(false)
@@ -37,7 +50,7 @@ export default function InputMingguanPage() {
         </div>
         <button
           type="button"
-          onClick={() => setModalOpen(true)}
+          onClick={openAdd}
           className="btn-primary text-sm"
         >
           <Plus size={16} />
@@ -45,7 +58,7 @@ export default function InputMingguanPage() {
         </button>
       </div>
 
-      <AdminPeriodRecap key={refreshKey} levelFilter="minggu" userUptKey={isAdmin ? null : uptKey} />
+      <AdminPeriodRecap key={refreshKey} levelFilter="minggu" userUptKey={isAdmin ? null : uptKey} onEditRow={openEditRow} />
 
       <Modal
         open={modalOpen}
@@ -53,7 +66,13 @@ export default function InputMingguanPage() {
         title="Input Mingguan"
         maxWidth="max-w-5xl"
       >
-        <PilihJenisData tipe="mingguan" onSaved={closeAndRefresh} />
+        <PilihJenisData
+          tipe="mingguan"
+          onSaved={closeAndRefresh}
+          initialJenisDataId={editTarget?.jenisDataId}
+          initialPeriodId={editTarget?.periodId}
+          initialUptKey={editTarget?.uptKey}
+        />
       </Modal>
     </div>
   )

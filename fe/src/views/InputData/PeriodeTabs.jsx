@@ -35,7 +35,7 @@ export function isBulananJenisData(jd) {
   return jd.level_utama === 'bulan' || jd.mode_bulanan === 'agregasi' || jd.mode_bulanan === 'upload_file'
 }
 
-export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
+export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, initialPeriodId, initialUptKey }) {
   const { isAdmin, uptKey } = useAuth()
   const isMonthOnly = isBulananJenisData(jenisData)
   // Mingguan: input di level minggu; triwulan & tahun hanya rekap otomatis (tanpa upload). Bulanan: level bulan saja.
@@ -103,7 +103,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
   // data — supaya data tiap UPT tidak tercampur jadi satu tempat yang sama.
   // Akun UPT selalu terkunci ke upt_key miliknya sendiri (tidak bisa diganti).
   const [uptList, setUptList] = useState([])
-  const [selectedUptKey, setSelectedUptKey] = useState('')
+  const [selectedUptKey, setSelectedUptKey] = useState(initialUptKey || '')
 
   useEffect(() => {
     db.from('upt_list').select('*').eq('aktif', true).order('label').then(({ data }) => {
@@ -169,7 +169,8 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved }) {
     setActiveLevel(levelToSet)
 
     const filtered = allP.filter(p => p.level === levelToSet)
-    setActivePeriod(pickCurrentPeriod(filtered))
+    const wanted = initialPeriodId && filtered.find(p => p.id === initialPeriodId)
+    setActivePeriod(wanted || pickCurrentPeriod(filtered))
     setLoadingPeriods(false)
   }
 

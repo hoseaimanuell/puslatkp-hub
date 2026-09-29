@@ -13,7 +13,7 @@ const MODE_BULANAN_LABEL = {
   agregasi: 'Rekap angka saja (dari mingguan)',
 }
 
-export default function PilihJenisData({ onSaved, tipe = 'mingguan' } = {}) {
+export default function PilihJenisData({ onSaved, tipe = 'mingguan', initialJenisDataId, initialPeriodId, initialUptKey } = {}) {
   const isBulanan = tipe === 'bulanan'
   const [jenisDataList, setJenisDataList] = useState([]) // sudah difilter sesuai tipe (mingguan / bulanan)
   const [allJenisData, setAllJenisData] = useState([]) // semua, untuk mencari pasangan
@@ -36,7 +36,8 @@ export default function PilihJenisData({ onSaved, tipe = 'mingguan' } = {}) {
     setAllJenisData(all)
     setJenisDataList(list)
     if (list.length > 0 && !selected) {
-      setSelected(list[0])
+      const wanted = initialJenisDataId && list.find(j => j.id === initialJenisDataId)
+      setSelected(wanted || list[0])
     }
     setLoading(false)
   }
@@ -130,7 +131,14 @@ export default function PilihJenisData({ onSaved, tipe = 'mingguan' } = {}) {
 
       {/* Period Tabs for selected Jenis Data */}
       {selected && (
-        <PeriodeTabs key={selected.id} jenisData={selected} allJenisData={jenisDataList} onSaved={onSaved} />
+        <PeriodeTabs
+          key={selected.id}
+          jenisData={selected}
+          allJenisData={jenisDataList}
+          onSaved={onSaved}
+          initialPeriodId={selected.id === initialJenisDataId ? initialPeriodId : undefined}
+          initialUptKey={selected.id === initialJenisDataId ? initialUptKey : undefined}
+        />
       )}
     </div>
   )
