@@ -267,7 +267,11 @@ mengikuti logika `saveBarisModal()` di `fe/src/views/InputData/PeriodeTabs.jsx`)
 `POST /api/permintaan-edit/rekap-nilai` dan `POST /api/permintaan-edit/data-entries`
 (`be/src/routes/permintaan-edit.js`) — karena bentuk datanya (upsert + field yang dikosongkan sekaligus) tidak
 cocok dipetakan ke satu operasi CRUD tunggal; kedua endpoint menolak Admin (403, admin selalu menulis langsung)
-dan memverifikasi baris yang dituju memang berstatus `disetujui` sebelum membuat permintaan.
+dan memverifikasi baris yang dituju memang berstatus `disetujui` sebelum membuat permintaan. Satu baris hanya
+punya satu permintaan edit yang menunggu: mengajukan edit lagi sebelum Admin memprosesnya **menimpa** nilai yang
+diajukan di permintaan itu (dicocokkan lewat `filter_json`), bukan menambah permintaan kedua. Hal yang sama
+berlaku untuk permintaan hapus — menekan Hapus lagi pada data yang permintaan hapusnya masih menunggu tidak
+membuat permintaan baru (`createDeleteRequest` di `be/src/lib/query.js`).
 
 Menyetujuinya tetap lewat endpoint yang sama seperti permintaan hapus — `POST /api/permintaan-hapus/:id/setujui`
 (`be/src/routes/permintaan-hapus.js`) — yang sekarang bercabang berdasar `aksi`: untuk `'hapus'` menjalankan

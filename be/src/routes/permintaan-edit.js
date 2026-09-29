@@ -42,12 +42,31 @@ async function labelJenisData(jenisDataId) {
   return row?.judul || jenisDataId
 }
 
-async function insertPermintaanEdit({ tabel, uptKey, periodId, jenisDataId, filters, dataBaru, ringkasan, user, alasan }) {
+// Satu baris hanya punya satu permintaan edit yang menunggu: mengajukan edit lagi sebelum Admin memproses
+// yang lama menimpa nilai yang diajukan (bukan menambah permintaan kedua). Target dicocokkan lewat
+// filter_json, yang selalu disusun dengan urutan yang sama untuk baris yang sama.
+async function simpanPermintaanEdit({ tabel, uptKey, periodId, jenisDataId, filters, dataBaru, ringkasan, user, alasan }) {
+  const filterJson = JSON.stringify(filters)
+  const [[lama]] = await pool.query(
+    `SELECT id FROM permintaan_hapus
+     WHERE status = 'pending' AND aksi = 'edit' AND tabel = ? AND upt_key = ? AND filter_json = CAST(? AS JSON) LIMIT 1`,
+    [tabel, uptKey, filterJson],
+  )
+  if (lama) {
+    await pool.query(
+      `UPDATE permintaan_hapus SET data_baru_json = ?, ringkasan = ?, alasan = ?, requested_by = ?, requested_by_label = ?, created_at = NOW()
+       WHERE id = ?`,
+      [JSON.stringify(dataBaru), ringkasan, alasan || null, user.id, user.email, lama.id],
+    )
+    await logAudit(user, 'ajukan_edit', { tabel, permintaan_id: lama.id, ringkasan, menggantikan_pengajuan_sebelumnya: true })
+    return lama.id
+  }
+
   const id = randomUUID()
   await pool.query(
     `INSERT INTO permintaan_hapus (id, tabel, aksi, upt_key, period_id, jenis_data_id, filter_json, data_baru_json, ringkasan, jumlah_baris, alasan, requested_by, requested_by_label)
      VALUES (?, ?, 'edit', ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
-    [id, tabel, uptKey, periodId, jenisDataId, JSON.stringify(filters), JSON.stringify(dataBaru), ringkasan, alasan || null, user.id, user.email],
+    [id, tabel, uptKey, periodId, jenisDataId, filterJson, JSON.stringify(dataBaru), ringkasan, alasan || null, user.id, user.email],
   )
   await logAudit(user, 'ajukan_edit', { tabel, permintaan_id: id, ringkasan })
   return id
@@ -86,7 +105,7 @@ router.post('/rekap-nilai', async (req, res) => {
   const [jd, upt, period] = await Promise.all([labelJenisData(jenis_data_id), labelUpt(upt_key), labelPeriod(period_id)])
   const ringkasan = `${jd} · ${period} · ${upt} — ajukan edit baris #${baris_ke}`.slice(0, 500)
 
-  const requestId = await insertPermintaanEdit({
+  const requestId = await simpanPermintaanEdit({
     tabel: 'rekap_nilai', uptKey: upt_key, periodId: period_id, jenisDataId: jenis_data_id,
     filters, dataBaru: { values: fullUpserts, clearedFields: cleared }, ringkasan, user: req.user, alasan,
   })
@@ -114,7 +133,7 @@ router.post('/data-entries', async (req, res) => {
   const [jd, upt, period] = await Promise.all([labelJenisData(row.jenis_data_id), labelUpt(row.upt_key), labelPeriod(row.period_id)])
   const ringkasan = `${jd} · ${period} · ${upt} — ajukan edit ${dataBaru.nama || 'satu baris rincian'}`.slice(0, 500)
 
-  const requestId = await insertPermintaanEdit({
+  const requestId = await simpanPermintaanEdit({
     tabel: 'data_entries', uptKey: row.upt_key, periodId: row.period_id, jenisDataId: row.jenis_data_id,
     filters, dataBaru: { values: dataBaru }, ringkasan, user: req.user, alasan,
   })

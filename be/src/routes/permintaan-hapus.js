@@ -1,7 +1,7 @@
 /**
  * routes/permintaan-hapus.js
  * Admin: setujui/tolak permintaan hapus & permintaan edit dari akun UPT (lihat lib/query.js: createDeleteRequest,
- * routes/permintaan-edit.js: insertPermintaanEdit). Keduanya berbagi tabel `permintaan_hapus`, dibedakan lewat
+ * routes/permintaan-edit.js: simpanPermintaanEdit). Keduanya berbagi tabel `permintaan_hapus`, dibedakan lewat
  * kolom `aksi` ('hapus' | 'edit'). Daftar permintaan sendiri dibaca lewat endpoint generik POST /api/db/query
  * (table: 'permintaan_hapus'), bukan di sini — hanya aksi yang benar-benar mengeksekusinya yang butuh route khusus.
  */

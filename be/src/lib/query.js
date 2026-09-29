@@ -361,6 +361,15 @@ async function createDeleteRequest(def, spec, user) {
   if (!rows.length) return { data: null, count: 0 }
 
   const filters = [...(spec.filters || []), { col: 'upt_key', op: 'eq', val: user.upt_key }]
+
+  // Menekan Hapus lagi pada data yang sama selagi permintaannya masih menunggu tidak membuat permintaan kedua.
+  const aksiCond = TABLES.permintaan_hapus?.cols.includes('aksi') ? " AND aksi = 'hapus'" : ''
+  const [[lama]] = await pool.query(
+    `SELECT id FROM permintaan_hapus WHERE status = 'pending'${aksiCond} AND tabel = ? AND upt_key = ? AND filter_json = CAST(? AS JSON) LIMIT 1`,
+    [spec.table, user.upt_key, JSON.stringify(filters)],
+  )
+  if (lama) return { data: null, count: 0, pending: true, requestId: lama.id }
+
   const ringkasan = await summarizeDeleteRequest(spec.table, rows, rows.length)
   const id = randomUUID()
   const alasan = spec.alasan ? String(spec.alasan).trim().slice(0, 500) || null : null
