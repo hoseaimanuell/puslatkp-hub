@@ -152,8 +152,18 @@ dipilih (perbandingannya bersifat per-UPT, tidak berarti saat digabung).
 2. Isi data, lalu **Upload Excel**. Layar **pemetaan kolom** mencocokkan kolom berkas dengan kolom sistem
    secara otomatis; Anda dapat mengoreksinya.
 3. Kolom yang tidak dikenali disimpan sebagai *data ekstra* dan dicatat di `audit_log`.
-4. Mengimpor ulang baris dengan NIK yang sama **memperbarui** baris tersebut, bukan menggandakan (setelah impor
-   selesai, popup otomatis menutup dan rekap di belakangnya menyegarkan).
+4. Setiap baris dicocokkan dengan data yang sudah tersimpan di periode itu: lewat **NIK**, atau lewat **nama**
+   bila NIK kosong. Jadi mengunggah ulang berkas yang sama **tidak menggandakan** data:
+   * baris yang isinya sama → dilewati;
+   * baris yang isinya berubah dan belum disetujui → diperbarui (kembali menunggu persetujuan);
+   * baris baru → ditambahkan, **menunggu persetujuan Admin** seperti input mingguan (unggahan Admin langsung
+     disetujui);
+   * baris yang **sudah disetujui** Admin tetapi isinya di Excel berbeda → tidak ditimpa. Muncul pertanyaan
+     apakah perubahan itu diajukan ke Admin (**Ajukan ke Admin**) atau diabaikan (**Lewati**). Nilai lama tetap
+     berlaku sampai Admin menyetujuinya di menu **Permintaan → Hapus & Edit**.
+
+   Setelah impor selesai muncul ringkasan (berapa baris baru, diperbarui, dilewati, diajukan), popup menutup, dan
+   rekap di belakangnya menyegarkan.
 
 Menutup popup (✕ / klik luar / Esc) selalu menyegarkan rekap di halaman Input Bulanan.
 
@@ -215,7 +225,7 @@ berlaku — hanya **menghapus** yang diatur di bawah ini.
 | Kebutuhan | Cara |
 | :-- | :-- |
 | Mengoreksi nilai mingguan | Buka periodenya di **Input Mingguan**, klik ikon ✏️ Edit pada baris di tabel rekap, ubah nilai, **Simpan** |
-| Mengoreksi satu baris bulanan | Ikon ✏️ pada baris di **Input Bulanan** → ubah → simpan. Impor Excel ulang dengan NIK yang sama juga memperbarui baris |
+| Mengoreksi satu baris bulanan | Ikon ✏️ pada baris di **Input Bulanan** → ubah → simpan. Impor Excel ulang juga memperbarui baris yang cocok (NIK, atau nama bila NIK kosong); baris yang sudah disetujui diajukan ke Admin sebagai permintaan edit |
 | Menghapus **satu** baris/berkas/aktivitas | Ikon 🗑️ pada item tersebut (ada konfirmasi) |
 | Menghapus **seluruh isian satu periode** | **Input Mingguan** → tombol **Kosongkan Data Minggu Ini**; **Input Bulanan** → **Hapus Semua Data Bulan Ini**. Wajib mengetik **HAPUS** |
 | Menghapus **lintas semua UPT sekaligus** (Admin) | Pilih **Semua UPT** di pemilih UPT (Input Mingguan/Bulanan, popup maupun tampilan Data by Name), lalu tombol Kosongkan/Hapus Semua mencakup semua UPT. Wajib mengetik **HAPUS** |

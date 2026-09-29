@@ -188,6 +188,9 @@ export const db = {
     /** UPT: ajukan nilai baru untuk satu baris data_entries yang sudah disetujui Admin. */
     ajukanEntry: (id, values, alasan) => api('/permintaan-edit/data-entries', { body: { id, values, alasan } }),
   },
+  /** Impor Excel "Data by Name": server mencocokkan tiap baris dengan data tersimpan (lihat be/src/routes/impor-rincian.js).
+   *  body: { jenis_data_id, period_id, upt_key, rows: [{nama, nik, data_json, data_ekstra}], pratinjau?, ajukanPerubahan? } */
+  imporRincian: body => api('/impor-rincian', { body }),
   persetujuanBaris: {
     /** Admin: setujui satu baris rekap_nilai (semua field baris_ke itu sekaligus, status draft -> disetujui). */
     setujuiRekap: (jenis_data_id, upt_key, period_id, baris_ke) =>
@@ -196,6 +199,8 @@ export const db = {
     setujuiRekapMassal: items => api('/persetujuan-baris/rekap-nilai/setujui-massal', { body: { items } }),
     /** Admin: setujui satu baris data_entries (satu orang/nik). */
     setujuiEntry: id => api('/persetujuan-baris/data-entries/setujui', { body: { id } }),
+    /** Admin: setujui banyak baris data_entries sekaligus (satu permintaan). */
+    setujuiEntryMassal: ids => api('/persetujuan-baris/data-entries/setujui-massal', { body: { ids } }),
     /** Admin: setujui satu berkas dokumen_upload. */
     setujuiDokumen: id => api('/persetujuan-baris/dokumen-upload/setujui', { body: { id } }),
     /** Admin: tolak satu baris rekap_nilai (status draft -> ditolak + catatan; baris tidak dihapus/diubah). */

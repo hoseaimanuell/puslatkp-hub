@@ -215,7 +215,10 @@ export default function PermintaanHapus() {
       const res = await db.persetujuanBaris.setujuiRekapMassal(items)
       if (res.error) error = res.error
     }
-    for (const e of g.entries) { if (error) break; const res = await db.persetujuanBaris.setujuiEntry(e.id); if (res.error) error = res.error }
+    if (g.entries.length && !error) {
+      const res = await db.persetujuanBaris.setujuiEntryMassal(g.entries.map(e => e.id))
+      if (res.error) error = res.error
+    }
     for (const d of g.dokumen) { if (error) break; const res = await db.persetujuanBaris.setujuiDokumen(d.id); if (res.error) error = res.error }
     setBusy('')
     setToast(error ? { type: 'error', message: error.message } : { type: 'success', message: `${total} baris disetujui.` })

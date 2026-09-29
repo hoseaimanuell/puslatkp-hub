@@ -11,6 +11,7 @@ import trashRoutes from './routes/trash.js'
 import permintaanHapusRoutes from './routes/permintaan-hapus.js'
 import permintaanEditRoutes from './routes/permintaan-edit.js'
 import persetujuanBarisRoutes from './routes/persetujuan-baris.js'
+import imporRincianRoutes from './routes/impor-rincian.js'
 import periodRoutes from './routes/periods.js'
 import arsipRoutes, { detectArsip, arsipEnabled, sweepArsipFiles } from './routes/arsip.js'
 import fieldFilesRoutes, { detectFieldFiles, fieldFilesEnabled, sweepFieldFiles } from './routes/fieldFiles.js'
@@ -40,6 +41,7 @@ app.use('/api/trash', trashRoutes)
 app.use('/api/permintaan-hapus', permintaanHapusRoutes)
 app.use('/api/permintaan-edit', permintaanEditRoutes)
 app.use('/api/persetujuan-baris', persetujuanBarisRoutes)
+app.use('/api/impor-rincian', imporRincianRoutes)
 app.use('/api/periods', periodRoutes)
 app.use('/api/arsip', arsipRoutes)
 app.use('/api/field-files', fieldFilesRoutes)

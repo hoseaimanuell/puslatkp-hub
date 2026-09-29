@@ -45,7 +45,7 @@ async function labelJenisData(jenisDataId) {
 // Satu baris hanya punya satu permintaan edit yang menunggu: mengajukan edit lagi sebelum Admin memproses
 // yang lama menimpa nilai yang diajukan (bukan menambah permintaan kedua). Target dicocokkan lewat
 // filter_json, yang selalu disusun dengan urutan yang sama untuk baris yang sama.
-async function simpanPermintaanEdit({ tabel, uptKey, periodId, jenisDataId, filters, dataBaru, ringkasan, user, alasan }) {
+export async function simpanPermintaanEdit({ tabel, uptKey, periodId, jenisDataId, filters, dataBaru, ringkasan, user, alasan }) {
   const filterJson = JSON.stringify(filters)
   const [[lama]] = await pool.query(
     `SELECT id FROM permintaan_hapus

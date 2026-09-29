@@ -140,22 +140,30 @@ function prepareRow(def, raw, user) {
   if (def.pk === 'id') row.id = randomUUID()
   for (const [col, from] of Object.entries(def.stamp || {})) row[col] = user[from] ?? null
   if (def.scope === 'upt' && user.role !== 'admin') row.upt_key = user.upt_key
-  // Kolom yang nilainya selalu dipaksa server, tidak boleh diatur klien (mis. `status` selalu 'draft' saat
-  // UPT mengirim — hanya endpoint persetujuan khusus yang boleh mengubahnya jadi 'disetujui'). Admin menulis
-  // langsung (mis. mengoreksi data UPT lewat form yang sama) dianggap sudah final — tidak perlu antre
-  // persetujuannya sendiri, jadi distempel `disetujui` alih-alih dipaksa `draft`.
-  if (def.forceOnWrite) {
-    if (user.role === 'admin' && def.rowApprovalGate) {
-      row[def.rowApprovalGate.column] = def.rowApprovalGate.values[0]
-      if (def.cols.includes('disetujui_at')) row.disetujui_at = new Date()
-      if (def.cols.includes('disetujui_by')) row.disetujui_by = user.id
-      if (def.cols.includes('disetujui_by_label')) row.disetujui_by_label = user.email
-      if (def.cols.includes('catatan_admin')) row.catatan_admin = null
-    } else {
-      for (const [col, val] of Object.entries(def.forceOnWrite)) row[col] = val
-    }
-  }
+  Object.assign(row, kolomPaksaan(def, user))
   return row
+}
+
+/**
+ * Kolom yang nilainya selalu dipaksa server, tidak boleh diatur klien (mis. `status` selalu 'draft' saat UPT
+ * mengirim — hanya endpoint persetujuan khusus yang boleh mengubahnya jadi 'disetujui'). Admin menulis langsung
+ * (mis. mengoreksi data UPT lewat form yang sama) dianggap sudah final — tidak perlu antre persetujuannya
+ * sendiri, jadi distempel `disetujui` alih-alih dipaksa `draft`. Dipakai untuk insert/upsert DAN update, supaya
+ * UPT tidak bisa menyetujui barisnya sendiri lewat update, dan baris 'ditolak' yang diperbaiki kembali ke antrean.
+ * Hanya kolom yang benar-benar ada (lihat compat.js: catatan_admin hilang bila migrasi_14 belum dijalankan).
+ */
+export function kolomPaksaan(def, user) {
+  if (!def.forceOnWrite) return {}
+  let paksa
+  if (user.role === 'admin' && def.rowApprovalGate) {
+    paksa = {
+      [def.rowApprovalGate.column]: def.rowApprovalGate.values[0],
+      disetujui_at: new Date(), disetujui_by: user.id, disetujui_by_label: user.email, catatan_admin: null,
+    }
+  } else {
+    paksa = def.forceOnWrite
+  }
+  return Object.fromEntries(Object.entries(paksa).filter(([c]) => def.cols.includes(c)))
 }
 
 /**
@@ -236,12 +244,15 @@ async function doUpdate(def, spec, user) {
   if (def.insertOnly) throw new HttpError(403, 'Data ini tidak dapat diubah.')
   const sets = []
   const setParams = []
+  const paksa = kolomPaksaan(def, user)
   for (const c of def.writable) {
     if (c === 'upt_key' && def.scope === 'upt' && user.role !== 'admin') continue
+    if (c in paksa) continue // status/persetujuan tidak boleh diatur klien — lihat kolomPaksaan()
     const v = toDb(def, c, spec.values?.[c])
     if (v !== undefined) { sets.push(`t.${q(c)} = ?`); setParams.push(v) }
   }
   if (!sets.length) throw bad('Tidak ada kolom yang dapat diubah.')
+  for (const [c, v] of Object.entries(paksa)) { sets.push(`t.${q(c)} = ?`); setParams.push(v) }
   if (def.late && def.cols.includes('terlambat') && user.role !== 'admin') {
     sets.push('t.`terlambat` = IF(EXISTS (SELECT 1 FROM periods p WHERE p.id = t.period_id AND p.deadline < ?), 1, t.`terlambat`)')
     setParams.push(todayJakarta())
@@ -273,7 +284,7 @@ export async function executeSoftDelete(def, tableName, where, params, user) {
 
 const REQUEST_TABLE_LABEL = { rekap_nilai: 'baris data mingguan/bulanan', data_entries: 'baris data rincian (nama)', dokumen_upload: 'berkas dokumen' }
 
-const ROW_APPROVED_MSG = 'Baris ini sudah disetujui Admin. Ajukan hapus untuk mengedit ulang, lalu masukkan datanya lagi.'
+const ROW_APPROVED_MSG = 'Baris ini sudah disetujui Admin, jadi tidak bisa ditimpa langsung. Tekan Edit pada baris itu untuk mengajukan perubahan ke Admin.'
 
 /**
  * Sebelum insert/upsert pada tabel ber-`rowApprovalGate` (persetujuan per-baris): tolak keras (403) bila baris

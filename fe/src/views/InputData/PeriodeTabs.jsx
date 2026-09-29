@@ -587,28 +587,44 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
     setSaving(true)
     const { entries: converted, extraKeys } = convertRows(mappingData.rows, mapping, fieldDefs)
 
-    // Kirim per batch 100 baris (bukan 1 permintaan per baris): jauh lebih cepat & tiap batch atomik
-    const payloads = converted.map(entry => ({
+    // Server mencocokkan tiap baris dengan data tersimpan (NIK, atau nama bila NIK kosong): baris sama dilewati,
+    // baris berubah diperbarui, baris yang sudah disetujui Admin tidak ditimpa — lihat be/src/routes/impor-rincian.js.
+    const body = {
       jenis_data_id: jenisData.id,
       upt_key: currentUptKey,
       period_id: activePeriod.id,
-      nama: entry.nama,
-      nik: entry.nik || null,
-      data_json: entry.data_json,
-      data_ekstra: entry.data_ekstra,
-    }))
-    let importError = null
-    for (let i = 0; i < payloads.length && !importError; i += 100) {
-      importError = (await db.from('data_entries').upsert(payloads.slice(i, i + 100), {
-        onConflict: 'jenis_data_id,upt_key,period_id,nik',
-      })).error
+      rows: converted.map(entry => ({ nama: entry.nama, nik: entry.nik || null, data_json: entry.data_json, data_ekstra: entry.data_ekstra })),
     }
+    const { data: pra, error: praError } = await db.imporRincian({ ...body, pratinjau: true })
+    if (praError) {
+      setSaving(false)
+      notify('Impor gagal: ' + praError.message)
+      return
+    }
+    let ajukanPerubahan = false
+    if (pra.disetujuiBerubah > 0 && pra.bisaAjukan) {
+      ajukanPerubahan = await confirmDialog(
+        `${pra.disetujuiBerubah} baris sudah disetujui Admin, tetapi isinya di Excel berbeda.\n\n` +
+        'Data yang sudah disetujui tidak ditimpa langsung. Ajukan perubahan ini ke Admin? Nilai lama tetap berlaku sampai Admin menyetujuinya. ' +
+        'Pilih "Lewati" bila perbedaan itu tidak disengaja.',
+        { confirmLabel: 'Ajukan ke Admin', cancelLabel: 'Lewati' },
+      )
+    }
+    const { data: hasil, error: importError } = await db.imporRincian({ ...body, ajukanPerubahan })
     if (importError) {
       setSaving(false)
-      notify('Impor berhenti: ' + importError.message + '\n\nBatch sebelumnya sudah tersimpan. Mengimpor ulang berkas yang sama aman: NIK yang sama diperbarui, bukan digandakan.')
+      notify('Impor berhenti: ' + importError.message + '\n\nMengunggah ulang berkas yang sama aman: baris yang sudah tersimpan tidak digandakan.')
       loadData()
       return
     }
+    const bagian = [
+      hasil.baru && `${hasil.baru} baris baru`,
+      hasil.diperbarui && `${hasil.diperbarui} baris diperbarui`,
+      hasil.sama && `${hasil.sama} baris sama (dilewati)`,
+      hasil.diajukan && `${hasil.diajukan} perubahan diajukan ke Admin`,
+      hasil.dilewatiDisetujui && `${hasil.dilewatiDisetujui} baris sudah disetujui tidak diubah`,
+    ].filter(Boolean)
+    const menunggu = !isAdmin && (hasil.baru || hasil.diperbarui) ? ' Baris baru/diperbarui menunggu persetujuan Admin.' : ''
 
     if (extraKeys.length > 0) {
       await db.from('audit_log').insert({
@@ -621,6 +637,7 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
     setSaving(false)
     setUploadModal(false)
     setMappingData(null)
+    notify(`Impor selesai: ${bagian.join(', ') || 'tidak ada perubahan'}.${menunggu}`, 'success')
     loadData()
     onSaved?.()
   }

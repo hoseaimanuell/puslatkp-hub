@@ -135,6 +135,25 @@ Sama seperti di atas, untuk satu baris rincian (`data_entries`) yang sudah `dise
 
 Respons: `{ "success": true, "requestId": "..." }`.
 
+## `POST /api/impor-rincian` *(login)*
+
+Impor Excel "Data by Name" (`data_entries`) untuk satu jenis data + UPT + periode, dalam satu permintaan
+(`be/src/routes/impor-rincian.js`). Setiap baris dicocokkan dengan data tersimpan (`be/src/lib/imporRincian.js`):
+lewat NIK, atau nama bila NIK kosong. Baris **sama** dilewati, baris **berubah** yang belum disetujui diperbarui
+(kembali `draft`), baris **baru** disimpan. Baris yang **sudah disetujui** tetapi isinya berubah tidak ditimpa: akun
+UPT mengajukannya sebagai permintaan edit bila `ajukanPerubahan: true` (selain itu dilewati); Admin menimpanya
+langsung. Semua tulisan lewat `runQuery()` (aturan akses, status, terlambat, tempat sampah sama dengan jalur lain).
+
+```json
+{ "jenis_data_id": "...", "period_id": "...", "upt_key": "hanya dipakai bila Admin",
+  "rows": [{ "nama": "...", "nik": "... atau null", "data_json": { }, "data_ekstra": null }],
+  "pratinjau": false, "ajukanPerubahan": false }
+```
+
+Respons: `{ baru, diperbarui, sama, disetujuiBerubah, bisaAjukan, diajukan, dilewatiDisetujui }`. Dengan
+`pratinjau: true` hanya menghitung (tanpa menyimpan); dipakai browser untuk menanyakan apakah perubahan pada baris
+yang sudah disetujui perlu diajukan ke Admin. Maks. 5000 baris per permintaan.
+
 ## `POST /api/db/query`
 
 Endpoint data tunggal. Klien tidak menulis SQL – ia mengirim **spesifikasi** yang divalidasi server.
@@ -302,11 +321,14 @@ log: `hapus_permanen_otomatis`). `GET /api/health` menyertakan `"trash": true|fa
 > resmi — hanya baris `disetujui` yang dihitung (lihat query-query yang menambahkan `.eq('status', 'disetujui')`
 > di frontend, dan `v_publik_rekap` yang menambahkan `AND status = 'disetujui'`). Admin menyetujui satu per satu
 > atau sekaligus lewat `POST /api/persetujuan-baris/{rekap-nilai|data-entries|dokumen-upload}/setujui`
-> (+ `/rekap-nilai/setujui-massal` untuk banyak baris sekaligus) — lihat menu **Permintaan**, bagian "Persetujuan
-> Baris Data". Begitu `disetujui`, baris itu **tidak bisa diedit langsung lagi** (403, `ensureRowsNotApproved`/
-> `ensureUpdateTargetNotApproved` di `be/src/lib/query.js`) — UPT harus mengajukan hapus dulu (digerbang jadi
-> `permintaan_hapus`, sama seperti alur di atas), baru bisa memasukkan data baru di posisi itu (statusnya
-> otomatis balik `draft`). **Tulisan langsung dari akun Admin selalu otomatis `disetujui`** (tidak ikut antre
+> (+ `/rekap-nilai/setujui-massal` dengan `{ items: [...] }` dan `/data-entries/setujui-massal` dengan
+> `{ ids: [...] }`, maks. 5000, untuk banyak baris sekaligus dalam satu permintaan) — lihat menu **Permintaan**,
+> bagian "Persetujuan Baris Data". Status dipaksa server pada **insert, upsert, maupun update**
+> (`kolomPaksaan()` di `be/src/lib/query.js`): UPT tidak bisa mengirim `status: 'disetujui'` sendiri, dan baris
+> `ditolak` yang diperbaiki UPT otomatis kembali `draft` dengan catatan penolakan dikosongkan. Begitu
+> `disetujui`, baris itu **tidak bisa diedit langsung lagi** (403, `ensureRowsNotApproved`/
+> `ensureUpdateTargetNotApproved` di `be/src/lib/query.js`) — UPT mengajukan edit (`/api/permintaan-edit/...`)
+> atau hapus (digerbang jadi `permintaan_hapus`, sama seperti alur di atas). **Tulisan langsung dari akun Admin selalu otomatis `disetujui`** (tidak ikut antre
 > persetujuan sendiri — lihat cabang `user.role === 'admin'` di `prepareRow()`). Tanpa migrasi_13, seluruh
 > mekanisme ini nonaktif total dan data langsung tersimpan resmi seperti sebelum revisi ini (lihat
 > `features.persetujuanBaris` di atas).

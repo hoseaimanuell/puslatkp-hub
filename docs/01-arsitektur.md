@@ -105,7 +105,8 @@ be/
 ├─ src/lib/query.js        Mesin query (select/insert/upsert/update/delete)
 ├─ src/lib/compat.js       Deteksi migrasi opsional yang sudah dijalankan → `GET /api/health` → `features`
 ├─ src/lib/periods.js      Generator periode 1 tahun
-├─ src/routes/             auth.js, db.js, arsip.js, fieldFiles.js, trash.js, permintaan-hapus.js
+├─ src/routes/             auth.js, db.js, arsip.js, fieldFiles.js, trash.js, permintaan-hapus.js,
+│                          permintaan-edit.js, persetujuan-baris.js, impor-rincian.js (impor Excel Data by Name)
 ├─ scripts/                build-sql, init-db, migrate (semua migrasi otomatis), backup, generate-periods,
 │                          set-password, data seed, run-migration.mjs (satu berkas)
 └─ test/                   Tes otomatis aturan hak akses (npm test)

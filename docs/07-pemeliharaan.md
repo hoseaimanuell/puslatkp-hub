@@ -176,7 +176,8 @@ sudah ada (mis. password yang sudah diganti) **tidak ditimpa**.
 
 * `cd be && npm test` — aturan hak akses endpoint generik: tabel di luar whitelist, anonim/UPT/Admin, UPT tidak
   bisa keluar dari UPT-nya sendiri, kolom `password_hash` tidak bisa dipilih, nama kolom berbahaya ditolak,
-  ubah/hapus tanpa filter ditolak, tempat sampah tersembunyi.
+  ubah/hapus tanpa filter ditolak, tempat sampah tersembunyi, UPT tidak bisa menyetujui barisnya sendiri; pencocokan
+  impor Excel Data by Name (NIK/nama, unggah ulang tidak menggandakan, baris disetujui tidak ditimpa).
 * `cd fe && npm test` — rumus rekap (jumlah/nilai terakhir/rata-rata/maks, antar UPT, beberapa pelatihan per
   minggu), peran kolom di rekap, pembuatan periode, dan tulis-baca Excel.
 

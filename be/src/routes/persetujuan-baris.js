@@ -105,6 +105,22 @@ router.post('/data-entries/setujui', async (req, res) => {
   res.json({ success: true })
 })
 
+// POST /api/persetujuan-baris/data-entries/setujui-massal — banyak baris sekaligus (mis. ratusan nama hasil impor
+// Excel), satu permintaan & satu query, bukan satu permintaan per baris.
+router.post('/data-entries/setujui-massal', async (req, res) => {
+  const ids = Array.isArray(req.body?.ids) ? [...new Set(req.body.ids.filter(id => typeof id === 'string' && id))] : []
+  if (!ids.length) throw new HttpError(400, 'Tidak ada baris yang dipilih.')
+  if (ids.length > 5000) throw new HttpError(400, 'Maksimal 5000 baris sekaligus.')
+  const marks = ids.map(() => '?').join(',')
+  const [res1] = await pool.query(
+    `UPDATE data_entries SET status = 'disetujui', disetujui_at = NOW(), disetujui_by = ?, disetujui_by_label = ?
+     WHERE id IN (${marks}) AND status = 'draft' AND deleted_at IS NULL`,
+    [req.user.id, req.user.email, ...ids],
+  )
+  await logAudit(req.user, 'setujui_baris_massal', { tabel: 'data_entries', jumlah_diajukan: ids.length, jumlah_disetujui: res1.affectedRows })
+  res.json({ success: true, jumlah: res1.affectedRows })
+})
+
 // POST /api/persetujuan-baris/data-entries/tolak
 router.post('/data-entries/tolak', requireTolakEnabled, async (req, res) => {
   const { id, catatan_admin } = req.body || {}
