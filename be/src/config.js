@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { fileURLToPath } from 'node:url'
+import { sslDari } from './lib/dbSsl.js'
 
 const env = process.env
 
@@ -17,8 +18,8 @@ export const config = {
     user: env.DB_USER || 'root',
     password: env.DB_PASSWORD || '',
     database: env.DB_NAME || 'Puslatkp1a',
-    // Database di cloud (mis. Aiven) mewajibkan koneksi terenkripsi: set DB_SSL=true
-    ...(env.DB_SSL === 'true' ? { ssl: { rejectUnauthorized: false } } : {}),
+    // Database di cloud (mis. Aiven) mewajibkan koneksi terenkripsi: set DB_SSL=true (+ DB_SSL_CA untuk verifikasi)
+    ...sslDari(env),
   },
 }
 

@@ -27,7 +27,7 @@ const MYSQL_MESSAGES = {
 export function friendlyError(err) {
   if (err instanceof HttpError) return err
   if (err?.code && MYSQL_MESSAGES[err.code]) return new HttpError(409, MYSQL_MESSAGES[err.code])
-  console.error(err)
+  console.error(`[${new Date().toISOString()}]`, err)
   return new HttpError(500, 'Terjadi kesalahan pada server.')
 }
 

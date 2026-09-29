@@ -10,6 +10,10 @@
     "db:build": "node scripts/build-sql.js",
     "db:init": "node scripts/init-db.js",
     "db:init:sample": "node scripts/init-db.js --sample",
+    "migrate": "node scripts/migrate.js",
+    "migrate:cek": "node scripts/migrate.js --cek",
+    "backup": "node scripts/backup.js",
+    "test": "node --test",
     "periods": "node scripts/generate-periods.js",
     "user:password": "node scripts/set-password.js"
   },

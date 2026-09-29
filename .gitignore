@@ -15,3 +15,6 @@ _legacy-vite
 **/.next-*
 fe/public/uji_*_sementara.xlsx
 fe/scratch-*.js
+
+# Hasil npm run backup (salin ke luar server, jangan di-commit)
+backup/

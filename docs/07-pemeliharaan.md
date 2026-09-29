@@ -31,22 +31,59 @@ npm run periods -- 2024 --reset     # KEMBALIKAN tanggal & deadline tahun itu ke
 4. Verifikasi di **Rekap Triwulan & Tahun** (pilih tahun lampau) dan bandingkan dengan sumber data lama.
 
 ### Backup
-Lihat [04-database.md](04-database.md#backup--restore). Jadwalkan `mysqldump` harian pada produksi **dan salin folder `be/storage`**
-(berkas Arsip Historis + kolom bertipe Berkas) — keduanya harus dari waktu yang sama; simpan di luar server.
+Database dan folder `be/storage` (berkas Arsip Historis + kolom bertipe Berkas) harus di-backup **bersamaan**;
+simpan salinannya di luar server. Cara manual lihat [04-database.md](04-database.md#backup--restore).
+
+#### Backup otomatis
+`npm run backup` (folder `be`) membuat `backup/<tanggal_jam>/database.sql.gz` + `storage/`, lalu menghapus backup
+yang lebih lama dari 14 hari. Pengaturan opsional di `be/.env`: `BACKUP_DIR` (folder tujuan, mis. drive/NAS lain),
+`BACKUP_KEEP_DAYS`, `MYSQLDUMP_PATH` (di Laragon terdeteksi otomatis).
+
+Jadwalkan harian:
+
+* **Windows** (Task Scheduler, jalankan sekali di PowerShell sebagai Administrator):
+
+  ```powershell
+  schtasks /Create /SC DAILY /ST 23:00 /TN "PUSLATKP Backup" /TR "cmd /c cd /d C:\laragon\www\puslatkp-hub\be && npm run backup >> ..\backup\backup.log 2>&1"
+  ```
+* **Linux** (`crontab -e`):
+
+  ```
+  0 23 * * * cd /srv/puslatkp-hub/be && npm run backup >> ../backup/backup.log 2>&1
+  ```
+
+**Memulihkan** dari backup: `gunzip -c database.sql.gz | mysql -u root -p` (membuat ulang database
+`Puslatkp1a` beserta isinya), lalu salin isi folder `storage/` ke `be/storage` (atau `STORAGE_DIR`) dan restart
+backend. Uji pemulihan sesekali di komputer lain.
 
 ### Mengganti password / membuat akun
 [05-akun-dan-keamanan.md](05-akun-dan-keamanan.md#mengelola-akun).
 
 ### Memperbarui aplikasi
 * **Tanpa coding** (via menu Admin, langsung berlaku): jenis data, kolom form, akun & daftar UPT.
-* **Perubahan kode**: ubah di `fe/` atau `be/`, uji lokal, lalu
+* **Perubahan kode**: ubah di `fe/` atau `be/`, uji lokal (`npm test` di `be` dan `fe`, `npm run lint` dan
+  `npm run build` di `fe`), push ke GitHub (CI menjalankan pemeriksaan yang sama), lalu di server:
+  * `npm run backup` dulu, lalu `git pull` dan `cd be && npm run migrate`
   * Docker: `docker compose up -d --build`
-  * pm2: `git pull`, `npm ci`, `npm run build` (fe), `pm2 restart …`
+  * pm2: `npm ci` (be & fe), `npm run build` (fe), `pm2 restart ecosystem.config.cjs`
+* Disarankan kerja di branch `dev`, gabungkan ke `main` setelah CI hijau dan diuji, sehingga `main` selalu siap
+  dipasang di server.
 
 ## Peningkatan dari versi sebelumnya (migrasi database)
 
-Jika database `Puslatkp1a` sudah terlanjur diimpor sebelum fitur *hapus UPT ikut menghapus datanya*, jalankan
-**sekali** di phpMyAdmin (tab **Import**, atau tab **SQL**):
+**Cara termudah** (dari folder `be`, kredensial diambil dari `be/.env`; backup dulu):
+
+```bash
+npm run migrate:cek   # lihat migrasi mana yang belum diterapkan
+npm run migrate       # terapkan semuanya berurutan, lalu restart backend
+```
+
+`npm run migrate` memeriksa sendiri apakah perubahan tiap migrasi (kolom/tabel/foreign key) sudah ada di
+database, jadi aman untuk database baru, database lama yang sebagian migrasinya sudah dijalankan manual lewat
+phpMyAdmin, maupun dijalankan berulang. Bila satu migrasi gagal, proses berhenti di situ dan migrasi berikutnya
+tidak dijalankan. Riwayatnya tercatat di tabel `schema_migrations`. Nama database mengikuti `DB_NAME`.
+
+Cara manual: jalankan berkas di bawah **sekali** di phpMyAdmin (tab **Import**, atau tab **SQL**):
 
 | Berkas | Fungsi |
 | :-- | :-- |
@@ -98,8 +135,10 @@ node scripts/run-migration.mjs migrasi_16_peran_rekap.sql
 
 ## Mengubah skema database
 
-1. Edit `be/scripts/ddl.sql` (untuk instalasi baru) **dan** siapkan skrip `ALTER TABLE` untuk database yang sudah
-   berjalan (jalankan lewat phpMyAdmin).
+1. Edit `be/scripts/ddl.sql` (untuk instalasi baru) **dan** buat berkas migrasi baru
+   `database/migrasi_17_xxx.sql` berisi `ALTER TABLE` untuk database yang sudah berjalan. Daftarkan berkas itu di
+   `DAFTAR` pada `be/scripts/migrate.js` beserta pemeriksaan "sudah" (mis. `kolom('tabel', 'kolom_baru')`);
+   `npm run migrate` menolak berjalan bila ada berkas migrasi yang belum terdaftar.
 2. Jika menambah **tabel/kolom baru** yang akan diakses dari UI, daftarkan di `be/src/schema.js`
    (kolom, kolom JSON/boolean, aturan baca/tulis, `scope`/`lock`). Tanpa itu, be akan menolak dengan
    *"Tabel tidak dikenal"* / *"Kolom tidak dikenal"*.
@@ -133,7 +172,18 @@ sudah ada (mis. password yang sudah diganti) **tidak ditimpa**.
 
 ## Pengujian yang sudah dilakukan
 
-Pada pengembangan ini (MySQL 8.0.30, Node 22, Next.js 16.3.5):
+**Tes otomatis** (jalan tanpa MySQL, juga dijalankan GitHub Actions setiap push):
+
+* `cd be && npm test` — aturan hak akses endpoint generik: tabel di luar whitelist, anonim/UPT/Admin, UPT tidak
+  bisa keluar dari UPT-nya sendiri, kolom `password_hash` tidak bisa dipilih, nama kolom berbahaya ditolak,
+  ubah/hapus tanpa filter ditolak, tempat sampah tersembunyi.
+* `cd fe && npm test` — rumus rekap (jumlah/nilai terakhir/rata-rata/maks, antar UPT, beberapa pelatihan per
+  minggu), peran kolom di rekap, pembuatan periode, dan tulis-baca Excel.
+
+Tambahkan tes baru di `be/test/` atau `fe/test/` (berkas `*.test.js`/`*.test.mjs`, memakai `node:test` bawaan
+Node) setiap kali mengubah aturan akses atau rumus rekap.
+
+**Pengujian manual** pada pengembangan ini (MySQL 8.0.30, Node 22, Next.js 16.3.5):
 
 * `puslatkp1a.sql` dan `puslatkp1a_contoh_data.sql` diimpor tanpa galat pada MySQL 8.0.
 * Backend: login benar/salah, pembatasan anonim (401), akun UPT tidak dapat membaca/menulis data UPT lain,

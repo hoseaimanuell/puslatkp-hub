@@ -129,7 +129,7 @@ export async function detectOptionalColumns() {
   }
   if (missing.length) {
     console.warn(`PERINGATAN: kolom migrasi belum ada: ${missing.join(', ')}.`)
-    console.warn(`  Jalankan di phpMyAdmin: ${[...migrasiPerlu].map(m => `database/${m}`).join(', ')}.`)
+    console.warn(`  Jalankan \`npm run migrate\` di folder be (atau di phpMyAdmin: ${[...migrasiPerlu].map(m => `database/${m}`).join(', ')}).`)
   }
   return features
 }

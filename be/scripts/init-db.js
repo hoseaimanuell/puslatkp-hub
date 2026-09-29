@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import mysql from 'mysql2/promise'
 import 'dotenv/config'
+import { sslDari } from '../src/lib/dbSsl.js'
 
 const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../database')
 const files = ['puslatkp1a.sql', ...(process.argv.includes('--sample') ? ['puslatkp1a_contoh_data.sql'] : [])]
@@ -19,7 +20,7 @@ const conn = await mysql.createConnection({
   password: process.env.DB_PASSWORD || '',
   multipleStatements: true,
   charset: 'utf8mb4',
-  ...(process.env.DB_SSL === 'true' ? { ssl: { rejectUnauthorized: false } } : {}),
+  ...sslDari(),
 })
 
 for (const f of files) {

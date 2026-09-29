@@ -308,6 +308,13 @@ Catatan aksi (mis. `import_kolom_tidak_dikenal`) dengan `actor_id`, `actor_upt_k
 Jumlah baris `data_entries` per jenis data & periode, **hanya** untuk jenis data `publik_boleh_lihat = 1` dan
 `aktif = 1`. Tidak memuat data pribadi; inilah satu-satunya data yang dapat dibaca tanpa login.
 
+### `schema_migrations` — riwayat migrasi
+Dibuat otomatis oleh `npm run migrate` (tidak ada di `ddl.sql`, tidak diakses aplikasi). Satu baris per berkas
+`database/migrasi_*.sql`: `nama`, `cara` (`dijalankan` = diterapkan oleh perintah itu, `terdeteksi` = sudah ada
+sebelumnya), `diterapkan_at`. Hanya catatan: penentu "sudah/belum" tetap pemeriksaan struktur tabel di
+`be/scripts/migrate.js`, sehingga impor ulang `puslatkp1a.sql` atau migrasi manual lewat phpMyAdmin tidak membuatnya
+salah.
+
 ## Data awal (seed)
 
 | Isi | Jumlah |
@@ -327,6 +334,9 @@ Jumlah baris `data_entries` per jenis data & periode, **hanya** untuk jenis data
 > lalu jalankan `npm run db:build` (lihat [07-pemeliharaan.md](07-pemeliharaan.md#mengubah-skema-database)).
 
 ## Backup & restore
+
+Cara yang disarankan: `cd be && npm run backup` (database + folder berkas sekaligus, bisa dijadwalkan harian — lihat
+[07-pemeliharaan.md](07-pemeliharaan.md#backup-otomatis)). Manual:
 
 ```bash
 # Backup

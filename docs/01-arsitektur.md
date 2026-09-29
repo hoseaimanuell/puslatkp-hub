@@ -87,14 +87,18 @@ fe/src/
 │        | impor-historis | tempat-sampah | permintaan-hapus (Admin, dibungkus AdminOnly)
 ├─ components/             Sidebar, TopBar, PortalShell, AdminOnly, DataTable, DynamicForm, Modal, ...
 ├─ views/                  Halaman (isi tiap route) – tampilan asli tidak berubah
-│  └─ admin/BuatJenisDataExcel.jsx   Wizard "Buat dari Excel" (Kelola Jenis Data): tebak kolom & tipe dari
-│                                    contoh berkas, lalu buat Jenis Data + impor datanya sekaligus
-├─ lib/                    db.js (klien API), periods.js, excelExport.js, deadline.js, historisImport.js, ...
+│  ├─ admin/BuatJenisDataExcel.jsx   Wizard "Buat dari Excel" (Kelola Jenis Data): tebak kolom & tipe dari
+│  │                                 contoh berkas, lalu buat Jenis Data + impor datanya sekaligus
+│  ├─ admin/KolomJenisData.jsx       Kartu kolom & pilihan jenis isian (dipakai KelolaJenisData.jsx)
+│  └─ RekapByNama.jsx                Tabel "Data by Name" (dipakai RekapBulanan.jsx)
+├─ lib/                    db.js (klien API), periods.js, agregasi.js, peranRekap.js, excelExport.js, ...
 └─ AuthContext.jsx         Sesi & profil pengguna (JWT)
+fe/test/                   Tes otomatis rumus rekap, periode, Excel (npm test)
+fe/eslint.config.mjs       Pemeriksa kode (npm run lint)
 
 be/
-├─ src/server.js           Aplikasi Express, middleware, penanganan error
-├─ src/config.js           Membaca .env
+├─ src/server.js           Aplikasi Express, middleware, penanganan error, berhenti rapi (SIGTERM)
+├─ src/config.js           Membaca .env (src/lib/dbSsl.js: opsi SSL database)
 ├─ src/db.js               Pool MySQL (UTC, DATE→string, DECIMAL→number)
 ├─ src/auth.js             JWT, middleware attachUser/requireAdmin
 ├─ src/schema.js           Whitelist tabel + aturan akses
@@ -102,9 +106,13 @@ be/
 ├─ src/lib/compat.js       Deteksi migrasi opsional yang sudah dijalankan → `GET /api/health` → `features`
 ├─ src/lib/periods.js      Generator periode 1 tahun
 ├─ src/routes/             auth.js, db.js, arsip.js, fieldFiles.js, trash.js, permintaan-hapus.js
-└─ scripts/                build-sql, init-db, generate-periods, set-password, data seed, run-migration.mjs
+├─ scripts/                build-sql, init-db, migrate (semua migrasi otomatis), backup, generate-periods,
+│                          set-password, data seed, run-migration.mjs (satu berkas)
+└─ test/                   Tes otomatis aturan hak akses (npm test)
 
-database/                  SQL siap-impor (dibangun oleh `npm run db:build`)
+database/                  SQL siap-impor (dibangun oleh `npm run db:build`), migrasi_*.sql, buat_user_aplikasi.sql
+.github/workflows/ci.yml   GitHub Actions: tes, lint, build, npm audit di setiap push
+ecosystem.config.cjs       PM2 untuk server produksi tanpa Docker
 ```
 
 ## Perubahan dari versi lama (Vite + Supabase)

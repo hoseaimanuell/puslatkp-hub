@@ -45,8 +45,10 @@ app.use('/api/arsip', arsipRoutes)
 app.use('/api/field-files', fieldFilesRoutes)
 
 app.use((_req, _res, next) => next(new HttpError(404, 'Endpoint tidak ditemukan.')))
-app.use((err, _req, res, _next) => {
+app.use((err, req, res, _next) => {
   const e = err.type === 'entity.too.large' ? new HttpError(413, 'Ukuran data terlalu besar.') : friendlyError(err)
+  // Kesalahan tak terduga: catat kapan, endpoint apa, dan akun siapa agar bisa dilacak dari log server
+  if (e.status >= 500) console.error(`[${new Date().toISOString()}] ${e.status} ${req.method} ${req.originalUrl} user=${req.user?.id || '-'}`)
   res.status(e.status).json({ error: { message: e.message } })
 })
 
@@ -73,6 +75,18 @@ const ensurePeriods = () => ensureCurrentYears().catch(e => console.error('Gagal
 await ensurePeriods()
 setInterval(ensurePeriods, 12 * 60 * 60 * 1000).unref()
 
-app.listen(config.port, () => {
+const server = app.listen(config.port, () => {
   console.log(`PUSLATKP BE berjalan di http://localhost:${config.port} (database: ${config.db.database}, tempat sampah: ${trashEnabled() ? 'aktif' : 'NONAKTIF'})`)
 })
+
+// Berhenti dengan rapi (docker stop / PM2 / Ctrl+C): selesaikan permintaan yang sedang berjalan, tutup koneksi DB.
+let berhenti = false
+for (const sinyal of ['SIGTERM', 'SIGINT']) {
+  process.on(sinyal, () => {
+    if (berhenti) return
+    berhenti = true
+    console.log(`${sinyal} diterima, menghentikan server ...`)
+    setTimeout(() => process.exit(1), 10_000).unref() // jangan menggantung bila ada koneksi yang tidak mau selesai
+    server.close(() => pool.end().finally(() => process.exit(0)))
+  })
+}

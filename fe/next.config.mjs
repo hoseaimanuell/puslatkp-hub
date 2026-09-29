@@ -11,6 +11,19 @@ const nextConfig = {
   async rewrites() {
     return process.env.API_PROXY ? [{ source: '/api/:path*', destination: `${process.env.API_PROXY}/api/:path*` }] : []
   },
+  // Header keamanan untuk semua halaman: tidak bisa disisipkan di situs lain (clickjacking), browser tidak menebak
+  // jenis berkas, dan alamat lengkap halaman tidak bocor ke situs luar lewat Referer.
+  async headers() {
+    return [{
+      source: '/:path*',
+      headers: [
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      ],
+    }]
+  },
   async redirects() {
     return [
       { source: '/input-data', destination: '/input-mingguan', permanent: false },

@@ -144,28 +144,49 @@ https://hub.contoh.go.id/api    → be  (127.0.0.1:4000)
 ```
 
 1. Siapkan MySQL & impor `database/puslatkp1a.sql` (jangan impor data contoh).
-2. Buat pengguna MySQL khusus dengan hak hanya pada `Puslatkp1a`.
-3. Atur env `be`: `JWT_SECRET` acak panjang, `CORS_ORIGIN=https://hub.contoh.go.id`, kredensial DB.
-4. Build & jalankan (contoh dengan pm2, atau Docker Compose seperti di atas):
+2. **Jangan pakai `root`.** Buat user MySQL khusus dengan `database/buat_user_aplikasi.sql` (ganti password di
+   dalamnya dulu). User itu hanya punya hak pada database `Puslatkp1a`, cukup untuk aplikasi, `npm run migrate`,
+   dan `npm run backup`.
+3. Atur `be/.env`: `JWT_SECRET` acak panjang, `CORS_ORIGIN=https://hub.contoh.go.id`, `DB_USER`/`DB_PASSWORD`
+   dari langkah 2. Untuk database cloud: `DB_SSL=true` dan `DB_SSL_CA=/path/ca.pem` (sertifikat CA dari
+   penyedia database) agar sertifikat server ikut diverifikasi.
+4. Pastikan skema terbaru: `cd be && npm run migrate` (aman dijalankan kapan saja, hanya menjalankan yang belum).
+5. Build & jalankan dengan PM2 (hidup lagi otomatis bila crash/reboot), atau Docker Compose seperti di atas:
 
    ```bash
-   cd be && npm ci --omit=dev && pm2 start src/server.js --name puslatkp-be
-   cd fe && NEXT_PUBLIC_API_URL=https://hub.contoh.go.id/api npm ci && npm run build && pm2 start npm --name puslatkp-fe -- start
+   cd be && npm ci --omit=dev && cd ..
+   cd fe && npm ci && NEXT_PUBLIC_API_URL=https://hub.contoh.go.id/api npm run build && cd ..
+   pm2 start ecosystem.config.cjs && pm2 save && pm2 startup
    ```
-5. Nginx:
+6. Nginx + HTTPS (sertifikat gratis Let's Encrypt: `sudo certbot --nginx -d hub.contoh.go.id`):
 
    ```nginx
    server {
+       listen 80;
+       server_name hub.contoh.go.id;
+       return 301 https://$host$request_uri;   # semua akses dipaksa lewat HTTPS
+   }
+   server {
        listen 443 ssl;
        server_name hub.contoh.go.id;
+       # ssl_certificate / ssl_certificate_key diisi otomatis oleh certbot
        client_max_body_size 25m;          # unggah berkas hingga 15 MB (base64 ± 20 MB)
+       add_header Strict-Transport-Security "max-age=31536000" always;
 
        location /api/ { proxy_pass http://127.0.0.1:4000; proxy_set_header Host $host;
-                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; }
+                        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                        proxy_set_header X-Forwarded-Proto $scheme; }
        location /     { proxy_pass http://127.0.0.1:3000; proxy_set_header Host $host; }
    }
    ```
-6. **Ganti semua password bawaan** (lihat [05-akun-dan-keamanan.md](05-akun-dan-keamanan.md)).
+7. **Backup harian otomatis**: jadwalkan `npm run backup` (lihat
+   [07-pemeliharaan.md](07-pemeliharaan.md#backup-otomatis)) dan salin folder `backup/` ke luar server.
+8. **Ganti semua password bawaan** (lihat [05-akun-dan-keamanan.md](05-akun-dan-keamanan.md)).
+9. Pantau `https://hub.contoh.go.id/api/health` dengan layanan pemantau uptime gratis (mis. UptimeRobot) agar
+   tahu bila server mati. Log error: `pm2 logs puslatkp-be`.
+
+> **Hosting gratis (Render)**: disk tidak permanen, jadi berkas Arsip Historis & kolom Berkas hilang saat restart.
+> Untuk pemakaian resmi pakai VPS/server kantor seperti di atas (lihat [08-hosting-gratis.md](08-hosting-gratis.md)).
 
 ---
 
@@ -179,10 +200,17 @@ https://hub.contoh.go.id/api    → be  (127.0.0.1:4000)
 | `npm start` | Backend mode produksi |
 | `npm run db:build` | Membangun ulang `database/*.sql` dari `scripts/ddl.sql` + data seed |
 | `npm run db:init` / `db:init:sample` | Mengimpor SQL ke MySQL tanpa phpMyAdmin |
+| `npm run migrate` | Menjalankan semua `database/migrasi_*.sql` yang belum diterapkan (mendeteksi sendiri; aman diulang). `npm run migrate:cek` hanya menampilkan status |
+| `npm run backup` | Backup database (`.sql.gz`) + folder berkas ke `backup/<tanggal_jam>/`; backup > 14 hari dihapus otomatis |
+| `npm test` | Tes otomatis aturan hak akses (tanpa perlu MySQL) |
 | `npm run periods -- 2021 2025` | Membuat periode satu tahun atau rentang tahun (65 periode/tahun; tidak menimpa yang ada; `--reset` mengembalikan ke aturan bawaan). Tahun berjalan & tahun depan dibuat otomatis oleh server |
 | `npm run user:password -- email password` | Mengganti password akun |
 
-**`fe/`**: `npm run dev`, `npm run build`, `npm start`.
+**`fe/`**: `npm run dev`, `npm run build`, `npm start`, `npm run lint` (pemeriksa kode ESLint), `npm test` (tes
+rumus rekap, periode, dan pustaka Excel).
+
+Setiap push ke GitHub otomatis menjalankan tes, lint, build, dan cek celah keamanan dependensi
+(`.github/workflows/ci.yml`, hasilnya di tab **Actions**).
 
 ---
 

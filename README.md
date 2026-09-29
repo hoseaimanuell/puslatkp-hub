@@ -18,22 +18,22 @@ mingguan vs bulanan, penanda terlambat setelah deadline, Arsip Data Historis (Ex
 ```
 puslatkp-hub/
 ├─ fe/                  Frontend Next.js (servis "fe")
-│  └─ src/app/          Route Next.js: /dashboard, /input-mingguan, /input-bulanan, /publik, ...
-│  └─ src/views/        Halaman & komponen UI (tampilan asli)
-│  └─ src/lib/db.js     Klien API ke backend
+│  ├─ src/app/          Route Next.js: /dashboard, /input-mingguan, /input-bulanan, /publik, ...
+│  ├─ src/views/        Halaman & komponen UI
+│  ├─ src/lib/          Klien API ke backend, rumus rekap, periode, Excel
+│  └─ test/             Tes otomatis (npm test)
 ├─ be/                  Backend Express (servis "be")
 │  ├─ src/              server, auth, aturan akses tabel, query engine
-│  └─ scripts/          pembangun SQL, init DB, generator periode, ganti password
+│  ├─ scripts/          pembangun SQL, init DB, migrasi otomatis, backup, generator periode, ganti password
+│  └─ test/             Tes otomatis hak akses (npm test)
 ├─ database/
 │  ├─ puslatkp1a.sql              Skema + data master + akun awal  (IMPORT INI)
 │  ├─ puslatkp1a_contoh_data.sql  Data contoh, opsional
-│  ├─ migrasi_01_hapus_upt_cascade.sql  Peningkatan DB lama (hapus UPT = hapus datanya)
-│  ├─ migrasi_02_tempat_sampah.sql      Peningkatan DB lama (tempat sampah / soft delete)
-│  ├─ migrasi_03_baris_dan_agregasi.sql Peningkatan DB lama (beberapa pelatihan/minggu + rekap kumulatif)
-│  ├─ migrasi_04_terlambat_dan_arsip.sql Peningkatan DB lama (penanda terlambat + Arsip Data Historis)
-│  ├─ migrasi_05_pengaturan_dashboard.sql Peningkatan DB lama (menu Kelola Dashboard)
-│  └─ migrasi_06_kolom_berkas.sql        Peningkatan DB lama (kolom bertipe Berkas: upload PDF/Word/Excel)
+│  ├─ migrasi_*.sql               Peningkatan DB lama, jalankan semuanya dengan `npm run migrate` (folder be)
+│  └─ buat_user_aplikasi.sql      User MySQL khusus aplikasi untuk server produksi (pengganti root)
 ├─ docs/                Dokumentasi lengkap
+├─ .github/workflows/   CI: tes, lint, build, cek keamanan dependensi di setiap push
+├─ ecosystem.config.cjs PM2 untuk server produksi tanpa Docker
 ├─ docker-compose.yml   Menjalankan fe + be
 ├─ run.bat / run.ps1    Peluncur development di Windows (Laragon)
 └─ _legacy-vite/        Arsip proyek lama (Vite + Supabase) – tidak dipakai lagi
