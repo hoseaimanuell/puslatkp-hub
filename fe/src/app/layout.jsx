@@ -8,7 +8,7 @@ import Providers from '../components/Providers'
 export const metadata = {
   title: 'PUSLATKP Management Hub',
   description: 'PUSLATKP Management Hub — Dashboard pelaporan aktivitas dan kinerja tim Pusat Pelatihan Kelautan dan Perikanan.',
-  icons: { icon: '/favicon.svg' },
+  icons: { icon: '/logo-kkp.jpg', apple: '/logo-kkp.jpg' },
 }
 
 export const viewport = { width: 'device-width', initialScale: 1 }

@@ -5,7 +5,8 @@
  */
 import { useState, useEffect, useMemo } from 'react'
 import { db } from '../lib/db'
-import { Waves, LogIn, Loader2, Globe } from 'lucide-react'
+import { LogIn, Loader2, Globe } from 'lucide-react'
+import LogoKKP from '../components/LogoKKP'
 
 export default function PublikView({ onLoginClick }) {
   const [rekap, setRekap] = useState([])
@@ -42,7 +43,7 @@ export default function PublikView({ onLoginClick }) {
       <div className="h-1 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500" />
       <header className="bg-[#0B1830] px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-amber-300"><Waves size={18} /></div>
+          <LogoKKP size={38} />
           <div>
             <div className="font-bold text-sm leading-tight text-white">PUSLATKP</div>
             <div className="text-[11px] text-white/50 leading-tight">Kementerian Kelautan dan Perikanan</div>

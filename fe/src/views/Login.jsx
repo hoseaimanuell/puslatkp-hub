@@ -5,7 +5,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '../AuthContext'
-import { Eye, EyeOff, Waves, LogIn, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react'
+import LogoKKP from '../components/LogoKKP'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -37,9 +38,7 @@ export default function Login() {
 
         <div className="relative">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-white/10 border border-white/15 text-amber-300">
-              <Waves size={22} />
-            </span>
+            <LogoKKP size={52} priority />
             <div>
               <p className="text-white font-bold text-lg leading-tight">PUSLATKP</p>
               <p className="text-white/50 text-xs leading-tight">Management Hub</p>
@@ -73,9 +72,7 @@ export default function Login() {
         <div className="w-full max-w-sm animate-scale-in">
           {/* Wordmark — tampil hanya di layar sempit, panel kiri sudah menampilkannya di layar lebar */}
           <div className="text-center mb-8 lg:hidden">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4 bg-[#0B1830] text-amber-300">
-              <Waves size={26} />
-            </div>
+            <LogoKKP size={72} priority className="mb-4 shadow-sm" />
             <h1 className="font-bold text-xl text-[#0B1830]">PUSLATKP</h1>
             <p className="text-gray-500 text-xs mt-1">Kementerian Kelautan dan Perikanan</p>
           </div>

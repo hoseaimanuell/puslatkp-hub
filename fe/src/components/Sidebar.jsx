@@ -8,10 +8,11 @@ import {
   LayoutDashboard, Zap, ClipboardList, Database,
   Users, Settings, BarChart2, FileText,
   ChevronRight, ChevronLeft, ChevronDown,
-  Building2, Globe, CalendarDays, Trash2, CalendarRange, Upload, LayoutGrid, SlidersHorizontal, Inbox, Waves
+  Building2, Globe, CalendarDays, Trash2, CalendarRange, Upload, LayoutGrid, SlidersHorizontal, Inbox
 } from 'lucide-react'
 import { useAuth } from '../AuthContext'
 import { db, getFeatures } from '../lib/db'
+import LogoKKP from './LogoKKP'
 
 const PERMINTAAN_POLL_MS = 60000 // cek permintaan baru (persetujuan data + hapus/buka kunci) tiap 1 menit
 
@@ -94,9 +95,7 @@ export default function Sidebar({ activePage, onNavigate, collapsed, onToggle })
       <div className="h-1 flex-shrink-0 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500" />
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-4 border-b border-white/10 ${collapsed ? 'justify-center' : ''}`}>
-        <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-amber-300 flex-shrink-0">
-          <Waves size={18} />
-        </div>
+        <LogoKKP size={38} />
         {!collapsed && (
           <div className="min-w-0">
             <div className="text-white font-bold font-display text-sm leading-tight tracking-wide">PUSLATKP</div>
