@@ -169,6 +169,11 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
         const pelatihanKeys = approvedRecs.filter(r => r.field_key === 'nama_pelatihan' && (r.value_text || r.value))
         const pelatihan = pelatihanKeys.length || (approvedRecs.length ? 1 : 0)
         const hasData = recs.length > 0 || entCount > 0
+        // Selaras dengan Persetujuan Baris Data: resmi ("Approved") hanya bila SEMUA baris/entri yang tersimpan
+        // sudah disetujui Admin — sebagian/semua masih draft/ditolak (atau belum ada isian) tetap "Draft".
+        const allApproved = hasData
+          && recs.every(r => !r.status || r.status === 'disetujui')
+          && ownEntries.every(e => !e.status || e.status === 'disetujui')
         rows.push({
           upt_key: upt.key,
           upt_label: upt.label,
@@ -177,7 +182,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
           peserta: peserta || entCountApproved,
           pagu,
           realisasi,
-          status: hasData ? 'Submitted' : 'Draft',
+          status: allApproved ? 'Approved' : 'Draft',
           terlambat: recs.some(r => r.terlambat),
         })
       })
@@ -440,7 +445,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                   <td className="py-2.5 px-3 text-right font-mono">{formatRp(r.pagu)}</td>
                   <td className="py-2.5 px-3 text-right font-mono">{formatRp(r.realisasi)}</td>
                   <td className="py-2.5 px-3">
-                    <Badge variant={r.status === 'Submitted' ? 'success' : 'draft'}>{r.status}</Badge>{r.terlambat && <span className="ml-1 inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
+                    <Badge variant={r.status === 'Approved' ? 'success' : 'draft'}>{r.status === 'Approved' ? 'Disetujui' : 'Draft'}</Badge>{r.terlambat && <span className="ml-1 inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
                   </td>
                 </tr>
               ))}
