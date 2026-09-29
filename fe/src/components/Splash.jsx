@@ -2,7 +2,7 @@ import { Waves } from 'lucide-react'
 
 export default function Splash() {
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-kkp-ocean flex flex-col items-center justify-center">
       <div className="w-14 h-14 rounded-xl bg-[#0B1830] text-amber-300 flex items-center justify-center mb-4 animate-pulse">
         <Waves size={26} />
       </div>

@@ -25,7 +25,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-kkp-ocean flex flex-col lg:flex-row">
       {/* Panel institusi — identitas KKP, disembunyikan di layar sempit demi keringkasan */}
       <div className="hidden lg:flex lg:w-[44%] relative overflow-hidden bg-gradient-to-br from-[#0B1830] via-[#10233F] to-[#0B1830] flex-col justify-between p-12">
         {/* Motif gelombang dekoratif */}

@@ -47,7 +47,7 @@ export default function PortalShell({ children }) {
   if (!session) return <Login />
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] dark:bg-[#0B0F1A] text-gray-900 dark:text-gray-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-kkp-ocean dark:bg-[#0B0F1A] text-gray-900 dark:text-gray-100 flex flex-col transition-colors duration-200">
       {/* Mobile Backdrop saat sidebar dibuka di layar kecil */}
       {!sidebarCollapsed && (
         <div

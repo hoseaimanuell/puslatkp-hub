@@ -38,7 +38,7 @@ export default function PublikView({ onLoginClick }) {
   const total = rows.reduce((a, r) => a + r.total, 0)
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] dark:bg-[#0B0F1A] text-gray-900 dark:text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-kkp-ocean dark:bg-[#0B0F1A] text-gray-900 dark:text-gray-100 flex flex-col">
       <div className="h-1 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500" />
       <header className="bg-[#0B1830] px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
