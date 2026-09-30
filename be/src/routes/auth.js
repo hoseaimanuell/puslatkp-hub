@@ -8,9 +8,12 @@ import { HttpError } from '../lib/query.js'
 
 const router = Router()
 
+// Hanya percobaan GAGAL yang dihitung: login yang berhasil tidak menghabiskan jatah, sehingga banyak pegawai yang
+// login dari satu kantor (satu IP publik) atau lewat proxy hosting tidak saling mengunci.
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
+  skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { message: 'Terlalu banyak percobaan login. Coba lagi beberapa menit lagi.' } },

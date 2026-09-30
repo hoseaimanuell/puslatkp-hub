@@ -73,3 +73,4 @@ Daftar lengkap 10 akun BPPP ada di [docs/05-akun-dan-keamanan.md](docs/05-akun-d
 | [07-pemeliharaan.md](docs/07-pemeliharaan.md) | Backup, tambah periode/tahun, pembaruan, batasan yang diketahui |
 | [08-hosting-gratis.md](docs/08-hosting-gratis.md) | Menaruh aplikasi di hosting gratis (Render + database cloud) |
 | [09-pengujian-blackbox.md](docs/09-pengujian-blackbox.md) | Laporan pengujian blackbox: 79 kasus uji API + 15 uji tampilan, bug yang ditemukan |
+| [10-serah-terima-hosting.md](docs/10-serah-terima-hosting.md) | **Untuk pengelola hosting**: yang diterima, kebutuhan server, langkah singkat, wajib setelah terpasang |

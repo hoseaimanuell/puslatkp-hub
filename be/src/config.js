@@ -6,7 +6,9 @@ const env = process.env
 
 export const config = {
   port: Number(env.PORT) || 4000,
-  corsOrigins: (env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(s => s.trim()).filter(Boolean),
+  // Angka (jumlah proxy di depan be) atau daftar alamat/subnet yang dipercaya, mis. 'loopback' atau '10.0.0.0/8'
+  trustProxy: /^\d+$/.test(env.TRUST_PROXY || '') ? Number(env.TRUST_PROXY) : (env.TRUST_PROXY || 'loopback'),
+  corsOrigins:(env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(s => s.trim()).filter(Boolean),
   jwtSecret: env.JWT_SECRET || '',
   jwtExpiresIn: env.JWT_EXPIRES_IN || '12h',
   trashRetentionDays: Number(env.TRASH_RETENTION_DAYS) || 30, // lama data dihapus tersimpan di tempat sampah

@@ -22,7 +22,10 @@ import { detectOptionalColumns, detectOptionalTables, detectRowApproval, detectR
 const app = express()
 
 app.disable('x-powered-by')
-app.set('trust proxy', 'loopback') // di belakang proxy fe/tunnel: IP asli pengunjung dibaca dari X-Forwarded-For (untuk batas percobaan login)
+// Proxy yang dipercaya untuk membaca IP asli pengunjung dari X-Forwarded-For (dipakai batas percobaan login).
+// Bawaan 'loopback' = Nginx/fe di server yang sama. Di hosting dengan load balancer di depannya (mis. Render: LB -> fe
+// -> be) isi TRUST_PROXY=2 (jumlah proxy); lihat docs/02-instalasi-dan-menjalankan.md.
+app.set('trust proxy', config.trustProxy)
 app.use(helmet())
 app.use(cors({ origin: config.corsOrigins, allowedHeaders: ['Content-Type', 'Authorization'] }))
 app.use(attachUser)
