@@ -4,6 +4,7 @@
  * Dilengkapi proteksi terhadap Formula Injection (CWE-1236 / DDE Attack).
  */
 import * as XLSX from 'xlsx'
+import { bacaTabel } from './bacaTabelExcel'
 
 /**
  * Sanitasi nilai sel dari potensi eksekusi formula jahat.
@@ -348,9 +349,10 @@ export async function readExcelFile(file) {
         const wb = XLSX.read(data, { type: 'array', cellDates: true })
         const sheetName = wb.SheetNames[0]
         const ws = wb.Sheets[sheetName]
-        const rows = XLSX.utils.sheet_to_json(ws, { defval: null })
-        const headers = rows.length > 0 ? Object.keys(rows[0]) : []
-        resolve({ headers, rows, sheetName })
+        // Tahan sel gabungan, judul besar di atas tabel, dan judul kolom dua tingkat — lihat lib/bacaTabelExcel.js
+        const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, blankrows: true })
+        const { headers, rows, barisJudul } = bacaTabel(aoa, ws['!merges'])
+        resolve({ headers, rows, sheetName, barisJudul })
       } catch (err) {
         reject(err)
       }

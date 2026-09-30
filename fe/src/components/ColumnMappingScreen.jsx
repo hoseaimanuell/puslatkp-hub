@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { ArrowRight, CheckCircle, AlertCircle, HelpCircle } from 'lucide-react'
 
-export default function ColumnMappingScreen({ excelHeaders, fieldDefs, initialMapping, onConfirm, onCancel }) {
+export default function ColumnMappingScreen({ excelHeaders, fieldDefs, initialMapping, onConfirm, onCancel, barisJudul = 1, jumlahBaris = null }) {
   const [mapping, setMapping] = useState(initialMapping)
 
   const usedFieldKeys = Object.values(mapping)
@@ -27,7 +27,10 @@ export default function ColumnMappingScreen({ excelHeaders, fieldDefs, initialMa
 
       {/* Header info */}
       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-2">
-        <span>{excelHeaders.length} kolom ditemukan di file</span>
+        <span>
+          {excelHeaders.length} kolom{jumlahBaris !== null ? ` · ${jumlahBaris} baris data` : ''} ditemukan di file
+          {barisJudul > 1 && ` · judul kolom dibaca dari baris ke-${barisJudul} (baris di atasnya dianggap judul laporan)`}
+        </span>
         {unmappedCount > 0 && (
           <span className="text-amber-600 dark:text-amber-400">{unmappedCount} belum dicocokkan</span>
         )}

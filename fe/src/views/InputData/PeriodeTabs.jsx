@@ -572,9 +572,9 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      const { headers, rows } = await readExcelFile(file)
+      const { headers, rows, barisJudul } = await readExcelFile(file)
       const initialMapping = matchColumns(headers, fieldDefs)
-      setMappingData({ headers, rows, initialMapping })
+      setMappingData({ headers, rows, initialMapping, barisJudul })
       setUploadModal(true)
     } catch (err) {
       notify('Gagal membaca file: ' + err.message)
@@ -1403,6 +1403,8 @@ export default function PeriodeTabs({ jenisData, allJenisData = [], onSaved, ini
             excelHeaders={mappingData.headers}
             fieldDefs={fieldDefs.filter(f => f.tipe !== 'file')}
             initialMapping={mappingData.initialMapping}
+            barisJudul={mappingData.barisJudul}
+            jumlahBaris={mappingData.rows.length}
             onConfirm={handleImportConfirm}
             onCancel={() => { setUploadModal(false); setMappingData(null) }}
           />

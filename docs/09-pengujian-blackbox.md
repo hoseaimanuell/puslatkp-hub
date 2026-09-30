@@ -223,8 +223,10 @@ pesan, dan isi data) dengan hasil yang diharapkan. Kode status: **200/201** berh
 
 * **Unggah Excel lewat tombol di browser.** Jendela pilih berkas tidak bisa dioperasikan otomatis. Logika impornya
   diuji lewat API (B01–B09) dan tes otomatis `be/test/impor-rincian.test.js`.
-* **Excel dengan sel gabungan (merge).** Belum didukung: judul yang digabung di baris atas atau judul kolom dua
-  tingkat membuat pemetaan kolom gagal. Template Excel dari aplikasi aman karena tidak memakai sel gabungan.
+* **Excel dengan sel gabungan (merge).** Saat pengujian ini belum didukung; sesudahnya ditambahkan (judul laporan
+  dilewati, judul dua tingkat digabung, sel gabungan diisi, baris JUMLAH dilewati) dan diuji otomatis di
+  `fe/test/excel.test.mjs`. Berkas berbentuk **formulir** (label di kiri, nilai di kanan, mis. Weekly Report UPT)
+  bukan tabel, jadi tetap tidak bisa diimpor lewat Upload Excel.
 * **Pemblokiran setelah 30 kali login gagal** tidak dipicu sungguhan, supaya pengguna tidak terkunci 15 menit;
   yang diverifikasi adalah batas yang terpasang (A02).
 * **Sesi lama setelah ganti password.** Mengatur ulang password tidak memutus sesi yang sudah login di perangkat

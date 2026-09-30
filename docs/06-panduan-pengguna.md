@@ -151,6 +151,11 @@ dipilih (perbandingannya bersifat per-UPT, tidak berarti saat digabung).
 1. Klik **Template Excel** untuk mengunduh berkas dengan kolom sesuai definisi jenis data saat ini.
 2. Isi data, lalu **Upload Excel**. Layar **pemetaan kolom** mencocokkan kolom berkas dengan kolom sistem
    secara otomatis; Anda dapat mengoreksinya.
+   Excel buatan sendiri juga bisa dipakai, termasuk yang memakai **sel gabungan (merge)**: judul laporan di baris
+   atas dilewati otomatis, judul kolom dua tingkat digabung (mis. "Jumlah Peserta" di atas "L"/"P" menjadi
+   "Jumlah Peserta L" dan "Jumlah Peserta P"), sel yang digabung ke bawah/ke samping diisi ke setiap baris, dan
+   baris kosong serta baris JUMLAH/TOTAL diabaikan. Bila judul kolom tidak di baris pertama, layar pemetaan
+   menyebutkan baris mana yang dipakai. Satu sheet dibaca sebagai **satu tabel** (sheet pertama).
 3. Kolom yang tidak dikenali disimpan sebagai *data ekstra* dan dicatat di `audit_log`.
 4. Setiap baris dicocokkan dengan data yang sudah tersimpan di periode itu: lewat **NIK**, atau lewat **nama**
    bila NIK kosong. Jadi mengunggah ulang berkas yang sama **tidak menggandakan** data:
