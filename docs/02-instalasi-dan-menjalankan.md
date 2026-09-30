@@ -203,6 +203,7 @@ https://hub.contoh.go.id/api    → be  (127.0.0.1:4000)
 | `npm run migrate` | Menjalankan semua `database/migrasi_*.sql` yang belum diterapkan (mendeteksi sendiri; aman diulang). `npm run migrate:cek` hanya menampilkan status |
 | `npm run backup` | Backup database (`.sql.gz`) + folder berkas ke `backup/<tanggal_jam>/`; backup > 14 hari dihapus otomatis |
 | `npm test` | Tes otomatis aturan hak akses (tanpa perlu MySQL) |
+| `npm run uji:blackbox` | Pengujian blackbox 79 kasus lewat API (backend harus berjalan; isi `UJI_ADMIN_EMAIL` & `UJI_ADMIN_PASSWORD`). Lihat [09-pengujian-blackbox.md](09-pengujian-blackbox.md) |
 | `npm run periods -- 2021 2025` | Membuat periode satu tahun atau rentang tahun (65 periode/tahun; tidak menimpa yang ada; `--reset` mengembalikan ke aturan bawaan). Tahun berjalan & tahun depan dibuat otomatis oleh server |
 | `npm run user:password -- email password` | Mengganti password akun |
 

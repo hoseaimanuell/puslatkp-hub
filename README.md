@@ -71,3 +71,5 @@ Daftar lengkap 10 akun BPPP ada di [docs/05-akun-dan-keamanan.md](docs/05-akun-d
 | [05-akun-dan-keamanan.md](docs/05-akun-dan-keamanan.md) | Akun, peran, autentikasi, keamanan |
 | [06-panduan-pengguna.md](docs/06-panduan-pengguna.md) | Cara memakai setiap menu, per peran |
 | [07-pemeliharaan.md](docs/07-pemeliharaan.md) | Backup, tambah periode/tahun, pembaruan, batasan yang diketahui |
+| [08-hosting-gratis.md](docs/08-hosting-gratis.md) | Menaruh aplikasi di hosting gratis (Render + database cloud) |
+| [09-pengujian-blackbox.md](docs/09-pengujian-blackbox.md) | Laporan pengujian blackbox: 79 kasus uji API + 15 uji tampilan, bug yang ditemukan |

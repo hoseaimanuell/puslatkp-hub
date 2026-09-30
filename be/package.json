@@ -14,6 +14,7 @@
     "migrate:cek": "node scripts/migrate.js --cek",
     "backup": "node scripts/backup.js",
     "test": "node --test",
+    "uji:blackbox": "node scripts/uji-blackbox.mjs",
     "periods": "node scripts/generate-periods.js",
     "user:password": "node scripts/set-password.js"
   },

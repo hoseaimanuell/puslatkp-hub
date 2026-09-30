@@ -184,6 +184,11 @@ sudah ada (mis. password yang sudah diganti) **tidak ditimpa**.
 Tambahkan tes baru di `be/test/` atau `fe/test/` (berkas `*.test.js`/`*.test.mjs`, memakai `node:test` bawaan
 Node) setiap kali mengubah aturan akses atau rumus rekap.
 
+**Pengujian blackbox** (butuh backend berjalan): `npm run uji:blackbox` di folder `be` menjalankan 79 kasus uji
+fungsional lewat API memakai UPT uji sementara yang dihapus lagi di akhir. Laporan lengkap, termasuk uji tampilan
+dan bug yang ditemukan: [09-pengujian-blackbox.md](09-pengujian-blackbox.md). Jalankan sebelum memasang versi baru
+di server.
+
 **Pengujian manual** pada pengembangan ini (MySQL 8.0.30, Node 22, Next.js 16.3.5):
 
 * `puslatkp1a.sql` dan `puslatkp1a_contoh_data.sql` diimpor tanpa galat pada MySQL 8.0.
