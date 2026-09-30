@@ -17,13 +17,13 @@ const loginLimiter = rateLimit({
 })
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const publicProfile = ({ id, email, role, upt_key, nama_lengkap, created_at }) => ({ id, email, role, upt_key, nama_lengkap, created_at })
+const publicProfile = ({ id, email, role, upt_key, upt_label, nama_lengkap, created_at }) => ({ id, email, role, upt_key, upt_label: upt_label || null, nama_lengkap, created_at })
 
 // POST /api/auth/login  { email, password }
 router.post('/login', loginLimiter, async (req, res) => {
   const email = String(req.body?.email || '').trim().toLowerCase()
   const password = String(req.body?.password || '')
-  const [[row]] = await pool.query('SELECT * FROM profiles WHERE email = ?', [email])
+  const [[row]] = await pool.query('SELECT p.*, u.label AS upt_label FROM profiles p LEFT JOIN upt_list u ON u.`key` = p.upt_key WHERE p.email = ?', [email])
   // Selalu jalankan compare agar waktu respons tidak membocorkan keberadaan email.
   const ok = await bcrypt.compare(password, row?.password_hash || '$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidi')
   if (!row || !ok) throw new HttpError(401, 'Invalid login credentials')

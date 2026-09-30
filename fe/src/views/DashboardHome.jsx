@@ -35,7 +35,7 @@ const compactNumber = (satuan, v) => (satuan === 'rupiah' ? 'Rp ' : '') + COMPAC
 import PageHeader from '../components/PageHeader'
 
 export default function DashboardHome() {
-  const { isAdmin, uptKey, profile } = useAuth()
+  const { isAdmin, uptKey, uptLabel, profile } = useAuth()
 
   // Data mingguan dari isian UPT
   const [weeks, setWeeks] = useState([])
@@ -174,7 +174,7 @@ export default function DashboardHome() {
     <div className="space-y-6 animate-fade-in">
       <PageHeader
         title="Dashboard"
-        description={`${profile?.nama_lengkap || 'Pengguna'} · ${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}${isAdmin ? ' · Admin' : uptKey ? ` · ${uptKey}` : ''}`}
+        description={`${profile?.nama_lengkap || 'Pengguna'} · ${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}${isAdmin ? ' · Admin' : uptLabel ? ` · ${uptLabel}` : ''}`}
       />
 
       {/* Filter mingguan — di bagian atas, berlaku untuk seluruh angka & grafik di bawahnya */}

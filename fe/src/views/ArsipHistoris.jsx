@@ -27,7 +27,7 @@ function detectHeader(rows) {
 }
 
 export default function ArsipHistoris() {
-  const { isAdmin, uptKey } = useAuth()
+  const { isAdmin, uptKey, uptLabel } = useAuth()
   const thisYear = new Date().getFullYear()
   const [enabled, setEnabled] = useState(true)
   const [loading, setLoading] = useState(true)
@@ -173,7 +173,7 @@ export default function ArsipHistoris() {
                 {uptList.map(u => <option key={u.key} value={u.key}>{u.label}</option>)}
               </select>
             </label>
-          ) : <div className="text-xs text-gray-500 self-end pb-2">Diunggah untuk UPT Anda ({uptKey}).</div>}
+          ) : <div className="text-xs text-gray-500 self-end pb-2">Diunggah untuk UPT Anda ({uptLabel}).</div>}
           <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Jenis data (opsional — untuk mengecek kesesuaian format)
             <select className="form-input mt-1" value={form.jenis_data_id} onChange={e => setForm(f => ({ ...f, jenis_data_id: e.target.value }))}>
               <option value="">— tidak dipilih —</option>

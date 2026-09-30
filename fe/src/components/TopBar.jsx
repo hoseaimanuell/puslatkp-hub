@@ -8,7 +8,7 @@ import { useAuth } from '../AuthContext'
 import { api } from '../lib/db'
 
 export default function TopBar({ pageTitle, onNavigate, onToggleSidebar }) {
-  const { profile, signOut } = useAuth()
+  const { profile, uptLabel, signOut } = useAuth()
   const [showDbInfo, setShowDbInfo] = useState(false)
   const [online, setOnline] = useState(null) // null = memeriksa; true/false = hasil health check
   const [dbName, setDbName] = useState('Puslatkp1a')
@@ -72,8 +72,8 @@ export default function TopBar({ pageTitle, onNavigate, onToggleSidebar }) {
             <div className="text-xs font-semibold text-gray-900 dark:text-white leading-tight">
               {profile?.nama_lengkap || 'Pengguna'}
             </div>
-            <div className="text-[10px] text-gray-400 capitalize">
-              {profile?.role} {profile?.upt_key ? `• ${profile.upt_key}` : ''}
+            <div className="text-[10px] text-gray-400">
+              {profile?.role === 'admin' ? 'Admin' : `UPT${uptLabel ? ` • ${uptLabel}` : ''}`}
             </div>
           </div>
           <div className="w-8 h-8 rounded-full bg-[#0B1830] ring-2 ring-amber-300/70 flex items-center justify-center text-amber-300 text-xs font-bold flex-shrink-0">

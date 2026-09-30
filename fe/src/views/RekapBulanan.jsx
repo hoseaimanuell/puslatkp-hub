@@ -220,12 +220,18 @@ export default function RekapBulanan({ onNavigate }) {
     let totalDokumen = 0
 
     const uptKeys = new Set(effectiveUptList.map(u => u.key))
+    // Ikuti filter Jenis Data: jenis bulanan yang direkap dari data mingguan (pasangan_mingguan_id) ikut membawa
+    // jenis mingguan pasangannya, sama seperti tabel rincian di bawah (recapPerJenisData).
+    const semuaJenis = selectedJdId === 'all'
+    const jdSendiri = new Set(effectiveJdList.map(j => j.id))
+    const jdRekap = new Set(effectiveJdList.flatMap(j => (j.pasangan_mingguan_id ? [j.id, j.pasangan_mingguan_id] : [j.id])))
 
     // Rekap tiap kolom sesuai cara rekapnya (pagu/realisasi kumulatif = nilai terakhir; peserta = dijumlahkan).
     // Peran kolom (Judul/Peserta/Pagu/Realisasi) diatur Admin di Kelola Jenis Data — lib/peranRekap.js.
     const petaPeran = buatPetaPeran(fieldDefs)
     aggregateRows(approvedRekapRows, currentWeeks.map(w => w.id), fieldDefs).forEach(r => {
       if (!uptKeys.has(r.upt_key)) return
+      if (!semuaJenis && !jdRekap.has(r.jenis_data_id)) return
       const peran = peranKolom(petaPeran, r.jenis_data_id, r.field_key)
       if (peran === 'peserta') totalPeserta += num(r.value)
       if (peran === 'pagu') totalPagu += num(r.value)
@@ -234,10 +240,10 @@ export default function RekapBulanan({ onNavigate }) {
     })
 
     approvedUploadedDocs.forEach(d => {
-      if (uptKeys.has(d.upt_key)) totalDokumen++
+      if (uptKeys.has(d.upt_key) && (semuaJenis || jdSendiri.has(d.jenis_data_id))) totalDokumen++
     })
 
-    const entCount = approvedDataEntries.filter(e => uptKeys.has(e.upt_key)).length
+    const entCount = approvedDataEntries.filter(e => uptKeys.has(e.upt_key) && (semuaJenis || jdSendiri.has(e.jenis_data_id))).length
     if (totalPeserta === 0 && entCount > 0) {
       totalPeserta = entCount
     }
@@ -252,7 +258,7 @@ export default function RekapBulanan({ onNavigate }) {
       persentaseSerapan,
       totalDokumen,
     }
-  }, [approvedRekapRows, approvedUploadedDocs, approvedDataEntries, effectiveUptList, currentWeeks, fieldDefs])
+  }, [approvedRekapRows, approvedUploadedDocs, approvedDataEntries, effectiveUptList, currentWeeks, fieldDefs, selectedJdId, effectiveJdList])
 
   // "Data Instruktur dan WI (Mingguan)": saat jenis data ini dipilih di filter, kartu ringkasan berganti jadi
   // Total Instruktur / Total Widyaiswara (dipisah dari kolom "Jenis" per baris, bukan "Total Pelatihan/Peserta"

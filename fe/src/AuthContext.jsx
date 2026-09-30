@@ -51,9 +51,10 @@ export function AuthProvider({ children }) {
   const isAdmin = profile?.role === 'admin'
   const isUPT = profile?.role === 'upt'
   const uptKey = profile?.upt_key
+  const uptLabel = profile?.upt_label || profile?.upt_key // nama UPT untuk ditampilkan (bukan kode)
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, isAdmin, isUPT, uptKey, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, profile, loading, isAdmin, isUPT, uptKey, uptLabel, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )

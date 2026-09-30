@@ -15,7 +15,10 @@ export async function attachUser(req, _res, next) {
       let payload
       try { payload = jwt.verify(header.slice(7), config.jwtSecret) } catch { /* token tidak valid -> anonim */ }
       if (payload?.sub) {
-        const [[row]] = await pool.query('SELECT id, email, role, upt_key, nama_lengkap, created_at FROM profiles WHERE id = ?', [payload.sub])
+        const [[row]] = await pool.query(
+          'SELECT p.id, p.email, p.role, p.upt_key, p.nama_lengkap, p.created_at, u.label AS upt_label FROM profiles p LEFT JOIN upt_list u ON u.`key` = p.upt_key WHERE p.id = ?',
+          [payload.sub],
+        )
         if (row) req.user = row
       }
     }

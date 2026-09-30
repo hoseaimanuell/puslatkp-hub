@@ -27,6 +27,8 @@ function num(v) {
   return Number.isFinite(n) ? n : 0
 }
 
+const STATUS_BADGE = { 'Disetujui': 'success', 'Menunggu Persetujuan': 'warning', 'Ditolak': 'danger', 'Belum Diisi': 'neutral' }
+
 function formatRp(n) {
   return `Rp ${Number(n || 0).toLocaleString('id-ID')}`
 }
@@ -186,11 +188,14 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
         const pelatihanKeys = approvedRecs.filter(r => peranOf(r) === 'judul' && (r.value_text || r.value))
         const pelatihan = pelatihanKeys.length || (approvedRecs.length ? 1 : 0)
         const hasData = recs.length > 0 || entCount > 0
-        // Selaras dengan Persetujuan Baris Data: resmi ("Approved") hanya bila SEMUA baris/entri yang tersimpan
-        // sudah disetujui Admin — sebagian/semua masih draft/ditolak (atau belum ada isian) tetap "Draft".
+        // Selaras dengan Persetujuan Baris Data: "Disetujui" hanya bila SEMUA baris/entri yang tersimpan sudah
+        // disetujui Admin; ada yang ditolak -> "Ditolak"; ada yang belum diproses -> "Menunggu Persetujuan";
+        // tanpa isian sama sekali -> "Belum Diisi" (bukan "Draft", supaya tidak dikira ada data yang menunggu).
         const allApproved = hasData
           && recs.every(r => !r.status || r.status === 'disetujui')
           && ownEntries.every(e => !e.status || e.status === 'disetujui')
+        const anyRejected = recs.some(r => r.status === 'ditolak') || ownEntries.some(e => e.status === 'ditolak')
+        const status = !hasData ? 'Belum Diisi' : allApproved ? 'Disetujui' : anyRejected ? 'Ditolak' : 'Menunggu Persetujuan'
         rows.push({
           upt_key: upt.key,
           upt_label: upt.label,
@@ -200,7 +205,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
           peserta: peserta || entCountApproved,
           pagu,
           realisasi,
-          status: allApproved ? 'Approved' : 'Draft',
+          status,
           terlambat: recs.some(r => r.terlambat),
         })
       })
@@ -464,7 +469,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
                   <td className="py-2.5 px-3 text-right tabular-nums">{formatRp(r.pagu)}</td>
                   <td className="py-2.5 px-3 text-right tabular-nums">{formatRp(r.realisasi)}</td>
                   <td className="py-2.5 px-3">
-                    <Badge variant={r.status === 'Approved' ? 'success' : 'draft'}>{r.status === 'Approved' ? 'Disetujui' : 'Draft'}</Badge>{r.terlambat && <span className="ml-1 inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
+                    <Badge variant={STATUS_BADGE[r.status] || 'neutral'}>{r.status}</Badge>{r.terlambat && <span className="ml-1 inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">Terlambat</span>}
                   </td>
                   {onEditRow && (
                     <td className="py-2.5 px-3 text-right">
