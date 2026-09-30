@@ -19,7 +19,7 @@
 2. Buka phpMyAdmin (`http://localhost/phpmyadmin`, login `root`, password kosong bila default).
 3. Klik **New** → *Database name*: `Puslatkp1a`, *Collation*: `utf8mb4_unicode_ci` → **Create**.
 4. Pilih database `Puslatkp1a` → tab **Import** → *Choose file* → `database/puslatkp1a.sql` → **Go**.
-   Hasilnya: 17 tabel + 1 view (skema lengkap, sudah termasuk migrasi_01–11 — **tidak perlu** menjalankan berkas
+   Hasilnya: 17 tabel + 1 view (skema lengkap, sudah termasuk migrasi_01–10 dan 13–17 — **tidak perlu** menjalankan berkas
    `migrasi_*.sql` terpisah untuk instalasi baru), 18 UPT, 17 Jenis Data (termasuk 8 jenis data Form Weekly Report) beserta 134 definisi kolom, 3 Dokumen & Panduan
    bawaan, 65 periode 2026, dan 19 akun. Ganti seluruh password bawaan sebelum dipakai sungguhan — lihat
    [05-akun-dan-keamanan.md](05-akun-dan-keamanan.md).

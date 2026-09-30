@@ -90,10 +90,13 @@ fe/src/
 │  ├─ admin/BuatJenisDataExcel.jsx   Wizard "Buat dari Excel" (Kelola Jenis Data): tebak kolom & tipe dari
 │  │                                 contoh berkas, lalu buat Jenis Data + impor datanya sekaligus
 │  ├─ admin/KolomJenisData.jsx       Kartu kolom & pilihan jenis isian (dipakai KelolaJenisData.jsx)
+│  ├─ InputData/ImporWeeklyReport.jsx Popup "Impor Weekly Report" (pratinjau + simpan ke jenis data mingguan)
 │  └─ RekapByNama.jsx                Tabel "Data by Name" (dipakai RekapBulanan.jsx)
-├─ lib/                    db.js (klien API), periods.js, agregasi.js, peranRekap.js, excelExport.js, ...
+├─ lib/                    db.js (klien API), periods.js, agregasi.js, peranRekap.js, excelExport.js,
+│                          bacaTabelExcel.js (Excel bersel gabungan -> tabel), weeklyReport.js (baca Form
+│                          Weekly Report), tautan.js (kolom Berkas: berkas atau link), ...
 └─ AuthContext.jsx         Sesi & profil pengguna (JWT)
-fe/test/                   Tes otomatis rumus rekap, periode, Excel (npm test)
+fe/test/                   Tes otomatis rumus rekap, periode, Excel, Weekly Report, link (npm test)
 fe/eslint.config.mjs       Pemeriksa kode (npm run lint)
 
 be/
@@ -108,8 +111,9 @@ be/
 ├─ src/routes/             auth.js, db.js, arsip.js, fieldFiles.js, trash.js, permintaan-hapus.js,
 │                          permintaan-edit.js, persetujuan-baris.js, impor-rincian.js (impor Excel Data by Name)
 ├─ scripts/                build-sql, init-db, migrate (semua migrasi otomatis), backup, generate-periods,
-│                          set-password, data seed, run-migration.mjs (satu berkas)
-└─ test/                   Tes otomatis aturan hak akses (npm test)
+│                          set-password, data seed (seed-data.js, seed-weekly-report.js), uji-blackbox.mjs,
+│                          run-migration.mjs (satu berkas)
+└─ test/                   Tes otomatis aturan hak akses & pencocokan impor (npm test)
 
 database/                  SQL siap-impor (dibangun oleh `npm run db:build`), migrasi_*.sql, buat_user_aplikasi.sql
 .github/workflows/ci.yml   GitHub Actions: tes, lint, build, npm audit di setiap push

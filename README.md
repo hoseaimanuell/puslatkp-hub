@@ -2,7 +2,9 @@
 
 Portal pelaporan aktivitas dan kinerja tim **Pusat Pelatihan Kelautan dan Perikanan (PUSLATKP)**, unit di bawah KKP.
 Mencakup Jenis Data dinamis (Form Builder), pelaporan mingguan/bulanan/triwulan/tahunan, validasi silang
-mingguan vs bulanan, penanda terlambat setelah deadline, Arsip Data Historis (Excel/PDF), impor/ekspor Excel, dan 3 tingkat akses (Admin, UPT, Publik).
+mingguan vs bulanan, penanda terlambat setelah deadline, persetujuan per baris oleh Admin, **Impor Weekly Report** (formulir Excel mingguan UPT
+dibaca otomatis), kolom data dukung (unggah berkas atau link), Arsip Data Historis (Excel/PDF), impor/ekspor Excel
+(termasuk Excel dengan sel gabungan), dan 3 tingkat akses (Admin, UPT, Publik).
 
 | Lapisan | Teknologi | Servis |
 | :-- | :-- | :-- |

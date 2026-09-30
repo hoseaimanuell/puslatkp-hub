@@ -105,7 +105,9 @@ berguna untuk akun Admin sendiri (menu Reset Password di UI hanya untuk akun ber
   `JWT_SECRET`. Token disimpan di `localStorage` browser.
 * Di **setiap** permintaan be memuat ulang akun dari database → akun yang dihapus atau diubah perannya langsung
   berlaku, walaupun token belum kedaluwarsa. Bila token ditolak (401), frontend otomatis kembali ke halaman login.
-* Login dibatasi 30 percobaan / 15 menit / IP, dan pesan galat sama untuk email/password salah.
+* Login dibatasi 30 percobaan **gagal** / 15 menit / IP (login yang berhasil tidak dihitung, jadi banyak pegawai di
+  satu jaringan kantor tidak saling mengunci), dan pesan galat sama untuk email/password salah. Di balik load balancer
+  hosting, isi `TRUST_PROXY` agar IP asli pengunjung terbaca (lihat [10-serah-terima-hosting.md](10-serah-terima-hosting.md)).
 * **Mengganti `JWT_SECRET`** membatalkan seluruh sesi aktif.
 
 ## Perlindungan lain

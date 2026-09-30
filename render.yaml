@@ -20,3 +20,6 @@ services:
         value: Puslatkp1a
       - key: DB_SSL
         value: "true"
+      # Render: load balancer -> frontend -> backend (IP asli pengunjung untuk batas percobaan login)
+      - key: TRUST_PROXY
+        value: "2"

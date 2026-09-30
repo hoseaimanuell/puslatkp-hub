@@ -54,15 +54,16 @@ Respons 200:
 {
   "token": "<JWT>",
   "user": { "id": "…", "email": "admin@puslatkp.kkp.go.id" },
-  "profile": { "id": "…", "email": "…", "role": "admin", "upt_key": null, "nama_lengkap": "Admin PUSLATKP", "created_at": "…" }
+  "profile": { "id": "…", "email": "…", "role": "admin", "upt_key": null, "upt_label": null, "nama_lengkap": "Admin PUSLATKP", "created_at": "…" }
 }
 ```
 
-Gagal: 401 `Invalid login credentials` (sengaja tidak membedakan email salah/password salah).
+Gagal: 401 `Invalid login credentials` (sengaja tidak membedakan email salah/password salah). Lebih dari 30 percobaan
+**gagal** dalam 15 menit dari satu IP: 429 (login berhasil tidak dihitung). `profile.upt_label` = nama UPT untuk ditampilkan.
 
 ## `GET /api/auth/me`
 
-Perlu login. Mengembalikan `{ user, profile }` terbaru dari database (dipakai untuk memulihkan sesi).
+Perlu login. Mengembalikan `{ user, profile }` terbaru dari database (dipakai untuk memulihkan sesi), termasuk `upt_label`.
 
 ## `POST /api/auth/users` *(Admin)*
 

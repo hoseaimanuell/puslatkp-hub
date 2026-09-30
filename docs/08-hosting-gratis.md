@@ -43,7 +43,9 @@ Ulangi untuk tiap akun UPT ([05-akun-dan-keamanan.md](05-akun-dan-keamanan.md)).
 ### 4. Buat layanan di Render
 1. render.com → **New > Web Service** → hubungkan repositori GitHub → *Runtime*: **Docker**, *Instance type*: **Free**.
    (Atau **New > Blueprint** memakai `render.yaml`.)
-2. *Environment variables*: `JWT_SECRET` (teks acak ≥ 16 karakter), `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=Puslatkp1a`, `DB_SSL=true`.
+2. *Environment variables*: `JWT_SECRET` (teks acak ≥ 16 karakter), `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME=Puslatkp1a`, `DB_SSL=true`,
+   `TRUST_PROXY=2` (Render meneruskan lewat load balancer + frontend; tanpa ini semua pengunjung dianggap satu IP
+   oleh batas percobaan login).
 3. **Deploy**. Alamat: `https://<nama>.onrender.com`. Build pertama beberapa menit.
 4. Uji: buka `https://<nama>.onrender.com/api/health` — harus `"status":"ok"`.
 
