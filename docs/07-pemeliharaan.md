@@ -101,6 +101,7 @@ Cara manual: jalankan berkas di bawah **sekali** di phpMyAdmin (tab **Import**, 
 | `database/migrasi_14_tolak_baris.sql` | Menambah `catatan_admin` pada `rekap_nilai`, `data_entries`, `dokumen_upload` — melengkapi migrasi_13: Admin sekarang bisa **Tolak** satu baris (bukan cuma Setujui), baris TIDAK dihapus, hanya ditandai status `ditolak` + catatan alasan yang terlihat UPT. Jalankan setelah migrasi_13, lalu restart be |
 | `database/migrasi_15_permintaan_edit.sql` | Menambah `aksi`/`data_baru_json` pada `permintaan_hapus` (menu Permintaan, bagian "Hapus & Edit") — UPT sekarang bisa menekan **Edit** pada baris `rekap_nilai`/`data_entries` yang sudah disetujui dan mengajukan nilai baru ke Admin, alih-alih harus Ajukan Hapus lalu mengetik ulang dari nol. Jalankan setelah migrasi_10, lalu restart be |
 | `database/migrasi_16_peran_rekap.sql` | Menambah `field_definitions.peran_rekap` ("Dihitung di rekap sebagai" di Kelola Jenis Data) — rekap tidak lagi bergantung pada nama kolom tertentu, sehingga jenis data buatan Admin ikut terhitung. Kolom lama diisi sesuai aturan nama sebelumnya (angka rekap tidak berubah). Jalankan kapan saja, lalu restart be |
+| `database/migrasi_17_weekly_report.sql` | Data (bukan struktur): 8 jenis data mingguan mengikuti **Form Weekly Report** UPT, kolom **Pagu AWAL** pada anggaran per jenis belanja & per sumber dana (kolom pagu lama = pagu AKTIF), dan peran rekap anggaran (hanya per jenis belanja yang dihitung pagu & realisasinya, supaya tidak dobel). Tidak menimpa label/peran yang sudah diubah Admin. **Dibangun otomatis** oleh `npm run db:build` dari `be/scripts/seed-weekly-report.js`. Jalankan setelah migrasi_16 |
 
 > **Riwayat: `migrasi_11_periode_kirim.sql` / `migrasi_12_status_kirim.sql` (tidak lagi dipakai).** Kedua berkas ini
 > pernah menambahkan fitur "Kirim & Kunci Data" (persetujuan per-periode, terpisah dari Persetujuan Baris Data di
@@ -110,7 +111,7 @@ Cara manual: jalankan berkas di bawah **sekali** di phpMyAdmin (tab **Import**, 
 > `periode_kirim` tidak di-`DROP` otomatis), tapi **jangan dijalankan lagi di instalasi baru** — `ddl.sql`/
 > `puslatkp1a.sql` sudah tidak memuat tabel ini.
 
-> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–10 dan migrasi_13–16 secara penuh** (`be/scripts/ddl.sql` dan
+> ✅ **`database/puslatkp1a.sql` sudah memuat migrasi_01–10 dan migrasi_13–17 secara penuh** (`be/scripts/ddl.sql` dan
 > `seed-data.js` disinkronkan ulang — lihat catatan di [04-database.md](04-database.md#data-awal-seed)). **Instalasi
 > baru cukup mengimpor `puslatkp1a.sql` sekali saja**, tanpa perlu menjalankan berkas `migrasi_*.sql` satu per satu.
 > Tabel di atas hanya untuk **database lama** yang sudah terlanjur diimpor sebelum tanggal sinkronisasi ini.
@@ -131,12 +132,13 @@ node scripts/run-migration.mjs migrasi_13_status_baris.sql
 node scripts/run-migration.mjs migrasi_14_tolak_baris.sql
 node scripts/run-migration.mjs migrasi_15_permintaan_edit.sql
 node scripts/run-migration.mjs migrasi_16_peran_rekap.sql
+node scripts/run-migration.mjs migrasi_17_weekly_report.sql
 ```
 
 ## Mengubah skema database
 
 1. Edit `be/scripts/ddl.sql` (untuk instalasi baru) **dan** buat berkas migrasi baru
-   `database/migrasi_17_xxx.sql` berisi `ALTER TABLE` untuk database yang sudah berjalan. Daftarkan berkas itu di
+   `database/migrasi_18_xxx.sql` berisi `ALTER TABLE` untuk database yang sudah berjalan. Daftarkan berkas itu di
    `DAFTAR` pada `be/scripts/migrate.js` beserta pemeriksaan "sudah" (mis. `kolom('tabel', 'kolom_baru')`);
    `npm run migrate` menolak berjalan bila ada berkas migrasi yang belum terdaftar.
 2. Jika menambah **tabel/kolom baru** yang akan diakses dari UI, daftarkan di `be/src/schema.js`

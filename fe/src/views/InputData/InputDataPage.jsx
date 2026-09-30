@@ -10,11 +10,13 @@ import { useAuth } from '../../AuthContext'
 import AdminPeriodRecap from '../../components/AdminPeriodRecap'
 import Modal from '../../components/Modal'
 import PilihJenisData from './PilihJenisData'
-import { Plus } from 'lucide-react'
+import ImporWeeklyReport from './ImporWeeklyReport'
+import { Plus, FileSpreadsheet } from 'lucide-react'
 
 export default function InputMingguanPage() {
   const { isAdmin, uptKey } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
+  const [imporOpen, setImporOpen] = useState(false)
   // Jenis Data + Periode + UPT yang dipakai popup saat dibuka: dari baris yang di-Edit, atau (tombol
   // "+ Input Mingguan") dari filter yang sedang dipilih di halaman, supaya tidak perlu memilih ulang.
   const [editTarget, setEditTarget] = useState(null)
@@ -35,6 +37,7 @@ export default function InputMingguanPage() {
 
   function closeAndRefresh() {
     setModalOpen(false)
+    setImporOpen(false)
     setRefreshKey(k => k + 1)
   }
 
@@ -49,14 +52,20 @@ export default function InputMingguanPage() {
               : 'Rekap data mingguan UPT Anda berdasarkan periode yang dipilih.'}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openAdd}
-          className="btn-primary text-sm"
-        >
-          <Plus size={16} />
-          Input Mingguan
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button type="button" onClick={() => setImporOpen(true)} className="btn-secondary text-sm" title="Unggah Form Weekly Report (Excel) yang biasa dikirim UPT">
+            <FileSpreadsheet size={16} />
+            Impor Weekly Report
+          </button>
+          <button
+            type="button"
+            onClick={openAdd}
+            className="btn-primary text-sm"
+          >
+            <Plus size={16} />
+            Input Mingguan
+          </button>
+        </div>
       </div>
 
       <AdminPeriodRecap
@@ -80,6 +89,10 @@ export default function InputMingguanPage() {
           initialPeriodId={editTarget?.periodId}
           initialUptKey={editTarget?.uptKey}
         />
+      </Modal>
+
+      <Modal open={imporOpen} onClose={closeAndRefresh} title="Impor Weekly Report" maxWidth="max-w-5xl">
+        {imporOpen && <ImporWeeklyReport onSaved={closeAndRefresh} />}
       </Modal>
     </div>
   )

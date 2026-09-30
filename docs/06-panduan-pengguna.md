@@ -74,7 +74,32 @@ akun UPT, dashboard hanya berisi data UPT tersebut.
 ## Input Mingguan
 
 Berisi **hanya Jenis Data mingguan**: Masyarakat, Aparatur, Data Instruktur dan WI, Data Belanja Modal, Capaian
-Anggaran per Jenis Belanja, dan per Sumber Dana.
+Anggaran per Jenis Belanja, dan per Sumber Dana, ditambah 8 jenis data yang mengikuti **Form Weekly Report** UPT:
+Target & Realisasi PNBP, Capaian Masyarakat per Program Prioritas / per Bidang Usaha / per Pembiayaan / per Metode,
+Capaian Diklat Aparatur per Metode, Lulusan DUDIKA, dan Pelatihan Non-APBN.
+
+### Impor Weekly Report
+
+Tombol **Impor Weekly Report** (di samping *Input Mingguan*) menerima berkas Excel **Form Weekly Report** yang biasa
+dikirim UPT tiap minggu, **apa adanya**, tanpa perlu diketik ulang.
+
+1. Pilih berkasnya. Aplikasi membaca UPT dan tanggal laporan dari formulir, lalu memilih **UPT** (Admin; akun UPT
+   selalu UPT-nya sendiri) dan **minggu** yang sesuai (mis. 24 September 2026 → Minggu ke-4 September 2026).
+   Keduanya bisa diganti sebelum menyimpan.
+2. Periksa **pratinjau**: satu tabel per jenis data dengan angka yang terbaca. Kotak **Perlu dicek** menampilkan
+   temuan pada formulir, misalnya pagu per jenis belanja tidak sama dengan per sumber dana, baris "Jumlah" yang tidak
+   cocok dengan rinciannya, atau label yang muncul dua kali (yang dipakai nilai pertama).
+3. **Simpan**. Seperti input biasa: data dari akun UPT berstatus *Menunggu Persetujuan*, data dari Admin langsung
+   disetujui; baris yang sudah disetujui tidak ditimpa, perubahannya diajukan sebagai **permintaan edit**. Mengimpor
+   ulang minggu yang sama memperbarui angkanya (tidak menggandakan). Bagian yang kosong di formulir tidak mengubah
+   data yang sudah tersimpan.
+4. Setelah tersimpan, semua angka bisa **diubah lagi** lewat *Input Mingguan* seperti data lain.
+
+Catatan: bagian **total Balai** di formulir tidak disimpan terpisah karena selalu sama dengan jumlah rinciannya;
+**persentase** juga tidak disimpan karena dihitung ulang oleh aplikasi. Angka di formulir adalah angka berjalan
+sejak awal tahun, sehingga rekap bulan/triwulan/tahun memakai nilai terakhir. Jenis data Weekly Report tidak
+dihitung di kolom Pelatihan/Peserta tabel rekap (supaya tidak terhitung dua kali dengan jenis data Masyarakat per
+pelatihan); Admin bisa mengubahnya lewat *Dihitung di rekap sebagai* di Kelola Jenis Data.
 
 1. Halaman menampilkan **rekap mingguan** (filter tahun/triwulan/bulan/minggu/jenis data; Admin juga memilih UPT).
 2. Klik **Input Mingguan** (kanan atas) → pilih **Jenis Data** (daftar sudah terfilter mingguan) → pilih periode
@@ -415,9 +440,10 @@ Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun hal
   dijumlahkan), atau **Tidak dihitung**. Dengan ini jenis data buatan Admin bebas memakai nama kolom apa pun dan
   tetap terhitung di rekap. Saat mengetik nama kolom baru, peran ditebak otomatis (mis. "Jumlah Peserta" →
   Peserta) dan tetap bisa diganti. Panel **"Cara data ini dihitung di rekap"** di atas daftar kolom merangkum
-  kolom mana yang mengisi tiap angka; kotak bertanda *Belum diatur* berarti angka itu selalu 0 di rekap (untuk
-  Pelatihan: dihitung 1 per UPT bila ada isian). Pilih satu kolom saja sebagai Judul baris agar pelatihan tidak
-  terhitung dua kali.
+  kolom mana yang mengisi tiap angka; kotak bertanda *Belum diatur* berarti angka itu selalu 0 di rekap (jenis
+  data tanpa kolom Judul baris, mis. data anggaran, tidak menambah jumlah Pelatihan). Pilih satu kolom saja sebagai
+  Judul baris agar pelatihan tidak terhitung dua kali. Untuk data yang merupakan **rincian dari total yang sama**
+  (mis. anggaran per jenis belanja dan per sumber dana), beri peran Pagu/Realisasi pada salah satunya saja.
 * Kode kolom (*field key*) dibuat otomatis dari nama kolom dan ada di bagian **Lanjutan**. Setelah kolom dibuat,
   kodenya tidak bisa diubah lagi (sudah dipakai menyimpan data) — nama kolom tetap bisa diganti bebas.
 * Untuk kolom **angka** pada jenis data mingguan tersedia **Cara Rekap** (jumlahkan / nilai terakhir / rata-rata /

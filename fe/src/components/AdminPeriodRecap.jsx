@@ -186,7 +186,7 @@ export default function AdminPeriodRecap({ compact = false, levelFilter = null, 
         const pagu = jumlahPeran(approvedRecs, 'pagu')
         const realisasi = jumlahPeran(approvedRecs, 'realisasi')
         const pelatihanKeys = approvedRecs.filter(r => peranOf(r) === 'judul' && (r.value_text || r.value))
-        const pelatihan = pelatihanKeys.length || (approvedRecs.length ? 1 : 0)
+        const pelatihan = pelatihanKeys.length // hanya baris yang kolom "Judul baris"-nya terisi (jenis data anggaran = 0 pelatihan)
         const hasData = recs.length > 0 || entCount > 0
         // Selaras dengan Persetujuan Baris Data: "Disetujui" hanya bila SEMUA baris/entri yang tersimpan sudah
         // disetujui Admin; ada yang ditolak -> "Ditolak"; ada yang belum diproses -> "Menunggu Persetujuan";

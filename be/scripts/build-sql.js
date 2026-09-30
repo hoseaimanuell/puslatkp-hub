@@ -14,6 +14,7 @@ import { generatePeriods } from '../src/lib/periods.js'
 import * as seed from './seed-data.js'
 import { EXTRA_ENTRIES, EXTRA_REKAP } from './seed-sample-extra.js'
 import { generate500Entries, generate500RekapNilai } from './sample-generator.js'
+import { WR_JENIS_DATA, WR_FIELDS, WR_UBAH_LABEL } from './seed-weekly-report.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(here, '../../database')
@@ -83,6 +84,7 @@ const agregasiDefault = f => (f.level === 'minggu' && f.tipe === 'angka' ? 'last
 
 // Peran di rekap (Pelatihan/Peserta/Pagu/Realisasi) — sama persis dengan database/migrasi_16_peran_rekap.sql.
 const peranDefault = f => {
+  if ('peran_rekap' in f) return f.peran_rekap // ditentukan eksplisit (mis. seed-weekly-report.js)
   if (f.field_key === 'nama_pelatihan') return 'judul'
   if (f.field_key === 'jumlah_peserta') return 'peserta'
   if (f.field_key.includes('pagu')) return 'pagu'
@@ -90,15 +92,17 @@ const peranDefault = f => {
   return null
 }
 
-const jenisData = [...seed.DEFAULT_JENIS_DATA]
+const jenisData = [...seed.DEFAULT_JENIS_DATA, ...WR_JENIS_DATA]
   .sort((a, b) => (a.pasangan_mingguan_id ? 1 : 0) - (b.pasangan_mingguan_id ? 1 : 0)) // induk dulu, agar FK terpenuhi
-  .map(j => ({ ...j, mode_bulanan: j.mode_bulanan ?? null, multi_baris: MULTI_BARIS.has(j.key), kumulatif_bulanan: false }))
-master += section('DATA MASTER — 9 JENIS DATA')
+  .map(j => ({ ...j, mode_bulanan: j.mode_bulanan ?? null, multi_baris: j.multi_baris ?? MULTI_BARIS.has(j.key), kumulatif_bulanan: false }))
+master += section(`DATA MASTER — ${jenisData.length} JENIS DATA`)
 master += insert('jenis_data',
   ['id', 'key', 'judul', 'deskripsi', 'level_utama', 'mode_bulanan', 'butuh_input_bulanan', 'pasangan_mingguan_id', 'publik_boleh_lihat', 'multi_baris', 'kumulatif_bulanan', 'aktif'],
   jenisData)
 
-const fields = seed.DEFAULT_FIELDS.map(f => ({
+// Label/urutan kolom anggaran disesuaikan dengan Form Weekly Report (lihat seed-weekly-report.js)
+const ubahLabel = new Map(WR_UBAH_LABEL.map(u => [`${u.jenis_data_id}|${u.field_key}`, u]))
+const toFieldRow = f => ({
   ...f,
   id: uid(f.id),
   opsi_pilihan: f.opsi_pilihan ?? null,
@@ -107,11 +111,17 @@ const fields = seed.DEFAULT_FIELDS.map(f => ({
   is_identitas: !!f.is_identitas,
   agregasi: agregasiDefault(f),
   peran_rekap: peranDefault(f),
-}))
+})
+const fields = [
+  ...seed.DEFAULT_FIELDS.map(f => {
+    const u = ubahLabel.get(`${f.jenis_data_id}|${f.field_key}`)
+    return u ? { ...f, label: u.label, urutan: u.urutan, ...('peran_rekap' in u ? { peran_rekap: u.peran_rekap } : {}) } : f
+  }),
+  ...WR_FIELDS,
+].map(toFieldRow)
+const FIELD_COLS = ['id', 'jenis_data_id', 'level', 'field_key', 'label', 'tipe', 'opsi_pilihan', 'opsi_bersyarat', 'agregasi', 'peran_rekap', 'wajib', 'is_identitas', 'urutan', 'aktif']
 master += section('DATA MASTER — DEFINISI KOLOM (FORM BUILDER)')
-master += insert('field_definitions',
-  ['id', 'jenis_data_id', 'level', 'field_key', 'label', 'tipe', 'opsi_pilihan', 'opsi_bersyarat', 'agregasi', 'peran_rekap', 'wajib', 'is_identitas', 'urutan', 'aktif'],
-  fields)
+master += insert('field_definitions', FIELD_COLS, fields)
 
 const docs = seed.DEFAULT_DOCS.map(d => ({ ...d, id: uid(d.id) }))
 master += section('DATA MASTER — DOKUMEN & PANDUAN BAWAAN')
@@ -124,6 +134,38 @@ master += insert('periods',
   periods, { mode: 'update', update: ['tanggal_mulai', 'tanggal_selesai', 'deadline', 'label'] })
 
 writeFileSync(path.join(outDir, 'puslatkp1a.sql'), master)
+
+// ---------- MIGRASI 17: jenis data Form Weekly Report (untuk database yang sudah berjalan) ----------
+{
+  const JD_COLS = ['id', 'key', 'judul', 'deskripsi', 'level_utama', 'mode_bulanan', 'butuh_input_bulanan', 'pasangan_mingguan_id', 'publik_boleh_lihat', 'multi_baris', 'kumulatif_bulanan', 'aktif']
+  const labelLama = new Map(seed.DEFAULT_FIELDS.map(f => [`${f.jenis_data_id}|${f.field_key}`, f.label]))
+  let sql = [
+    '-- ==========================================================',
+    '-- MIGRASI 17: jenis data mingguan mengikuti "Form Weekly Report" UPT',
+    '-- DIBANGUN OTOMATIS oleh be/scripts/build-sql.js dari be/scripts/seed-weekly-report.js — jangan disunting manual.',
+    '-- Menambah 8 jenis data mingguan (PNBP, capaian masyarakat per program/bidang/pembiayaan/metode, diklat aparatur',
+    '-- per metode, lulusan DUDIKA, pelatihan Non-APBN) dan kolom "Pagu ... AWAL" pada 2 jenis data anggaran.',
+    '-- Kolom pagu lama tetap dipakai sebagai pagu AKTIF (labelnya diperjelas hanya bila belum diubah Admin).',
+    '-- Aman dijalankan ulang (INSERT IGNORE). Butuh migrasi_16. Cara termudah: npm run migrate (folder be).',
+    '-- ==========================================================',
+    'USE `Puslatkp1a`;',
+    '',
+  ].join('\n') + '\n'
+  sql += insert('jenis_data', JD_COLS, jenisData.filter(j => WR_JENIS_DATA.some(w => w.id === j.id)))
+  sql += '\n' + insert('field_definitions', FIELD_COLS, WR_FIELDS.map(toFieldRow))
+  sql += '\n-- Label & urutan kolom anggaran lama (hanya bila labelnya masih bawaan)\n'
+  for (const u of WR_UBAH_LABEL) {
+    const lama = labelLama.get(`${u.jenis_data_id}|${u.field_key}`)
+    sql += `UPDATE field_definitions SET label = ${esc(u.label)}, urutan = ${u.urutan} WHERE jenis_data_id = ${esc(u.jenis_data_id)} AND level = 'minggu' AND field_key = ${esc(u.field_key)} AND label = ${esc(lama)};\n`
+  }
+  sql += '\n-- Peran di rekap: anggaran per jenis belanja & per sumber dana adalah rincian dari total yang SAMA -> hanya per jenis\n'
+  sql += '-- belanja yang dihitung (pagu AKTIF + realisasi). Hanya bila perannya masih bawaan lama (belum diubah Admin).\n'
+  for (const u of WR_UBAH_LABEL.filter(x => 'peran_rekap' in x)) {
+    const bawaanLama = peranDefault({ field_key: u.field_key })
+    sql += `UPDATE field_definitions SET peran_rekap = ${esc(u.peran_rekap)} WHERE jenis_data_id = ${esc(u.jenis_data_id)} AND level = 'minggu' AND field_key = ${esc(u.field_key)} AND peran_rekap <=> ${esc(bawaanLama)};\n`
+  }
+  writeFileSync(path.join(outDir, 'migrasi_17_weekly_report.sql'), sql)
+}
 
 // ---------- 2. DATA CONTOH ----------
 const conv = (r, extra = {}) => ({ ...r, id: uid(r.id), period_id: r.period_id ? mapPeriod(r.period_id) : undefined, ...extra })

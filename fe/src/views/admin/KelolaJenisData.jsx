@@ -532,7 +532,7 @@ export default function KelolaJenisData() {
                       <p className="text-sm font-semibold text-[#0B1830] mt-1 leading-snug">{cols.map(c => c.label).join(' + ')}</p>
                     ) : (
                       <p className="text-xs text-gray-500 mt-1 leading-snug">
-                        {key === 'judul' ? 'Belum diatur — dihitung 1 per UPT bila ada isian' : 'Belum diatur — selalu 0 di rekap'}
+                        Belum diatur — selalu 0 di rekap
                       </p>
                     )}
                     {key === 'judul' && cols.length > 1 && (

@@ -28,6 +28,9 @@ const kolom = (table, col) => async q =>
   (await q('SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?', [DB, table, col])).length > 0
 const tabel = table => async q =>
   (await q('SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?', [DB, table])).length > 0
+// Migrasi berisi data (bukan struktur): sudah diterapkan bila jenis data yang ditambahkannya ada
+const jenisData = key => async q =>
+  (await q('SELECT 1 FROM `' + DB + '`.jenis_data WHERE `key` = ?', [key])).length > 0
 const fkCascade = name => async q =>
   (await q("SELECT 1 FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = ? AND CONSTRAINT_NAME = ? AND DELETE_RULE = 'CASCADE'", [DB, name])).length > 0
 
@@ -47,6 +50,7 @@ const DAFTAR = [
   { file: 'migrasi_14_tolak_baris.sql', sudah: kolom('rekap_nilai', 'catatan_admin') },
   { file: 'migrasi_15_permintaan_edit.sql', sudah: kolom('permintaan_hapus', 'aksi') },
   { file: 'migrasi_16_peran_rekap.sql', sudah: kolom('field_definitions', 'peran_rekap') },
+  { file: 'migrasi_17_weekly_report.sql', sudah: jenisData('pnbp_dan_mp_pnbp') },
 ]
 // Fitur yang sudah dihapus dari aplikasi — jangan pernah dijalankan otomatis (lihat docs/07-pemeliharaan.md).
 const USANG = new Set(['migrasi_11_periode_kirim.sql', 'migrasi_12_status_kirim.sql'])
