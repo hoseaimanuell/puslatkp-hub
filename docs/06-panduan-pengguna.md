@@ -430,10 +430,14 @@ Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun hal
 * Kelola **kolom**: tambah, ubah, aktif/nonaktif, hapus, ubah urutan (seret-dan-lepas), tipe
   (*angka, teks, teks panjang, tanggal, pilihan, berkas*), opsi pilihan, wajib, dan penanda **Identitas Pribadi**
   (tidak pernah tampil di publik).
-* **Tipe Berkas** — UPT mengunggah berkas (PDF, Word, atau Excel; maks. **10 MB**) langsung dari form, menggantikan
-  cara lama mengetik link (mis. "Link Laporan Pelatihan"). Di tabel rekap, sel ini menampilkan tombol **📎 unduh**
-  berisi nama berkas asli, bukan teks link. Mengganti berkas otomatis membuang berkas lama. **Tidak bisa** diisi
-  lewat Excel — kolom bertipe Berkas dikecualikan dari template & impor Excel (termasuk Impor Data Historis).
+* **Tipe Berkas** (dipakai untuk semua kolom data dukung: Link Laporan Pelatihan, Data Dukung PNBP, Bukti Dukung
+  program prioritas) — diisi **salah satu**: unggah berkas (PDF, Word, atau Excel; maks. **10 MB**) langsung dari
+  form, **atau** tempel link (mis. folder Google Drive) di isian *atau link* di bawahnya. Hanya alamat `http://` /
+  `https://` yang diterima. Di tabel rekap, berkas tampil sebagai tombol unduh bernama berkas asli, link tampil
+  sebagai **Buka link (nama situs)** yang terbuka di tab baru. Mengganti berkas atau beralih ke link otomatis membuang
+  berkas lama. Ekspor Excel menuliskan link apa adanya (berkas unggahan: "berkas — unduh di web"). Tidak bisa diisi
+  lewat Upload Excel data per nama / Impor Data Historis; **Impor Weekly Report** mengisinya dengan link dari
+  formulir.
 * **Dihitung di rekap sebagai** (jenis data mingguan) — menentukan angka ringkasan mana di Rekap UPT/Balai dan
   Rekap Bulanan yang diisi sebuah kolom: **Judul baris** → Pelatihan (tiap baris yang kolom ini terisi dihitung
   1 pelatihan), **Jumlah peserta** → Peserta, **Pagu anggaran** → Pagu, **Realisasi anggaran** → Realisasi (ketiganya

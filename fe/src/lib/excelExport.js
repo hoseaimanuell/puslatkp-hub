@@ -5,6 +5,7 @@
  */
 import * as XLSX from 'xlsx'
 import { bacaTabel } from './bacaTabelExcel'
+import { berkasUntukExcel } from './tautan'
 
 /**
  * Sanitasi nilai sel dari potensi eksekusi formula jahat.
@@ -55,7 +56,7 @@ export function exportDataEntries({ entries, fieldDefs, jenisDataJudul, periodLa
     fieldKeys.forEach((key, i) => {
       const rawVal = entry.data_json?.[key] ?? entry[key] ?? ''
       // Kolom bertipe berkas: nilainya id internal, tidak berguna di Excel — tampilkan penanda saja.
-      row[baseHeaders[i]] = sortedFields[i].tipe === 'file' ? (rawVal ? '(berkas — lihat di web)' : '') : sanitizeCellValue(rawVal)
+      row[baseHeaders[i]] = sortedFields[i].tipe === 'file' ? sanitizeCellValue(berkasUntukExcel(rawVal)) : sanitizeCellValue(rawVal)
     })
     return row
   })
@@ -97,7 +98,7 @@ export function exportRekapNilai({ rekapData, fieldDefs, jenisDataJudul, periodL
     }
     fieldDefs.forEach(fd => {
       const raw = item.values?.[fd.field_key] ?? ''
-      row[fd.label] = fd.tipe === 'file' ? (raw ? '(berkas — lihat di web)' : '') : sanitizeCellValue(raw)
+      row[fd.label] = fd.tipe === 'file' ? sanitizeCellValue(berkasUntukExcel(raw)) : sanitizeCellValue(raw)
     })
     return row
   })

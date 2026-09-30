@@ -7,6 +7,7 @@ import { db } from '../lib/db'
 import { notify } from '../lib/dialog'
 import Badge from '../components/Badge'
 import { FileValueDisplay } from '../components/DynamicForm'
+import { berkasUntukExcel } from '../lib/tautan'
 import * as XLSX from 'xlsx'
 import { sanitizeRows } from '../lib/excelExport'
 import { Download, Users, Search, Trash2, Copy } from 'lucide-react'
@@ -37,7 +38,7 @@ export default function RekapByNama({ jenisData, fields = [], entries = [], uptL
     return ''
   }
   // Untuk export Excel: kolom berkas tidak berguna sebagai id mentah — tampilkan penanda saja.
-  const cellForExport = (e, f) => (f.tipe === 'file' ? (cell(e, f) ? '(berkas — lihat di web)' : '') : cell(e, f))
+  const cellForExport = (e, f) => (f.tipe === 'file' ? berkasUntukExcel(cell(e, f)) : cell(e, f))
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()

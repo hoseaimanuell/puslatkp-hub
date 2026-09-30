@@ -21,7 +21,7 @@ INSERT IGNORE INTO `jenis_data` (`id`, `key`, `judul`, `deskripsi`, `level_utama
 INSERT IGNORE INTO `field_definitions` (`id`, `jenis_data_id`, `level`, `field_key`, `label`, `tipe`, `opsi_pilihan`, `opsi_bersyarat`, `agregasi`, `peran_rekap`, `wajib`, `is_identitas`, `urutan`, `aktif`) VALUES
   ('fc7823ed-9c56-4d0c-8fe1-cc1fd4d46940', '11111111-0010-0000-0000-000000000010', 'minggu', 'target_penerimaan_pnbp', 'Target Penerimaan PNBP (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 1, 1),
   ('9dea54b6-afd0-46a1-8123-832671adefec', '11111111-0010-0000-0000-000000000010', 'minggu', 'realisasi_pnbp', 'Realisasi PNBP (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 2, 1),
-  ('a61e76cc-85e0-4a29-822e-b8018b0d9651', '11111111-0010-0000-0000-000000000010', 'minggu', 'link_data_dukung_pnbp', 'Link Data Dukung PNBP', 'teks', NULL, NULL, 'sum', NULL, 0, 0, 3, 1),
+  ('a61e76cc-85e0-4a29-822e-b8018b0d9651', '11111111-0010-0000-0000-000000000010', 'minggu', 'link_data_dukung_pnbp', 'Data Dukung PNBP (Berkas / Link)', 'file', NULL, NULL, 'sum', NULL, 0, 0, 3, 1),
   ('62f42b43-ea57-4007-88e7-9bd7091ffef5', '11111111-0010-0000-0000-000000000010', 'minggu', 'pagu_total_mp_pnbp', 'Pagu Total MP PNBP (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 4, 1),
   ('7ea65fba-dbdf-42db-843f-668b0e30a296', '11111111-0010-0000-0000-000000000010', 'minggu', 'pagu_mp1_pnbp', 'Pagu MP I PNBP (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 5, 1),
   ('f7f8bd74-0e9b-4dca-8046-c5eb126d8d44', '11111111-0010-0000-0000-000000000010', 'minggu', 'realisasi_mp_pnbp', 'Realisasi MP PNBP (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 6, 1),
@@ -32,7 +32,7 @@ INSERT IGNORE INTO `field_definitions` (`id`, `jenis_data_id`, `level`, `field_k
   ('f3d0acb3-b67a-4cc5-8462-5900b3deb848', '11111111-0011-0000-0000-000000000011', 'minggu', 'anggaran_dipa_awal', 'Anggaran DIPA Awal (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 5, 1),
   ('19b65d92-3be2-4ba5-8015-30e8f57998d9', '11111111-0011-0000-0000-000000000011', 'minggu', 'anggaran_efektif', 'Anggaran Efektif (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 6, 1),
   ('5363f512-faba-422e-8127-8e2225d45e21', '11111111-0011-0000-0000-000000000011', 'minggu', 'realisasi_anggaran', 'Realisasi Anggaran (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 7, 1),
-  ('657337c9-4771-4b37-8481-7dd8035cd956', '11111111-0011-0000-0000-000000000011', 'minggu', 'link_bukti_dukung', 'Link Bukti Dukung (Folder Laporan Pelatihan)', 'teks', NULL, NULL, 'sum', NULL, 0, 0, 8, 1),
+  ('657337c9-4771-4b37-8481-7dd8035cd956', '11111111-0011-0000-0000-000000000011', 'minggu', 'link_bukti_dukung', 'Bukti Dukung (Berkas / Link Folder Laporan Pelatihan)', 'file', NULL, NULL, 'sum', NULL, 0, 0, 8, 1),
   ('016259c4-1c66-4bee-817a-d55761071142', '11111111-0012-0000-0000-000000000012', 'minggu', 'bidang_usaha', 'Bidang Usaha', 'pilihan', '[\"Sistem Jaminan Mutu\",\"Pembentukan Keahlian Awak Kapal Perikanan (AKP)\",\"Budidaya\",\"Pengolahan dan Pemasaran\",\"Konservasi dan Kemitigasian\",\"Kelautan dan Kemaritiman\",\"Pengawasan dan Kepelabuhan\",\"Permesinan dan Mekanisasi\",\"Peningkatan Keahlian Awak Kapal Perikanan (AKP)\",\"Penangkapan dan Alat Tangkap\",\"Teknis Lainnya\"]', NULL, 'sum', NULL, 1, 0, 1, 1),
   ('3f5a38fb-0651-493d-8886-2e2d633d9d68', '11111111-0012-0000-0000-000000000012', 'minggu', 'realisasi_fisik', 'Realisasi Fisik (Orang)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 2, 1),
   ('dfe1e40d-465c-4462-80b7-bd340b27c79b', '11111111-0012-0000-0000-000000000012', 'minggu', 'realisasi_anggaran', 'Realisasi Anggaran (Rp)', 'angka', NULL, NULL, 'last', NULL, 0, 0, 3, 1),
@@ -81,6 +81,10 @@ UPDATE field_definitions SET label = 'Pagu PNBP/BLU AKTIF (Rp)', urutan = 5 WHER
 UPDATE field_definitions SET label = 'Realisasi PNBP/BLU (Rp)', urutan = 6 WHERE jenis_data_id = '11111111-0009-0000-0000-000000000009' AND level = 'minggu' AND field_key = 'realisasi_pnbp_blu' AND label = 'Realisasi PNBP/BLU (Rp)';
 UPDATE field_definitions SET label = 'Pagu SBSN AKTIF (Rp)', urutan = 8 WHERE jenis_data_id = '11111111-0009-0000-0000-000000000009' AND level = 'minggu' AND field_key = 'pagu_sbsn' AND label = 'Pagu SBSN (Rp)';
 UPDATE field_definitions SET label = 'Realisasi SBSN (Rp)', urutan = 9 WHERE jenis_data_id = '11111111-0009-0000-0000-000000000009' AND level = 'minggu' AND field_key = 'realisasi_sbsn' AND label = 'Realisasi SBSN (Rp)';
+
+-- Kolom data dukung jadi tipe Berkas (bisa unggah berkas ATAU tempel link); versi awal migrasi ini membuatnya teks
+UPDATE field_definitions SET tipe = 'file', label = 'Data Dukung PNBP (Berkas / Link)' WHERE jenis_data_id = '11111111-0010-0000-0000-000000000010' AND level = 'minggu' AND field_key = 'link_data_dukung_pnbp' AND tipe = 'teks';
+UPDATE field_definitions SET tipe = 'file', label = 'Bukti Dukung (Berkas / Link Folder Laporan Pelatihan)' WHERE jenis_data_id = '11111111-0011-0000-0000-000000000011' AND level = 'minggu' AND field_key = 'link_bukti_dukung' AND tipe = 'teks';
 
 -- Peran di rekap: anggaran per jenis belanja & per sumber dana adalah rincian dari total yang SAMA -> hanya per jenis
 -- belanja yang dihitung (pagu AKTIF + realisasi). Hanya bila perannya masih bawaan lama (belum diubah Admin).

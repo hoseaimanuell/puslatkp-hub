@@ -68,3 +68,15 @@ test('tulis lalu baca ulang workbook (ekspor & impor Excel)', () => {
   assert.deepEqual(XLSX.utils.sheet_to_json(dibaca.Sheets.Data), [{ Nama: 'Budi', 'Jumlah Peserta': 25 }, { Nama: 'Sari', 'Jumlah Peserta': 30 }])
   assert.equal(typeof XLSX.writeFile, 'function')
 })
+
+test('kolom Berkas: link data dukung dikenali, alamat berbahaya ditolak, ekspor Excel memakai link', async () => {
+  const { isTautan, berkasUntukExcel } = await import('../src/lib/tautan.js')
+  assert.equal(isTautan('https://drive.google.com/drive/folders/abc123'), true)
+  assert.equal(isTautan('http://intranet.kkp.go.id/laporan.pdf'), true)
+  assert.equal(isTautan('javascript:alert(1)'), false)
+  assert.equal(isTautan('https://x.com/a b'), false) // spasi: bukan satu alamat
+  assert.equal(isTautan('3f2a9c1e-0000-4000-8000-000000000000'), false) // id berkas unggahan
+  assert.equal(berkasUntukExcel(' https://drive.google.com/x '), 'https://drive.google.com/x')
+  assert.equal(berkasUntukExcel('3f2a9c1e-0000-4000-8000-000000000000'), '(berkas — unduh di web)')
+  assert.equal(berkasUntukExcel(null), '')
+})

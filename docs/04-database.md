@@ -113,7 +113,9 @@ Kolom-kolom form per Jenis Data per level.
 ### `field_files` — Berkas kolom bertipe `file`
 Satu baris = satu berkas yang diunggah UPT untuk mengisi SATU sel bertipe `file` (mis. "Link Laporan Pelatihan" pada
 Jenis Data *Masyarakat*, yang diganti dari teks link menjadi unggah berkas). Nilai sel itu sendiri, di `rekap_nilai.value_text`
-(level minggu) atau `data_entries.data_json[field_key]` (level bulan), hanyalah **id baris ini** — isi berkas ada di disk
+(level minggu) atau `data_entries.data_json[field_key]` (level bulan), hanyalah **id baris ini** — atau, bila UPT memilih
+menempel link data dukung alih-alih mengunggah, **alamat link** itu sendiri (hanya `http(s)://` yang ditampilkan sebagai
+tautan; lihat `fe/src/lib/tautan.js`) — isi berkas ada di disk
 (`STORAGE_DIR/field-files/<id>.<ext>`), bukan di database. PDF/Word/Excel saja, maks. **10 MB**; isi berkas diperiksa
 (magic bytes), bukan hanya ekstensinya. Baca: pemilik UPT + Admin (`scope: upt`); tulis/hapus lewat `/api/field-files`
 (bukan `/api/db/query`) supaya validasi ekstensi & isi berkas tetap ditegakkan. Ikut terhapus (`ON DELETE CASCADE`) bila

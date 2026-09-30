@@ -158,6 +158,10 @@ writeFileSync(path.join(outDir, 'puslatkp1a.sql'), master)
     const lama = labelLama.get(`${u.jenis_data_id}|${u.field_key}`)
     sql += `UPDATE field_definitions SET label = ${esc(u.label)}, urutan = ${u.urutan} WHERE jenis_data_id = ${esc(u.jenis_data_id)} AND level = 'minggu' AND field_key = ${esc(u.field_key)} AND label = ${esc(lama)};\n`
   }
+  sql += '\n-- Kolom data dukung jadi tipe Berkas (bisa unggah berkas ATAU tempel link); versi awal migrasi ini membuatnya teks\n'
+  for (const f of WR_FIELDS.filter(x => x.tipe === 'file')) {
+    sql += `UPDATE field_definitions SET tipe = 'file', label = ${esc(f.label)} WHERE jenis_data_id = ${esc(f.jenis_data_id)} AND level = 'minggu' AND field_key = ${esc(f.field_key)} AND tipe = 'teks';\n`
+  }
   sql += '\n-- Peran di rekap: anggaran per jenis belanja & per sumber dana adalah rincian dari total yang SAMA -> hanya per jenis\n'
   sql += '-- belanja yang dihitung (pagu AKTIF + realisasi). Hanya bila perannya masih bawaan lama (belum diubah Admin).\n'
   for (const u of WR_UBAH_LABEL.filter(x => 'peran_rekap' in x)) {

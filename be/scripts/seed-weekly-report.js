@@ -100,7 +100,7 @@ const capaianFisikAnggaran = jd => [
 const WR_FIELDS_BARU = [
   kolom(JD_WR.pnbp, 'target_penerimaan_pnbp', 'Target Penerimaan PNBP (Rp)'),
   kolom(JD_WR.pnbp, 'realisasi_pnbp', 'Realisasi PNBP (Rp)'),
-  kolom(JD_WR.pnbp, 'link_data_dukung_pnbp', 'Link Data Dukung PNBP', 'teks'),
+  kolom(JD_WR.pnbp, 'link_data_dukung_pnbp', 'Data Dukung PNBP (Berkas / Link)', 'file'),
   kolom(JD_WR.pnbp, 'pagu_total_mp_pnbp', 'Pagu Total MP PNBP (Rp)'),
   kolom(JD_WR.pnbp, 'pagu_mp1_pnbp', 'Pagu MP I PNBP (Rp)'),
   kolom(JD_WR.pnbp, 'realisasi_mp_pnbp', 'Realisasi MP PNBP (Rp)'),
@@ -112,7 +112,7 @@ const WR_FIELDS_BARU = [
   kolom(JD_WR.program, 'anggaran_dipa_awal', 'Anggaran DIPA Awal (Rp)'),
   kolom(JD_WR.program, 'anggaran_efektif', 'Anggaran Efektif (Rp)'),
   kolom(JD_WR.program, 'realisasi_anggaran', 'Realisasi Anggaran (Rp)'),
-  kolom(JD_WR.program, 'link_bukti_dukung', 'Link Bukti Dukung (Folder Laporan Pelatihan)', 'teks'),
+  kolom(JD_WR.program, 'link_bukti_dukung', 'Bukti Dukung (Berkas / Link Folder Laporan Pelatihan)', 'file'),
 
   kolom(JD_WR.bidang, 'bidang_usaha', 'Bidang Usaha', 'pilihan', { opsi_pilihan: OPSI_BIDANG_USAHA, wajib: true }),
   kolom(JD_WR.bidang, 'realisasi_fisik', 'Realisasi Fisik (Orang)'),

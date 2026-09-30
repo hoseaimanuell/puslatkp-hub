@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react'
 import { agregasiOf } from '../lib/agregasi'
 import { db, fieldFiles } from '../lib/db'
 import { notify } from '../lib/dialog'
+import { isTautan } from '../lib/tautan'
+import { Link2, Paperclip } from 'lucide-react'
 
 const FILE_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx'
 const FILE_MAX_MB = 10
@@ -26,7 +28,7 @@ function useFieldFileMeta(id) {
   const [loading, setLoading] = useState(!!id)
   useEffect(() => {
     let alive = true
-    if (!id) { setMeta(null); setLoading(false); return }
+    if (!id || isTautan(id)) { setMeta(null); setLoading(false); return } // link, bukan berkas unggahan
     setLoading(true)
     db.from('field_files').select('id,file_name,file_ext,file_size').eq('id', id).single()
       .then(({ data }) => { if (alive) { setMeta(data || null); setLoading(false) } })
@@ -36,11 +38,22 @@ function useFieldFileMeta(id) {
   return { meta, loading }
 }
 
-/** Tampilan baca-saja (tabel rekap): tombol unduh + nama berkas. `value` = id field_files, atau teks lama (link). */
+/** Tampilan baca-saja (tabel rekap): tombol unduh berkas, atau tautan bila isinya link data dukung. */
 export function FileValueDisplay({ id, className = '' }) {
   const { meta, loading } = useFieldFileMeta(id)
   const [busy, setBusy] = useState(false)
   if (!id) return <span className="text-gray-300 dark:text-gray-600">—</span>
+  if (isTautan(id)) {
+    const url = id.trim()
+    let host = url
+    try { host = new URL(url).hostname.replace(/^www./, '') } catch { /* tetap tampilkan apa adanya */ }
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" title={url}
+        className={`inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline max-w-[16rem] truncate ${className}`}>
+        <Link2 size={12} className="flex-shrink-0" /> Buka link ({host})
+      </a>
+    )
+  }
   if (loading) return <span className="text-gray-400 text-xs">Memuat…</span>
   if (!meta) {
     // Bukan id berkas yang dikenal (mis. isian lama berupa teks/link sebelum kolom ini diganti tipe Berkas)
@@ -54,7 +67,7 @@ export function FileValueDisplay({ id, className = '' }) {
       className={`inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 ${className}`}
       title={`${meta.file_name} (${formatFileSize(meta.file_size)})`}
     >
-      📎 {busy ? 'Mengunduh…' : meta.file_name}
+      <Paperclip size={12} className="flex-shrink-0" /> {busy ? 'Mengunduh…' : meta.file_name}
     </button>
   )
 }
@@ -64,6 +77,19 @@ function FileFieldInput({ field, value, onChange, disabled, idPrefix, jenisDataI
   const { meta, loading } = useFieldFileMeta(value)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [link, setLink] = useState(isTautan(value) ? value : '')
+  const berkasLama = v => (v && !isTautan(v) ? v : null) // id field_files yang perlu dibuang bila diganti
+
+  // Link sah dipakai langsung saat diketik/ditempel; saat kursor keluar, isian yang bukan link sah diberi pesan.
+  function simpanLink(isi = link) {
+    const url = String(isi).trim()
+    setError('')
+    if (!url) return
+    if (!isTautan(url)) { setError('Link harus diawali http:// atau https:// (mis. link folder Google Drive).'); return }
+    const prevId = berkasLama(value)
+    onChange(field.field_key, url)
+    if (prevId) fieldFiles.remove(prevId).catch(() => {}) // ganti berkas dengan link: buang berkas lama
+  }
 
   async function handleFile(e) {
     const file = e.target.files?.[0]
@@ -78,7 +104,8 @@ function FileFieldInput({ field, value, onChange, disabled, idPrefix, jenisDataI
     setBusy(false)
     if (err) { setError(err.message); return }
     onChange(field.field_key, data.id)
-    if (prevId && prevId !== data.id) fieldFiles.remove(prevId).catch(() => {}) // ganti berkas: buang yang lama
+    setLink('')
+    if (berkasLama(prevId) && prevId !== data.id) fieldFiles.remove(prevId).catch(() => {}) // ganti berkas: buang yang lama
   }
 
   return (
@@ -87,6 +114,8 @@ function FileFieldInput({ field, value, onChange, disabled, idPrefix, jenisDataI
         <div className="flex items-center gap-2 text-xs">
           {loading ? (
             <span className="text-gray-400">Memuat…</span>
+          ) : isTautan(value) ? (
+            <FileValueDisplay id={value} />
           ) : meta ? (
             <>
               <FileValueDisplay id={value} />
@@ -96,7 +125,7 @@ function FileFieldInput({ field, value, onChange, disabled, idPrefix, jenisDataI
             <span className="text-gray-500 dark:text-gray-400 break-all">{String(value)}</span>
           )}
           {!disabled && (
-            <button type="button" onClick={() => onChange(field.field_key, null)} className="text-rose-500 hover:underline">Hapus</button>
+            <button type="button" onClick={() => { onChange(field.field_key, null); setLink('') }} className="text-rose-500 hover:underline">Hapus</button>
           )}
         </div>
       )}
@@ -110,9 +139,24 @@ function FileFieldInput({ field, value, onChange, disabled, idPrefix, jenisDataI
           className="block w-full text-xs text-gray-600 dark:text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-950/40 dark:file:text-blue-300 hover:file:bg-blue-100"
         />
       )}
+      {!disabled && (
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-gray-400 flex-shrink-0">atau link:</span>
+          <input
+            type="url"
+            value={link}
+            onChange={e => { const v = e.target.value; setLink(v); setError(''); if (isTautan(v.trim()) && v.trim() !== value) simpanLink(v) }}
+            onBlur={() => simpanLink()}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); simpanLink() } }}
+            placeholder="https://drive.google.com/..."
+            className="form-input text-xs py-1.5"
+            disabled={busy}
+          />
+        </div>
+      )}
       {busy && <p className="text-xs text-blue-500">Mengunggah…</p>}
       {error && <p className="text-xs text-rose-500">{error}</p>}
-      <p className="text-[10px] text-gray-400">PDF, Word, atau Excel — maks. {FILE_MAX_MB} MB.</p>
+      <p className="text-[10px] text-gray-400">Unggah PDF, Word, atau Excel (maks. {FILE_MAX_MB} MB), atau tempel link data dukung (mis. folder Google Drive).</p>
     </div>
   )
 }
