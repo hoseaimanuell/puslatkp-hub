@@ -1,7 +1,7 @@
 /**
  * views/admin/RekapEksporSemuaUPT.jsx
  * Admin: Rekap & Ekspor Gabungan Semua UPT (Multi-Sheet Excel)
- * Adaptif terhadap 9 Jenis Data (Level Utama Minggu / Bulan)
+ * Adaptif terhadap semua Jenis Data (Level Utama Minggu / Bulan)
  */
 import { useState, useEffect } from 'react'
 import { db } from '../../lib/db'

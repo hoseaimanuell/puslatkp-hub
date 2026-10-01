@@ -1,6 +1,6 @@
 /**
  * views/InputData/PilihJenisData.jsx
- * Dropdown pemilih 9 Jenis Data dengan penanda visual pasangan
+ * Dropdown pemilih Jenis Data dengan penanda visual pasangan
  */
 import { useState, useEffect } from 'react'
 import { db } from '../../lib/db'

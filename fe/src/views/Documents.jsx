@@ -130,7 +130,7 @@ export default function Documents() {
 
       {/* Template Generator Per Jenis Data */}
       <InfoCard
-        title="Template Standar Impor Excel (Sesuai 9 Jenis Data)"
+        title="Template Standar Impor Excel"
         subtitle="Unduh berkas format Excel resmi yang kolom-kolomnya telah disesuaikan dengan konfigurasi database jenis data."
       >
         <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

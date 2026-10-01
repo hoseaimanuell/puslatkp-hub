@@ -1,6 +1,6 @@
 /**
  * views/admin/KelolaJenisData.jsx
- * Admin: CRUD 9 Jenis Data + Relasi Pasangan + Form Builder Fleksibel
+ * Admin: CRUD Jenis Data + Relasi Pasangan + Form Builder Fleksibel
  * Admin bisa bebas membuat kolom teks, angka, tanggal, narasi, dan pilihan (custom/E-Laut)
  */
 import { useState, useEffect } from 'react'
