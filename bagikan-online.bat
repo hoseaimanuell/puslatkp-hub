@@ -11,7 +11,7 @@ cd /d "%~dp0"
 set PORT_FE=3100
 set PORT_BE=4100
 
-if not exist "be.env" ( echo be.env belum ada. Salin be.env.example menjadi be.env lalu isi dulu. & pause & exit /b 1 )
+if not exist "be\.env" ( echo be\.env belum ada. Salin be\.env.example menjadi be\.env lalu isi dulu. & pause & exit /b 1 )
 
 echo [1/4] Build frontend (sekitar 1 menit)...
 set NEXT_PUBLIC_API_URL=/api
