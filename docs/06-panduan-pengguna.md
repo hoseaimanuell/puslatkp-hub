@@ -1,16 +1,23 @@
 # 06 — Panduan Pengguna
 
-Aplikasi dibuka di `http://localhost:3000` (atau domain produksi). Tampilan berwarna gelap; sidebar dapat
-dibuka/ditutup lewat ikon ☰ di kiri atas dan otomatis menyempit di layar kecil.
+Panduan ini untuk tiga jenis pengguna:
 
-## Masuk & keluar
+* **Akun UPT**: pegawai UPT/Balai yang mengisi data mingguan dan bulanan.
+* **Admin**: pengelola di PUSLATKP yang memeriksa, menyetujui, dan mengatur isi aplikasi.
+* **Pengunjung**: siapa saja yang membuka Tampilan Publik tanpa login.
 
-1. Buka aplikasi → isi **Email** dan **Password** → **Masuk**. Akun diberikan Admin.
-2. Ikon **↪** di kanan atas untuk **Keluar**. Sesi berakhir otomatis setelah 12 jam.
-3. **Tampilan Publik** (tanpa login): tautan di bawah form login, atau langsung `/publik`.
+Hal teknis (pemasangan, database, backup) ada di dokumen lain, mulai dari [README](../README.md).
 
-Indikator di bar atas: **Tersambung (MySQL)** (hijau) berarti backend & database normal; **Server Terputus**
-(merah) berarti aplikasi tidak bisa menjangkau backend – klik untuk detail.
+## Masuk dan keluar
+
+1. Buka alamat aplikasi yang diberikan Admin. Isi **Email** dan **Password**, lalu klik **Masuk**.
+2. Akun dibuat oleh Admin. Kalau lupa password, minta Admin mengatur ulang password Anda.
+3. Untuk keluar, klik ikon keluar di pojok kanan atas. Sesi juga berakhir sendiri setelah 12 jam.
+4. Tampilan Publik bisa dibuka tanpa login lewat tautan **Tampilan Publik** di bawah formulir login.
+
+Sidebar di kiri bisa dibuka dan ditutup dengan ikon ☰ di kiri atas. Di layar HP, sidebar tertutup dengan sendirinya.
+Kalau muncul tulisan merah **Server terputus** di bagian atas, aplikasi sedang tidak bisa menghubungi server. Tunggu
+sebentar lalu muat ulang halaman. Kalau masih terjadi, hubungi Admin.
 
 ## Prinsip: setiap UPT hanya melihat datanya sendiri
 
@@ -19,465 +26,293 @@ Input Mingguan, Input Bulanan, Rekap Triwulan & Tahun). Ini ditegakkan di server
 Akun **Admin** melihat semua UPT dan dapat memilih UPT (termasuk **Semua UPT**, lihat masing-masing menu) saat
 memfilter/menginput/menghapus.
 
-## Menu & fungsinya
+## Alur kerja singkat
 
-| Menu | Alamat | Untuk | Fungsi |
-| :-- | :-- | :-- | :-- |
-| Dashboard | `/dashboard` | Semua | Ringkasan mingguan dari isian UPT (lihat di bawah) |
-| **Input Mingguan** | `/input-mingguan` | Semua | Input & rekap data **mingguan** |
-| **Input Bulanan** | `/input-bulanan` | Semua | Rekap bulanan (akumulasi 4 minggu / data by name) + popup **Input Bulanan** |
-| **Rekap Triwulan & Tahun** | `/rekap-triwulan-tahun` | Semua | Hasil rekap **triwulan** dan **tahunan** (baca saja) |
-| **Dokumen & Arsip** | `/dokumen-arsip` | **Admin** | Dua tab: **Dokumen & Panduan** (pedoman, SOP, template Excel — tersimpan di database) dan **Arsip Data Historis** (berkas Excel/PDF tahun lalu) |
-| Kelola Akun UPT | `/kelola-upt` | Admin | Buat/hapus akun UPT, reset password, tambah/hapus UPT |
-| **Permintaan** | `/permintaan-hapus` | Admin | Setujui/tolak baris data per baris (Persetujuan Baris Data), serta setujui/tolak permintaan hapus data |
-| Kelola Jenis Data | `/kelola-jenis-data` | Admin | Form Builder: jenis data & kolom, termasuk wizard **Buat dari Excel** |
-| **Kelola Dashboard** | `/kelola-dashboard` | Admin | Mengatur kartu & grafik Dashboard tanpa coding |
-| **Pengaturan Lanjutan** (menu lipat) | — | Admin | Jarang dipakai: **Kelola Periode** (`/kelola-periode`), **Impor Data Historis** (`/impor-historis`), **Tempat Sampah** (`/tempat-sampah`) |
-| Tampilan Publik | `/publik` | Publik | Satu halaman ringkas: total capaian per kategori data untuk satu tahun |
+1. UPT mengisi data di **Input Mingguan** dan **Input Bulanan**, atau mengunggah Weekly Report.
+2. Setiap baris yang disimpan UPT berstatus **Menunggu Persetujuan**.
+3. Admin memeriksa dan menyetujui (atau menolak) di menu **Permintaan**.
+4. Hanya data yang sudah **Disetujui** yang masuk Dashboard, rekap, dan Tampilan Publik.
 
-Alamat lama `/documents`, `/arsip-historis`, `/highlights`, dan `/daily-activity` dialihkan otomatis (Highlights & Daily Activity sudah dihapus).
+## Menu
 
-Alamat lama `/input-data` dan `/rekap-bulanan` otomatis dialihkan ke `/input-mingguan` dan `/input-bulanan`.
+| Menu | Untuk | Isi |
+| :-- | :-- | :-- |
+| Dashboard | Semua | Ringkasan angka dan grafik |
+| Input Mingguan | Semua | Mengisi dan melihat data mingguan |
+| Input Bulanan | Semua | Mengisi data bulanan dan melihat rekap bulanan |
+| Rekap Triwulan & Tahun | Semua | Rekap otomatis per triwulan dan per tahun (hanya dibaca) |
+| Dokumen & Arsip | Admin | Pedoman, SOP, template Excel, dan arsip berkas tahun-tahun lalu |
+| Kelola Akun UPT | Admin | Akun pengguna dan daftar UPT |
+| Permintaan | Admin | Menyetujui data UPT, permintaan hapus, dan permintaan edit |
+| Kelola Jenis Data | Admin | Mengatur jenis data dan kolom isiannya |
+| Kelola Dashboard | Admin | Mengatur kartu dan grafik Dashboard |
+| Pengaturan Lanjutan | Admin | Kelola Periode, Impor Data Historis, dan Tempat Sampah (jarang dipakai) |
 
 ## Dashboard
 
-Semua angka di dashboard **berasal dari isian UPT** dan mengikuti **Periode Mingguan** yang dipilih pada filter
-di bagian atas (tombol ◀ ▶ untuk pindah minggu; bawaan = minggu berjalan).
+Dashboard menampilkan ringkasan dari data UPT yang sudah disetujui. Pilih minggu di bagian atas (tombol ◀ ▶ untuk
+berpindah minggu). Bawaannya minggu yang sedang berjalan. Kalau ada data lebih dari satu tahun, pilihan **Tahun**
+juga muncul.
 
-**Semua angka bersifat kumulatif dari minggu ke-1 tahun berjalan.** Memilih minggu ke-4 menjumlahkan seluruh data
-dari minggu ke-1 Januari sampai minggu ke-4 itu (bukan hanya minggu yang dipilih) — berlaku untuk semua kartu dan
-grafik, bukan cuma kolom bertanda "kumulatif" (Pagu/Realisasi/dsb.). Memilih minggu lebih akhir dalam tahun yang
-sama selalu menghasilkan angka yang sama atau lebih besar.
+Angka di Dashboard dihitung **dari minggu pertama tahun itu sampai minggu yang dipilih**. Jadi memilih minggu yang
+lebih akhir selalu menghasilkan angka yang sama atau lebih besar.
 
-Isi kartu & grafik **diatur Admin lewat menu Kelola Dashboard** (lihat bawah) — bukan tetap di kode. Bawaannya:
+Bawaannya Dashboard berisi:
 
-* **4 kotak sejajar Realisasi Anggaran**: **RM**, **PNBP/BLU**, **SBSN** (dari *Data Capaian Anggaran per Sumber
-  Dana*, opsional) dan **Total Realisasi Anggaran** (dijumlahkan dari kolom Pagu/Realisasi Anggaran milik
-  *Masyarakat + Aparatur + Data Belanja Modal* — jenis data yang memang diisi UPT tiap minggu). Total **tidak**
-  dijumlahkan dari RM+PNBP/BLU+SBSN (supaya anggaran yang sama tidak terhitung dua kali kalau UPT mengisi kedua
-  jenis data itu) — keempatnya tampil sejajar satu grup, tapi sumber angkanya sengaja terpisah.
-* **3 kartu Progress & Status**
-  * **Masyarakat Dilatih** – jumlah peserta Jenis Data *Masyarakat*.
-  * **Aparatur Dilatih** – jumlah peserta Jenis Data *Aparatur*.
-  * **SDM Pelatih** – jumlah instruktur dan widyaiswara (*Data Instruktur dan WI*).
-* **Grafik** *Peserta Dilatih* dan *Pagu vs Realisasi* per UPT.
+* Kartu **Masyarakat Dilatih**, **Aparatur Dilatih**, dan **SDM Pelatih** (instruktur dan widyaiswara).
+* Kotak **Realisasi Anggaran**: RM, PNBP/BLU, SBSN, dan Total Realisasi Anggaran.
+* Grafik **Peserta Dilatih** dan **Pagu vs Realisasi** per UPT. Tombol kecil di pojok kartu grafik mengganti
+  tampilan menjadi tabel angka.
 
-Bila periode tersedia untuk lebih dari satu tahun, di samping pilihan minggu tampil pilihan **Tahun** (daftar minggu hanya
-menampilkan 48 minggu pada tahun terpilih).
-
-Selama UPT belum memasukkan data pada minggu itu (atau minggu-minggu sebelumnya di tahun yang sama), kartu menampilkan
-**–** dengan keterangan *"Menunggu input UPT"*, dan grafik menampilkan pesan menunggu. Begitu data disimpan di
-**Input Mingguan**, angka otomatis muncul (Admin juga melihat "N dari M UPT sudah input"; angka ini mengikuti jumlah UPT
-**aktif** saat ini — bila satu UPT dihapus, penyebutnya otomatis berkurang dan datanya tidak lagi ikut terhitung). Untuk
-akun UPT, dashboard hanya berisi data UPT tersebut.
+Kalau belum ada data, kartu menampilkan **–** dan tulisan *Menunggu input UPT*. Admin juga melihat berapa UPT yang
+sudah mengisi. Isi kartu dan grafik bisa diubah Admin di **Kelola Dashboard**.
 
 ## Input Mingguan
 
-Berisi **hanya Jenis Data mingguan**: Masyarakat, Aparatur, Data Instruktur dan WI, Data Belanja Modal, Capaian
-Anggaran per Jenis Belanja, dan per Sumber Dana, ditambah 8 jenis data yang mengikuti **Form Weekly Report** UPT:
-Target & Realisasi PNBP, Capaian Masyarakat per Program Prioritas / per Bidang Usaha / per Pembiayaan / per Metode,
-Capaian Diklat Aparatur per Metode, Lulusan DUDIKA, dan Pelatihan Non-APBN.
+Halaman ini menampilkan tabel rekap mingguan. Gunakan filter di atas tabel (tahun, triwulan, bulan, minggu, jenis
+data; Admin juga memilih UPT). Satu bulan dibagi empat minggu: tanggal 1–7, 8–14, 15–21, dan 22 sampai akhir bulan.
+
+### Mengisi data
+
+1. Klik **Input Mingguan** di kanan atas.
+2. Pilih jenis data, minggu, dan (untuk Admin) UPT.
+3. Klik **Tambah Pelatihan**, atau **Isi Data Minggu Ini** untuk jenis data yang hanya punya satu baris per minggu.
+4. Isi kolomnya, lalu klik **Simpan**. Baris baru langsung muncul di tabel dengan status *Menunggu Persetujuan*.
+
+Untuk mengubah, klik ikon pensil di kolom **Aksi**. Untuk menghapus, klik ikon tempat sampah. Aturan untuk baris yang
+sudah disetujui ada di bagian [Mengubah dan menghapus data](#mengubah-dan-menghapus-data).
+
+Beberapa jenis data (misalnya Masyarakat dan Aparatur) boleh berisi **lebih dari satu pelatihan dalam seminggu**.
+Klik **Tambah Pelatihan** lagi untuk setiap pelatihan. Angka minggu itu adalah jumlah semua pelatihannya.
+
+Di jenis data tertentu, pilihan satu kolom menentukan pilihan kolom lain. Contohnya di *Data Instruktur dan WI*:
+pilih dulu **Jenis** (Instruktur atau Widyaiswara), baru pilihan **Jenjang Jabatan** yang sesuai muncul.
+
+### Angka berjalan (kumulatif)
+
+Kolom bertanda **kumulatif**, seperti pagu, realisasi, dan jumlah SDM, diisi dengan **total sejak awal tahun sampai
+minggu itu**, bukan tambahan minggu itu saja. Contoh: realisasi minggu pertama Rp10 juta, minggu kedua bertambah
+Rp20 juta, maka minggu kedua diisi Rp30 juta. Rekap bulanan, triwulan, dan tahunan memakai angka terakhir ini.
+Kolom lain, seperti jumlah peserta, dijumlahkan dari minggu ke minggu.
+
+### Kolom data dukung
+
+Kolom seperti *Laporan Pelatihan*, *Data Dukung PNBP*, dan *Bukti Dukung* bisa diisi dengan salah satu cara:
+
+* **Unggah berkas** PDF, Word, atau Excel, paling besar 10 MB, atau
+* **Tempel link** di isian *atau link*, misalnya link folder Google Drive. Link harus diawali `http://` atau
+  `https://`.
+
+Di tabel, berkas tampil sebagai tombol unduh dan link tampil sebagai **Buka link**.
 
 ### Impor Weekly Report
 
-Tombol **Impor Weekly Report** (di samping *Input Mingguan*) menerima berkas Excel **Form Weekly Report** yang biasa
-dikirim UPT tiap minggu, **apa adanya**, tanpa perlu diketik ulang.
+UPT yang biasa mengirim **Form Weekly Report** (Excel) tidak perlu mengetik ulang isinya.
 
-1. Pilih berkasnya. Aplikasi membaca UPT dan tanggal laporan dari formulir, lalu memilih **UPT** (Admin; akun UPT
-   selalu UPT-nya sendiri) dan **minggu** yang sesuai (mis. 24 September 2026 → Minggu ke-4 September 2026).
-   Keduanya bisa diganti sebelum menyimpan.
-2. Periksa **pratinjau**: satu tabel per jenis data dengan angka yang terbaca. Kotak **Perlu dicek** menampilkan
-   temuan pada formulir, misalnya pagu per jenis belanja tidak sama dengan per sumber dana, baris "Jumlah" yang tidak
-   cocok dengan rinciannya, atau label yang muncul dua kali (yang dipakai nilai pertama).
-3. **Simpan**. Seperti input biasa: data dari akun UPT berstatus *Menunggu Persetujuan*, data dari Admin langsung
-   disetujui; baris yang sudah disetujui tidak ditimpa, perubahannya diajukan sebagai **permintaan edit**. Mengimpor
-   ulang minggu yang sama memperbarui angkanya (tidak menggandakan). Bagian yang kosong di formulir tidak mengubah
-   data yang sudah tersimpan.
-4. Setelah tersimpan, semua angka bisa **diubah lagi** lewat *Input Mingguan* seperti data lain.
+1. Klik **Impor Weekly Report** di samping tombol *Input Mingguan*, lalu pilih berkasnya.
+2. Aplikasi membaca nama UPT dan tanggal laporan dari formulir, lalu memilih minggu yang sesuai. Contohnya, laporan
+   24 September 2026 masuk ke Minggu ke-4 September 2026. Admin bisa mengganti UPT dan minggunya bila perlu.
+3. Periksa **pratinjau**. Setiap bagian formulir tampil sebagai tabel. Kotak **Perlu dicek** memberi tahu kalau ada
+   angka yang janggal, misalnya pagu per jenis belanja tidak sama dengan pagu per sumber dana.
+4. Klik **Simpan**. Data masuk dengan status *Menunggu Persetujuan*, sama seperti input biasa.
 
-Catatan: bagian **total Balai** di formulir tidak disimpan terpisah karena selalu sama dengan jumlah rinciannya;
-**persentase** juga tidak disimpan karena dihitung ulang oleh aplikasi. Angka di formulir adalah angka berjalan
-sejak awal tahun, sehingga rekap bulan/triwulan/tahun memakai nilai terakhir. Jenis data Weekly Report tidak
-dihitung di kolom Pelatihan/Peserta tabel rekap (supaya tidak terhitung dua kali dengan jenis data Masyarakat per
-pelatihan); Admin bisa mengubahnya lewat *Dihitung di rekap sebagai* di Kelola Jenis Data.
-
-1. Halaman menampilkan **rekap mingguan** (filter tahun/triwulan/bulan/minggu/jenis data; Admin juga memilih UPT).
-2. Klik **Input Mingguan** (kanan atas) → pilih **Jenis Data** (daftar sudah terfilter mingguan) → pilih periode
-   (**Minggu ke-1…4** tiap bulan: tanggal 1–7, 8–14, 15–21, 22–akhir bulan) → pilih **UPT**. Yang tampil adalah
-   **tabel rekap** berisi baris yang sudah tersimpan (kosong bila belum ada), dengan kolom **Status** (badge
-   Menunggu/Disetujui/Ditolak — lihat [Persetujuan Baris Data](#persetujuan-baris-data)) dan **Aksi** (Edit/Hapus)
-   di paling kanan. Input data TIDAK lagi lewat form yang selalu terbuka — klik **+ Tambah Pelatihan** (atau
-   **Isi Data Minggu Ini** untuk jenis data yang cuma satu baris nilai per minggu) untuk membuka jendela isian,
-   isi kolomnya, lalu **Simpan** — jendela tertutup dan baris itu langsung muncul di tabel. Untuk mengubah baris
-   yang sudah ada, klik ikon **Edit** di kolom Aksi (jendela yang sama terbuka terisi nilai lama); mengosongkan
-   sebuah kolom lalu Simpan akan menghapus nilai kolom itu saja (masuk Tempat Sampah). Klik ikon **Hapus** di
-   kolom Aksi untuk membuang seluruh baris (masuk Tempat Sampah 30 hari; berubah jadi **Ajukan Hapus** dengan
-   ikon amber begitu baris itu sudah **Disetujui** Admin — lihat [Persetujuan Baris Data](#persetujuan-baris-data)).
-3. **Beberapa pelatihan dalam seminggu.** Pada jenis data yang diaktifkan Admin (*Masyarakat, Aparatur, Data
-   Belanja Modal, Data Instruktur dan WI*, dan lainnya bila diaktifkan lewat **Kelola Jenis Data** → *Boleh lebih
-   dari 1 pelatihan per minggu*), tombol **+ Tambah Pelatihan** bisa diklik berkali-kali — tiap klik membuka
-   jendela isian baru untuk satu pelatihan, dan tabel rekap menampilkan semua pelatihan sebagai baris terpisah
-   (bernomor 1, 2, 3, …). Angka pada minggu itu = **jumlah semua pelatihan** (mis. peserta 12 + 8 = 20). Jenis
-   data yang tidak diaktifkan opsi ini hanya punya **satu baris** nilai per minggu (tombol **Isi Data Minggu Ini**
-   hilang setelah baris itu terisi, tersisa Edit/Hapus di tabel).
-4. **Angka kumulatif.** Kolom bertanda **kumulatif** (Pagu, Realisasi, jumlah SDM) diisi dengan **total sampai minggu
-   tersebut**, bukan tambahan minggu itu saja. Rekap bulan/triwulan/tahun memakai **nilai terakhir** yang sudah diisi,
-   sehingga pagu/realisasi tidak terhitung berulang. Kolom lain (mis. jumlah peserta) dijumlahkan.
-5. **Kolom pilihan bersyarat.** Pada jenis data tertentu (mis. *Data Instruktur dan WI*: kolom **Jenis** →
-   Instruktur/Widyaiswara), memilih satu kolom mengubah **opsi** kolom lain yang bergantung padanya (mis.
-   **Jenjang Jabatan** menampilkan opsi khusus Instruktur atau khusus Widyaiswara, dan menunjukkan
-   "- Pilih Jenis dulu -" sampai kolom Jenis diisi). Mengganti pilihan pada kolom penentu mengosongkan ulang
-   kolom yang bergantung padanya.
-6. **Semua UPT — kosongkan/hapus massal.** Admin juga bisa memilih **Semua UPT** pada pemilih UPT. Form isian
-   disembunyikan (nilai per-UPT tidak bisa digabung jadi satu form), tapi tombol **Kosongkan Data Minggu Ini
-   (Semua UPT)** aktif — menghapus seluruh isian minggu itu **lintas semua UPT sekaligus** lewat dialog konfirmasi
-   ketik **HAPUS** (masuk Tempat Sampah 30 hari, sama seperti penghapusan biasa).
-7. Tab **Triwulan** dan **Tahun** hanya **rekap otomatis** (sesuai cara rekap tiap kolom) — **tidak ada input
-   maupun upload**; tersedia tombol *Download Excel*.
-8. Nilai yang disimpan langsung tampil di Dashboard.
+Mengimpor ulang laporan minggu yang sama hanya memperbarui angkanya, tidak menggandakan. Bagian formulir yang kosong
+tidak mengubah data yang sudah ada. Setelah tersimpan, semua angka tetap bisa diubah di Input Mingguan. Total Balai
+dan persentase di formulir tidak disimpan karena aplikasi menghitungnya sendiri.
 
 ## Input Bulanan
 
-Pola halamannya sama seperti Input Mingguan: yang tampil pertama adalah **rekap bulanan**, dan tombol
-**+ Input Bulanan** (kanan atas) membuka **popup** untuk mengisi/mengunggah data. Berisi **hanya Jenis Data bulanan**;
-setiap jenis data bulanan berbentuk salah satu dari dua: **Per nama (rincian)** atau **Rekap angka saja**.
+Halaman ini menampilkan rekap bulanan. Tombol **Input Bulanan** di kanan atas membuka jendela untuk mengisi data.
+Jenis data bulanan ada dua macam:
 
-Saat filter **Jenis Data** di halaman diarahkan ke *Data Instruktur dan WI (Bulanan)*, 2 kartu ringkasan teratas
-("Total Pelatihan"/"Total Peserta" — tidak relevan untuk jenis data ini) otomatis berganti jadi **Total Instruktur**
-dan **Total Widyaiswara**, dihitung terpisah dari kolom "Jenis" per baris data mingguannya.
+* **Per nama**: satu baris untuk satu orang, misalnya Data Masyarakat dan Data Aparatur. Diisi lewat
+  **Tambah Baris** atau **Upload Excel**.
+* **Rekap angka**: angkanya dihitung otomatis dari data mingguan, jadi tidak perlu diisi.
 
-### Popup "Input Bulanan"
-Di dalam popup: pilih Jenis Data bulanan (sudah terfilter), periode bulan, dan (Admin) UPT.
+### Upload Excel
 
-| Jenis | Cara isi |
-| :-- | :-- |
-| **Per nama (rincian)** (mis. Data Masyarakat, Data Aparatur) | **Tambah Baris** (per orang) atau **Upload Excel**. Baris dapat diedit/dihapus. Menyimpan satu baris **tidak menutup popup** — lanjutkan menambah baris berikutnya, lalu tutup popup (✕) saat selesai |
-| **Rekap angka saja** | Hanya angka total per bulan yang dijumlahkan otomatis dari isian mingguan pasangannya; tidak diisi manual |
-| Unggah berkas *(mode lama)* | Hanya untuk jenis data lama yang sudah memakainya. Tidak tersedia untuk jenis data baru; ganti ke salah satu mode di atas lewat Kelola Jenis Data bila perlu |
+1. Klik **Template Excel** untuk mengunduh berkas dengan kolom yang benar, lalu isi datanya.
+2. Klik **Upload Excel** dan pilih berkasnya.
+3. Periksa layar **pemetaan kolom**. Aplikasi mencocokkan kolom Excel dengan kolom isian secara otomatis. Perbaiki
+   bila ada yang keliru, lalu lanjutkan.
 
-Mode dipilih Admin saat membuat jenis data bulanan di **Kelola Jenis Data**. "Rekap angka saja" wajib memilih Pasangan Jenis Data Mingguan.
+Excel buatan sendiri juga bisa dipakai, termasuk yang memakai sel gabungan (merge). Judul laporan di baris paling
+atas dilewati, judul kolom dua tingkat digabung (misalnya "Jumlah Peserta" di atas "L" dan "P" menjadi "Jumlah
+Peserta L" dan "Jumlah Peserta P"), dan baris JUMLAH atau TOTAL diabaikan. Hanya sheet pertama yang dibaca. Satu kali
+unggah paling banyak 5.000 baris.
 
-**Semua UPT (khusus "Per nama").** Selain memilih satu UPT, Admin bisa memilih **Semua UPT** — tabel menampilkan
-baris dari **semua UPT sekaligus** dengan kolom/badge UPT per baris. Karena baris baru butuh satu UPT tujuan yang
-jelas, tombol **Tambah Baris**/**Upload Excel**/**Edit** disembunyikan selama "Semua UPT" dipilih (tetap bisa
-Lihat & Hapus per baris, dan **Download Excel** ikut menyertakan kolom UPT). Dua tombol tambahan muncul:
+Setiap baris dicocokkan dengan data yang sudah ada lewat **NIK**, atau lewat **nama** kalau NIK kosong. Karena itu,
+mengunggah berkas yang sama dua kali tidak membuat data dobel:
 
-* **Hapus Semua** (atau *Hapus Hasil Pencarian* bila sedang mencari) — menghapus sesuai cakupan filter aktif
-  (termasuk lintas semua UPT bila "Semua UPT" dipilih), lewat dialog konfirmasi ketik **HAPUS**.
-* **Hapus Duplikat** — mendeteksi otomatis baris yang UPT, periode, dan **seluruh isi kolomnya sama persis**
-  (mis. akibat Excel yang sama diunggah dua kali), lalu menyisakan satu dan menghapus sisanya.
+* Baris yang isinya sama dilewati.
+* Baris yang berubah dan belum disetujui diperbarui.
+* Baris baru ditambahkan.
+* Baris yang sudah disetujui tapi isinya berubah tidak langsung ditimpa. Aplikasi bertanya apakah perubahan itu
+  diajukan ke Admin (**Ajukan ke Admin**) atau diabaikan (**Lewati**).
 
-**Validasi silang**: pada jenis data bulanan yang berpasangan dengan mingguan, aplikasi membandingkan jumlah
-baris rincian bulan dengan total peserta dari 4 minggu pasangannya dan menampilkan status kelengkapan
-(mis. "Baru 3 dari 4 minggu terisi …") serta selisihnya. Validasi ini otomatis disembunyikan saat "Semua UPT"
-dipilih (perbandingannya bersifat per-UPT, tidak berarti saat digabung).
+Setelah selesai, muncul ringkasan jumlah baris baru, diperbarui, dilewati, dan diajukan.
 
-**Impor Excel**
-1. Klik **Template Excel** untuk mengunduh berkas dengan kolom sesuai definisi jenis data saat ini.
-2. Isi data, lalu **Upload Excel**. Layar **pemetaan kolom** mencocokkan kolom berkas dengan kolom sistem
-   secara otomatis; Anda dapat mengoreksinya.
-   Excel buatan sendiri juga bisa dipakai, termasuk yang memakai **sel gabungan (merge)**: judul laporan di baris
-   atas dilewati otomatis, judul kolom dua tingkat digabung (mis. "Jumlah Peserta" di atas "L"/"P" menjadi
-   "Jumlah Peserta L" dan "Jumlah Peserta P"), sel yang digabung ke bawah/ke samping diisi ke setiap baris, dan
-   baris kosong serta baris JUMLAH/TOTAL diabaikan. Bila judul kolom tidak di baris pertama, layar pemetaan
-   menyebutkan baris mana yang dipakai. Satu sheet dibaca sebagai **satu tabel** (sheet pertama).
-3. Kolom yang tidak dikenali disimpan sebagai *data ekstra* dan dicatat di `audit_log`.
-4. Setiap baris dicocokkan dengan data yang sudah tersimpan di periode itu: lewat **NIK**, atau lewat **nama**
-   bila NIK kosong. Jadi mengunggah ulang berkas yang sama **tidak menggandakan** data:
-   * baris yang isinya sama → dilewati;
-   * baris yang isinya berubah dan belum disetujui → diperbarui (kembali menunggu persetujuan);
-   * baris baru → ditambahkan, **menunggu persetujuan Admin** seperti input mingguan (unggahan Admin langsung
-     disetujui);
-   * baris yang **sudah disetujui** Admin tetapi isinya di Excel berbeda → tidak ditimpa. Muncul pertanyaan
-     apakah perubahan itu diajukan ke Admin (**Ajukan ke Admin**) atau diabaikan (**Lewati**). Nilai lama tetap
-     berlaku sampai Admin menyetujuinya di menu **Permintaan → Hapus & Edit**.
+### Rekap bulanan
 
-   Setelah impor selesai muncul ringkasan (berapa baris baru, diperbarui, dilewati, diajukan), popup menutup, dan
-   rekap di belakangnya menyegarkan.
+Pilih tahun, bulan, jenis data, dan (Admin) UPT. Ada dua tampilan:
 
-Menutup popup (✕ / klik luar / Esc) selalu menyegarkan rekap di halaman Input Bulanan.
+* **Rekap 4 Minggu**: total pelatihan, peserta, pagu, dan realisasi bulan itu, serta kelengkapan isian tiap minggu.
+  **Download Excel Bulanan** mengunduh rekapnya.
+* **Data by Name**: daftar baris per orang, lengkap dengan pencarian dan **Download Excel**. Kalau ada baris yang
+  persis sama, tombol **Hapus Duplikat** muncul.
 
-### Rekap Bulanan (tampilan utama halaman)
-Pilih **Tahun**, **Bulan**, **UPT** (Admin), dan **Jenis Data**, lalu pilih tampilan:
-
-* **Rekap 4 Minggu** – total pelatihan, peserta, pagu, realisasi, berkas; rincian per Jenis Data dan status
-  kelengkapan tiap minggu. **Download Excel Bulanan** menghasilkan berkas multi-sheet.
-* **Data by Name (Unggahan UPT)** – baris per orang hasil unggahan UPT (Excel sesuai template atau form). Admin
-  bisa memilih **satu UPT** (tanpa kolom UPT, seperti sebelumnya) atau **Semua UPT** (kolom UPT ditambahkan per
-  baris — lihat penjelasan "Semua UPT" di atas, berlaku sama di tampilan ini dan di dalam popup); akun UPT tetap
-  otomatis terkunci ke UPT-nya sendiri. Tersedia pencarian, pilihan 25/50/100/250 baris per halaman, dan
-  **Download Excel**.
-  * **Jenis data kumulatif** (toggle *Data kumulatif* di Kelola Jenis Data, kolom `kumulatif_bulanan`): bila bulan
-    yang dipilih belum ada datanya, tampilan otomatis loncat ke **bulan terakhir yang sudah ada datanya** — badge
-    **KUMULATIF** muncul di judul, dan catatan biru menjelaskan bulan mana yang ditampilkan. Konsepnya: roster
-    bulan terbaru **menggantikan** bulan sebelumnya (UPT mengunggah data lengkap tiap bulan), bukan dataset
-    bulanan yang terpisah-pisah.
-
-### Deadline & penanda terlambat
-Setiap periode punya **deadline** (lihat [04-database.md](04-database.md#periods--periode-pelaporan)). Setelah
-lewat, akun **UPT tetap dapat mengisi/mengubah/menghapus** data periode itu — tidak ada penguncian. Sebagai gantinya muncul banner
-merah *"Lewat Deadline"*, dan data yang disimpan setelah deadline diberi label merah **Terlambat** (di Input Mingguan/Bulanan, kartu status
-Dashboard, dan Rekap Admin). Penanda dicap oleh server dan tidak dapat dihapus dengan menyimpan ulang. Pengisian oleh **Admin** tidak ditandai.
+Untuk jenis data bulanan yang berpasangan dengan data mingguan, aplikasi membandingkan jumlah orang di data bulanan
+dengan jumlah peserta dari empat minggunya dan menampilkan selisihnya.
 
 ## Rekap Triwulan & Tahun
 
-Halaman **baca saja** (tanpa input/upload): seluruh angka **dijumlahkan otomatis (SUM) dari data mingguan** yang sudah
-diinput UPT.
+Halaman ini hanya untuk dibaca. Semua angkanya dihitung otomatis dari data mingguan yang sudah disetujui.
 
-1. Pilih tampilan **Triwulan** (lalu pilih Triwulan I–IV) atau **Tahunan**, serta **Tahun**.
-2. **Admin** memilih **Semua UPT** atau satu UPT; **akun UPT** otomatis hanya melihat UPT-nya sendiri.
-3. Filter **Jenis Data** membatasi tabel di bagian bawah ke satu jenis data mingguan.
+1. Pilih **Triwulan** (lalu Triwulan I sampai IV) atau **Tahunan**, dan pilih tahunnya.
+2. Admin bisa memilih satu UPT atau **Semua UPT**.
+3. Filter **Jenis Data** membatasi tabel di bagian bawah.
 
-Isi halaman:
+Isinya: kartu ringkasan, rincian per bulan atau per triwulan, tabel per jenis data, dan tombol **Download Excel**.
 
-* **Kartu ringkasan**: Masyarakat Dilatih, Aparatur Dilatih, SDM Pelatih, serta Realisasi **RM**, **PNBP/BLU**, **SBSN**
-  dan **Total Realisasi Anggaran** (= RM + PNBP/BLU + SBSN) untuk periode terpilih.
-* **Rincian per Bulan** (mode Triwulan) atau **per Triwulan** (mode Tahunan) untuk setiap indikator di atas, plus grafik peserta.
-* **Rekap per Jenis Data**: tabel per UPT berisi seluruh kolom angka yang dijumlahkan, jumlah *minggu terisi* (mis. 4/12),
-  dan baris TOTAL.
-* **Download Excel** (sheet *Ringkasan* + satu sheet per Jenis Data).
+## Status data
 
-Bila UPT belum menginput, indikator menampilkan **–** dan keterangan *"Menunggu input UPT"*. UPT yang dihapus otomatis
-tidak lagi ikut terhitung.
+Setiap baris data punya status:
 
-> **Cara rekap per kolom.** Tiap kolom angka mingguan punya cara rekap: **Jumlahkan (Σ)**, **Nilai terakhir
-> (kumulatif)**, **Rata-rata**, atau **Maksimum**. Bawaan untuk kolom baru: **nilai terakhir** (angka dianggap
-> berjalan/kumulatif — mis. minggu 1 = 10, minggu 2 = 30 → rekap bulan pakai 30, bukan 10 + 30); ganti ke *jumlahkan*
-> hanya untuk kolom yang memang mencatat tambahan baru tiap minggu secara terpisah (mis. jumlah peserta pelatihan
-> per sesi). Antar-UPT, angka *nilai terakhir* tetap dijumlahkan (total RM semua UPT = jumlah RM terakhir tiap UPT).
-> Admin dapat mengubahnya per kolom di **Kelola Jenis Data**.
+| Status | Artinya | Yang bisa dilakukan UPT |
+| :-- | :-- | :-- |
+| Menunggu Persetujuan (kuning) | Sudah tersimpan, belum diperiksa Admin, belum masuk rekap | Mengubah dan menghapus langsung |
+| Disetujui (hijau) | Sudah resmi dan masuk rekap | Mengajukan perubahan atau penghapusan ke Admin |
+| Ditolak (merah) | Admin menolak, disertai alasan bila diisi | Memperbaiki lalu menyimpan lagi; statusnya kembali *Menunggu Persetujuan* |
 
-## Koreksi & Penghapusan Data
+Data yang dimasukkan Admin langsung berstatus *Disetujui*.
 
-Data yang salah dapat **dikoreksi** atau **dihapus**. Mengoreksi (mengubah nilai lalu Simpan) selalu langsung
-berlaku — hanya **menghapus** yang diatur di bawah ini.
+## Mengubah dan menghapus data
 
-| Kebutuhan | Cara |
-| :-- | :-- |
-| Mengoreksi nilai mingguan | Buka periodenya di **Input Mingguan**, klik ikon ✏️ Edit pada baris di tabel rekap, ubah nilai, **Simpan** |
-| Mengoreksi satu baris bulanan | Ikon ✏️ pada baris di **Input Bulanan** → ubah → simpan. Impor Excel ulang juga memperbarui baris yang cocok (NIK, atau nama bila NIK kosong); baris yang sudah disetujui diajukan ke Admin sebagai permintaan edit |
-| Menghapus **satu** baris/berkas/aktivitas | Ikon 🗑️ pada item tersebut (ada konfirmasi) |
-| Menghapus **seluruh isian satu periode** | **Input Mingguan** → tombol **Kosongkan Data Minggu Ini**; **Input Bulanan** → **Hapus Semua Data Bulan Ini**. Wajib mengetik **HAPUS** |
-| Menghapus **lintas semua UPT sekaligus** (Admin) | Pilih **Semua UPT** di pemilih UPT (Input Mingguan/Bulanan, popup maupun tampilan Data by Name), lalu tombol Kosongkan/Hapus Semua mencakup semua UPT. Wajib mengetik **HAPUS** |
-| Menghapus **data duplikat** (baris identik akibat impor dobel) | **Input Bulanan** → tampilan Data by Name / popup → tombol **Hapus Duplikat** (muncul otomatis bila terdeteksi) |
+**Baris yang belum disetujui** (menunggu atau ditolak) boleh diubah dan dihapus langsung oleh UPT.
 
-**Aturan siapa yang boleh:**
+**Baris yang sudah disetujui** tidak bisa diubah langsung oleh UPT:
 
-* **Akun UPT tidak bisa langsung menghapus** data mingguan/bulanan/berkas miliknya sendiri. Menekan tombol
-  Hapus/Kosongkan/Hapus Duplikat di atas **mengajukan permintaan** ke Admin ("Akan mengajukan permintaan hapus …
-  ke Admin. Data tidak langsung terhapus") — data tetap utuh sampai disetujui. Mengedit/mengosongkan isian biasa
-  sambil masih mengisi form minggu/bulan berjalan (bukan lewat tombol Hapus) **tidak** kena aturan ini — tetap
-  tersimpan langsung seperti biasa.
-* **Admin** menghapus langsung, kapan saja, tanpa perlu persetujuan siapa pun (baik data UPT tertentu maupun
-  "Semua UPT" sekaligus). Admin juga yang menyetujui/menolak permintaan dari UPT, lewat menu **Permintaan**,
-  bagian **Hapus** (lihat [Menu Admin](#menu-admin) di bawah).
-* **Memulihkan** data dari Tempat Sampah hanya dapat dilakukan **Admin**.
+* Klik **Edit**, ubah isinya, lalu **Simpan**. Perubahan itu dikirim ke Admin sebagai **permintaan edit**. Angka lama
+  tetap berlaku sampai Admin menyetujuinya. Kalau Anda mengajukan edit lagi sebelum Admin memproses, pengajuan lama
+  diganti dengan yang baru.
+* Klik ikon hapus untuk mengajukan **permintaan hapus**. Datanya tetap ada sampai Admin menyetujui.
 
-Setelah disetujui (atau dihapus langsung oleh Admin), data masuk **Tempat Sampah** selama **30 hari** dan tercatat
-di log — bukan langsung permanen. Bila setelah dihapus Anda menyimpan data yang sama lagi (mis. mengisi ulang
-kolom mingguan atau memasukkan NIK yang sama), data yang baru otomatis menggantikan salinan di tempat sampah.
+Untuk menghapus banyak data sekaligus:
 
-## Persetujuan Baris Data
+* **Kosongkan Data Minggu Ini** di Input Mingguan, atau **Hapus Semua Data Bulan Ini** di Input Bulanan. Anda harus
+  mengetik **HAPUS** untuk memastikan.
+* Kalau di antara data itu ada yang sudah disetujui, seluruh penghapusan diajukan ke Admin lebih dulu.
+* Admin bisa memilih **Semua UPT** untuk menghapus data satu periode dari semua UPT sekaligus.
 
-Setiap baris data yang Anda simpan menunggu persetujuan Admin sebelum dihitung resmi — berlaku otomatis pada
-**setiap baris**, tanpa perlu tombol "kirim" terpisah.
+Data yang dihapus masuk **Tempat Sampah** selama 30 hari dan masih bisa dipulihkan oleh Admin.
 
-1. Begitu Anda mengisi & menekan **Simpan** (mingguan, bulanan, atau upload berkas), baris/entri itu langsung
-   muncul dengan badge kuning **"Menunggu Persetujuan"**. Anda masih bebas mengedit atau menghapusnya sendiri
-   kapan saja selama masih berstatus ini.
-2. Baris yang masih menunggu persetujuan **belum ikut dihitung** di Dashboard, Rekap, grafik, atau halaman
-   publik — hanya baris yang sudah disetujui yang masuk total resmi. Data Anda tetap tersimpan dan tetap
-   terlihat di form Anda sendiri, hanya belum "resmi".
-3. Setelah Admin menekan **Setujui** (menu **Permintaan**, bagian "Persetujuan Baris Data"), badge berubah hijau
-   **"Disetujui"**. Anda masih bisa menekan tombol **Edit**, tapi mengisi & menyimpan sekarang **mengajukan nilai
-   baru ke Admin** alih-alih menulis langsung — data lama tetap berlaku sampai disetujui.
-4. Untuk mengubah baris yang sudah disetujui, klik **Edit** seperti biasa (formnya terisi nilai lama, tidak perlu
-   mengetik ulang dari nol), ubah yang perlu, lalu **Simpan** — ini mengajukan permintaan edit ke Admin, sama
-   seperti permintaan hapus data lainnya (lihat bagian **Hapus & Edit** di [Menu Admin](#menu-admin)). Anda tetap
-   bisa menghapus baris yang sudah disetujui lewat tombol Hapus (mengajukan permintaan hapus), lalu memasukkan
-   data baru dari nol bila memang itu yang diinginkan.
-5. Admin juga bisa menekan **Tolak** alih-alih Setujui — baris itu TIDAK dihapus atau diubah, badge berubah
-   merah **"Ditolak"** disertai catatan alasan dari Admin (bila diisi). Baris yang ditolak tetap bisa Anda
-   edit/hapus bebas seperti biasa (sama seperti "Menunggu Persetujuan") — begitu Anda perbaiki & **Simpan**
-   ulang, badge otomatis kembali kuning "Menunggu Persetujuan" dan catatan penolakan lama hilang, menunggu
-   ditinjau Admin lagi dari awal. Menolak permintaan **edit** pada baris yang sudah disetujui tidak menyentuh
-   data — nilai lama tetap berlaku, badge tetap hijau "Disetujui".
+## Deadline dan tanda Terlambat
 
-**Data yang Admin masukkan sendiri langsung dianggap disetujui** — Admin tidak pernah perlu menyetujui isian
-dirinya sendiri.
+Setiap minggu dan bulan punya batas waktu pengisian. Setelah batas waktu lewat, UPT **tetap bisa** mengisi dan
+mengubah data. Bedanya, data yang disimpan setelah batas waktu diberi tanda merah **Terlambat**. Tanda ini tidak hilang
+walaupun data disimpan ulang. Data yang dimasukkan Admin tidak pernah diberi tanda Terlambat.
 
-## Menu Admin
-
-### Kelola Akun UPT
-* **Buat Akun Baru** – email, password (≥ 8 karakter), nama lengkap, UPT. Akun langsung aktif.
-* Hapus akun (ikon tempat sampah). Akun sendiri tidak dapat dihapus.
-* **Tambah UPT** – masukkan *key* (huruf kecil & underscore, mis. `upt_kupang`) dan nama UPT.
-* **Hapus UPT** – ⚠️ menghapus UPT ikut menghapus **permanen** seluruh datanya: akun pengguna, rekap mingguan,
-  data rincian bulanan, berkas unggahan, dan daily activity milik UPT itu. Dashboard, grafik, dan rekap otomatis
-  tidak lagi memuatnya. Aksi ini meminta konfirmasi dan **tidak dapat dibatalkan** (lakukan backup lebih dulu).
+## Khusus Admin
 
 ### Permintaan
-Ada dua bagian berbeda di halaman ini:
 
-**Persetujuan Baris Data** (lihat [Persetujuan Baris Data](#persetujuan-baris-data)): daftar baris data
-mingguan/bulanan/berkas yang UPT simpan dan masih menunggu disetujui, dikelompokkan per UPT · Jenis Data ·
-Periode. Tiap grup menampilkan pratinjau ringkas tiap baris (nama pelatihan, nama orang, atau judul berkas)
-dengan tombol **Setujui** dan **Tolak** per baris, plus tombol **Setujui Semua** di judul grup untuk menyetujui
-banyak baris sekaligus. Menekan **Tolak** membuka kotak dialog untuk mengisi alasan (opsional) — baris itu TIDAK
-dihapus, hanya ditandai "Ditolak" dengan catatan yang terlihat UPT; mereka tetap bebas mengedit/menghapus baris
-draft maupun yang ditolak sendiri kapan saja.
+Halaman ini punya dua bagian.
 
-**Hapus & Edit** – daftar permintaan hapus DAN permintaan edit pada baris yang sudah disetujui (lihat [Koreksi &
-Penghapusan Data](#koreksi--penghapusan-data) dan [Persetujuan Baris Data](#persetujuan-baris-data)),
-dikelompokkan **Menunggu Persetujuan** dan **Riwayat**. Tiap permintaan diberi label **Hapus** (merah) atau
-**Edit** (kuning) supaya mudah dibedakan sekilas; untuk permintaan Edit, ringkasan nilai baru yang diajukan
-langsung terlihat di daftar sebelum Anda memutuskan. Menampilkan UPT pengaju, jenis data, periode, dan alasan
-(bila diisi UPT). Dua aksi:
+**Persetujuan Baris Data** berisi data UPT yang menunggu persetujuan, dikelompokkan per UPT, jenis data, dan periode.
 
-* **Setujui** – untuk Hapus: benar-benar menjalankan penghapusannya (masuk Tempat Sampah 30 hari, dapat
-  dipulihkan). Untuk Edit: langsung menulis nilai baru yang diajukan — baris kembali berstatus **Disetujui**
-  seketika, UPT tidak perlu menunggu persetujuan kedua kali.
-* **Tolak** – data tidak disentuh (untuk Edit: nilai lama tetap berlaku); boleh menambahkan catatan alasan
-  penolakan (terlihat UPT di riwayat).
+* **Setujui** menyetujui satu baris. **Setujui Semua** menyetujui satu kelompok sekaligus.
+* **Tolak** menandai baris sebagai ditolak. Anda bisa menulis alasannya, dan UPT akan melihat alasan itu. Barisnya
+  tidak dihapus.
 
-### Kelola Periode
-Periode (1 tahun = 65: 1 tahun, 4 triwulan, 12 bulan, 48 minggu) **tahun berjalan dan tahun depan dibuat otomatis** oleh
-server — tidak perlu perintah manual saat pergantian tahun. Di menu ini Admin dapat:
+**Hapus & Edit** berisi permintaan dari UPT untuk menghapus atau mengubah data yang sudah disetujui. Label merah
+berarti permintaan hapus, label kuning berarti permintaan edit (nilai barunya terlihat di daftar).
 
-* melihat tahun yang tersedia dan kelengkapannya (mis. 65 / 65);
-* **membuat tahun lain**, termasuk **5 tahun ke belakang** (tombol satu klik) — periode yang sudah ada tidak ditimpa;
-* **mengubah deadline per periode** (kolom Deadline). Memperpanjang deadline membuka periode itu bagi UPT; perubahan
-  hanya berlaku untuk periode tersebut dan tercatat di log.
+* **Setujui** pada permintaan hapus memindahkan data ke Tempat Sampah. Pada permintaan edit, nilai baru langsung
+  berlaku dan tetap berstatus disetujui.
+* **Tolak** tidak mengubah data apa pun. Anda bisa menulis alasannya.
 
-Deadline tahun lampau sudah lewat, sehingga isian UPT pada periode itu ditandai **terlambat**. Untuk data lama, gunakan **Arsip Data Historis** atau **Impor Data Historis**.
+### Kelola Akun UPT
+
+* **Buat Akun Baru**: isi email, password (minimal 8 karakter), nama lengkap, dan UPT. Satu UPT boleh punya beberapa
+  akun. Sebaiknya setiap pegawai punya akun sendiri supaya tercatat siapa mengisi apa.
+* **Reset Password**: ikon kunci pada baris akun. Password baru hanya ditampilkan sekali, jadi salin dan berikan
+  langsung ke pemilik akun.
+* **Tambah UPT**: isi kode UPT (huruf kecil dan garis bawah, misalnya `upt_kupang`) dan nama UPT.
+* **Hapus UPT**: menghapus UPT ikut menghapus **permanen** semua akun dan datanya. Langkah ini tidak bisa dibatalkan,
+  jadi pastikan ada backup sebelumnya.
+
+### Kelola Jenis Data
+
+Di sini Admin mengatur jenis data dan kolom isiannya. Perubahan langsung berlaku untuk formulir input dan template
+Excel.
+
+* **Jenis data**: judul, diisi mingguan atau bulanan, pasangan mingguannya (untuk data bulanan), boleh tampil di
+  Tampilan Publik atau tidak, dan boleh berisi lebih dari satu pelatihan per minggu atau tidak.
+* **Buat dari Excel**: membuat jenis data bulanan per nama langsung dari contoh berkas Excel. Kolom dan jenis isiannya
+  ditebak dari isi berkas, bisa Anda periksa dulu, lalu seluruh baris berkas ikut diimpor.
+* **Kolom**: tambah, ubah, sembunyikan, hapus, atau ubah urutan dengan menyeret. Jenis isian yang tersedia: angka,
+  teks singkat, teks panjang, tanggal, pilihan, dan berkas. Centang **Data pribadi** untuk kolom seperti NIK supaya
+  tidak pernah tampil di Tampilan Publik.
+* **Dihitung di rekap sebagai** (jenis data mingguan): menentukan kolom mana yang menjadi jumlah Pelatihan, Peserta,
+  Pagu, dan Realisasi di tabel rekap. Panel **Cara data ini dihitung di rekap** merangkumnya. Untuk dua rincian dari
+  angka yang sama (misalnya anggaran per jenis belanja dan per sumber dana), pilih salah satu saja supaya tidak
+  terhitung dua kali.
+* **Cara rekap** (kolom angka mingguan): *nilai terakhir* untuk angka berjalan seperti pagu dan realisasi, atau
+  *jumlahkan* untuk angka yang dicatat terpisah tiap minggu.
+* **Opsi bersyarat** (kolom pilihan): pilihan kolom ini mengikuti nilai kolom pilihan lain di baris yang sama.
+
+Menghapus jenis data ikut menghapus kolom dan semua datanya. Kalau sebuah kolom dipakai di Dashboard lalu dihapus atau
+diganti, periksa lagi **Kelola Dashboard**.
 
 ### Kelola Dashboard
-Admin mengatur isi Dashboard sendiri, tanpa mengubah kode.
 
-1. Buka **Kelola Dashboard**. Mulanya Dashboard memakai tampilan bawaan; klik **Salin tampilan bawaan** agar dapat diubah.
-2. **Kartu**: judul, bagian, gaya (*berwarna* dengan ikon/warna, atau *putih* dengan pembanding seperti Pagu), satuan (angka/rupiah),
-   dan **sumber angka** = jenis data + kolom (bisa lebih dari satu, dijumlahkan).
-3. **Grafik**: batang per UPT; tiap **seri** punya nama, warna, dan sumber angka. Di Dashboard, tiap kartu grafik punya
-   tombol kecil untuk beralih tampilan **grafik batang ↔ tabel angka** (ikon grafik/tabel di pojok kanan atas kartu) —
-   sumber angkanya sama persis, tidak perlu diatur ulang; pilihan tampilan ini per pengguna/per kunjungan, tidak tersimpan.
-4. Tombol panah mengubah urutan, ikon mata menyembunyikan, pensil mengubah, tempat sampah menghapus; **Kembali ke bawaan** menghapus semua pengaturan.
-5. Berlaku untuk semua akun; akun UPT tetap hanya melihat angka UPT-nya sendiri.
+1. Klik **Salin tampilan bawaan** supaya tampilan Dashboard bisa diubah.
+2. **Kartu**: atur judul, bagian, gaya, satuan (angka atau rupiah), dan sumber angkanya (jenis data dan kolom; bisa
+   lebih dari satu, nanti dijumlahkan).
+3. **Grafik**: batang per UPT. Setiap seri punya nama, warna, dan sumber angka.
+4. Gunakan tombol panah untuk mengubah urutan, ikon mata untuk menyembunyikan, pensil untuk mengubah, dan tempat sampah
+   untuk menghapus. **Kembali ke bawaan** mengembalikan tampilan semula.
 
-Jenis data atau kolom baru (Kelola Jenis Data, level mingguan, tipe angka) otomatis muncul sebagai pilihan sumber. Rumus yang berbeda
-(mis. persentase realisasi terhadap pagu) belum tersedia sebagai tipe widget dan perlu ditambahkan di kode.
+Pengaturan ini berlaku untuk semua akun. Akun UPT tetap hanya melihat angka UPT-nya sendiri.
 
-### Dokumen & Panduan
-Repositori pedoman/regulasi/SOP: dapat dicari, diunduh, ditambah (**+ Tambah Dokumen**), dan dihapus — tersimpan di
-**database** (tabel `dokumen_resmi`), bukan di browser, jadi dokumen yang ditambahkan seorang Admin langsung
-terlihat bagi Admin lain juga. Ditambah **template Excel** per jenis data, dibuat otomatis dari definisi kolom.
+### Dokumen & Arsip
 
-### Arsip Data Historis
-Untuk data tahun-tahun lalu yang formatnya berbeda-beda: **unggah berkas Excel atau PDF apa adanya**, lalu lihat langsung di web.
+**Dokumen & Panduan** berisi pedoman, regulasi, dan SOP yang bisa dicari, diunduh, ditambah, dan dihapus. Di sini juga
+ada **Template Standar Impor Excel**: pilih jenis data, lalu unduh templatenya.
 
-1. Menu **Arsip Data Historis** → pilih **Tahun data**, (Admin: pilih **UPT** atau *Pusat/seluruh UPT*), isi judul, pilih berkas
-   (PDF, XLSX, XLS, CSV — maks. 30 MB) → **Unggah**.
-2. Klik **Lihat** pada daftar: PDF tampil di penampil bawaan; Excel/CSV tampil sebagai tabel (per sheet, 500 baris pertama).
-3. Bila saat mengunggah dipilih **Jenis data**, sistem membandingkan kolom berkas dengan template: hijau *"Format sesuai template"*
-   (kolom cocok ≥ 80%) atau kuning *"Format berbeda — ditampilkan apa adanya"*. Berkas berformat berbeda tetap tersimpan & tampil.
-4. Seluruh menu **Dokumen & Arsip** (tab ini dan tab **Dokumen & Panduan**) **khusus Admin** — server tetap membatasi
-   baca/tulis per `upt_key` bila diakses lewat API, tapi menunya disembunyikan dari UPT di UI. Isi berkas
-   disimpan di folder `be/storage` (jangan lupa ikut di-backup — lihat [07-pemeliharaan.md](07-pemeliharaan.md)).
+**Arsip Data Historis** menyimpan berkas data tahun-tahun lalu apa adanya.
 
-### Impor Data Historis
-Untuk memasukkan data **tahunan/bulanan by name** tahun-tahun lalu ke dalam sistem (agar muncul di rekap). Hanya Admin.
-**Data mingguan tidak diimpor massal.**
+1. Pilih tahun data dan UPT (atau Pusat), isi judul, pilih berkas PDF, XLSX, XLS, atau CSV (paling besar 30 MB), lalu
+   klik **Unggah**.
+2. Klik **Lihat** untuk membuka berkasnya langsung di web. Berkas Excel tampil sebagai tabel.
 
-1. Pastikan tahunnya ada di **Kelola Periode** (tombol *Buat 5 tahun ke belakang*).
-2. Pilih **Jenis Data** (bulanan rincian per nama) lalu **Unduh Template Excel** (opsional bila berkas Anda sudah rapi).
-3. **Pilih berkas**: *Unggah dari komputer*, atau *Dari Arsip Data Historis* (berkas yang sudah diarsipkan).
-4. Kolom dipetakan otomatis (dapat diubah). Bila berkas **tidak punya kolom UPT / Tahun / Bulan**, tentukan di kotak "nilai tetap":
-   UPT untuk seluruh berkas, Tahun, dan Bulan — atau pilih **kolom tanggal** agar bulan & tahun tiap baris diturunkan dari tanggalnya.
-5. **Periksa Data**: sistem menampilkan baris valid, baris bermasalah (nomor baris Excel + alasan), dan peringatan. Centang
-   **Lewati baris bermasalah** bila ingin melanjutkan, lalu **Impor**. Angka boleh `1.250.000` / `Rp 1250000`; tanggal `YYYY-MM-DD` atau `DD/MM/YYYY`.
+### Pengaturan Lanjutan
 
-Mengimpor ulang baris ber-NIK yang sama **memperbarui** data (tidak menggandakan); baris tanpa NIK akan terduplikasi. Data hasil impor Admin
-tidak ditandai terlambat. Jika format berkas sangat berbeda, cukup simpan di **Arsip Data Historis**.
+**Kelola Periode.** Periode tahun berjalan dan tahun depan dibuat otomatis. Di sini Admin bisa membuat periode untuk
+tahun-tahun lalu dan mengubah batas waktu (deadline) setiap periode.
 
-### Tempat Sampah & Catatan Aktivitas
-Menu **Tempat Sampah** (khusus Admin) berisi dua tab:
+**Impor Data Historis.** Untuk memasukkan data per nama tahun-tahun lalu supaya ikut di rekap.
 
-* **Tempat Sampah** – daftar data yang dihapus, dikelompokkan per aksi hapus: jenis data, UPT, periode, jumlah, siapa
-  yang menghapus, waktu, dan **sisa hari** sebelum dibuang otomatis. Tombol **Pulihkan** mengembalikan seluruh data pada
-  aksi itu; ikon 🗑️ membuangnya **permanen**.
-* **Catatan Aktivitas** – 200 log terbaru: *Hapus*, *Hapus Massal*, *Pulihkan*, *Hapus Permanen*, *Dibuang Otomatis*
-  (setelah 30 hari), *Hapus UPT* (beserta jumlah akun/data yang ikut terhapus), serta *Buat Periode*, *Ubah Deadline*, dan
-  *Impor Historis*.
+1. Pastikan periode tahun itu sudah ada di Kelola Periode.
+2. Pilih jenis data, lalu pilih berkas dari komputer atau dari Arsip Data Historis.
+3. Periksa pemetaan kolom. Kalau berkas tidak punya kolom UPT, tahun, atau bulan, isi nilainya untuk seluruh berkas.
+4. Klik **Periksa Data**. Baris yang bermasalah ditampilkan beserta alasannya. Lanjutkan dengan **Impor**.
 
-Data di tempat sampah tidak tampil di dashboard, rekap, ekspor Excel, maupun halaman publik. Mengubah lama penyimpanan:
-`TRASH_RETENTION_DAYS` di `be/.env` (bawaan 30). Bila kotak kuning "Tempat sampah belum aktif" muncul, jalankan
-`database/migrasi_02_tempat_sampah.sql` di phpMyAdmin. Urutan migrasi lengkap untuk database lama ada di
-[07-pemeliharaan.md](07-pemeliharaan.md#peningkatan-dari-versi-sebelumnya-migrasi-database) (01 sampai 09).
-
-### Kelola Jenis Data (Form Builder)
-* Tambah/ubah/hapus **Jenis Data**; atur tingkat (mingguan/bulanan), pasangan mingguan, mode bulanan, dan
-  **Boleh dilihat publik**. Tingkat (*level utama*) menentukan apakah jenis data muncul di **Input Mingguan**
-  atau **Input Bulanan**.
-* **Buat dari Excel** (tombol di sebelah *Buat Jenis Data Baru*) — cara cepat membuat Jenis Data bulanan "Per nama"
-  langsung dari contoh berkas Excel:
-  1. Unggah berkas (baris pertama = judul kolom). Sistem menebak kolom identitas **UPT/Tahun/Bulan** (alias yang
-     sama dengan Impor Data Historis) dan tipe tiap kolom isian (teks/angka/tanggal/pilihan, termasuk opsi
-     dropdown-nya) dari isi selnya.
-  2. Tinjau & koreksi: judul jenis data, tiap kolom (label, field key, tipe, wajib, identitas pribadi), serta
-     kolom UPT/Tahun/Bulan (kolom dari berkas, atau "nilai tetap" bila berkas tidak punya kolom itu).
-  3. Konfirmasi → Jenis Data + kolom-kolomnya dibuat, dan **seluruh baris berkas langsung diimpor** sebagai data
-     pertamanya (baris bermasalah dilewati & dilaporkan, memakai mesin validasi yang sama dengan Impor Data
-     Historis).
-* Kelola **kolom**: tambah, ubah, aktif/nonaktif, hapus, ubah urutan (seret-dan-lepas), tipe
-  (*angka, teks, teks panjang, tanggal, pilihan, berkas*), opsi pilihan, wajib, dan penanda **Identitas Pribadi**
-  (tidak pernah tampil di publik).
-* **Tipe Berkas** (dipakai untuk semua kolom data dukung: Link Laporan Pelatihan, Data Dukung PNBP, Bukti Dukung
-  program prioritas) — diisi **salah satu**: unggah berkas (PDF, Word, atau Excel; maks. **10 MB**) langsung dari
-  form, **atau** tempel link (mis. folder Google Drive) di isian *atau link* di bawahnya. Hanya alamat `http://` /
-  `https://` yang diterima. Di tabel rekap, berkas tampil sebagai tombol unduh bernama berkas asli, link tampil
-  sebagai **Buka link (nama situs)** yang terbuka di tab baru. Mengganti berkas atau beralih ke link otomatis membuang
-  berkas lama. Ekspor Excel menuliskan link apa adanya (berkas unggahan: "berkas — unduh di web"). Tidak bisa diisi
-  lewat Upload Excel data per nama / Impor Data Historis; **Impor Weekly Report** mengisinya dengan link dari
-  formulir.
-* **Dihitung di rekap sebagai** (jenis data mingguan) — menentukan angka ringkasan mana di Rekap UPT/Balai dan
-  Rekap Bulanan yang diisi sebuah kolom: **Judul baris** → Pelatihan (tiap baris yang kolom ini terisi dihitung
-  1 pelatihan), **Jumlah peserta** → Peserta, **Pagu anggaran** → Pagu, **Realisasi anggaran** → Realisasi (ketiganya
-  dijumlahkan), atau **Tidak dihitung**. Dengan ini jenis data buatan Admin bebas memakai nama kolom apa pun dan
-  tetap terhitung di rekap. Saat mengetik nama kolom baru, peran ditebak otomatis (mis. "Jumlah Peserta" →
-  Peserta) dan tetap bisa diganti. Panel **"Cara data ini dihitung di rekap"** di atas daftar kolom merangkum
-  kolom mana yang mengisi tiap angka; kotak bertanda *Belum diatur* berarti angka itu selalu 0 di rekap (jenis
-  data tanpa kolom Judul baris, mis. data anggaran, tidak menambah jumlah Pelatihan). Pilih satu kolom saja sebagai
-  Judul baris agar pelatihan tidak terhitung dua kali. Untuk data yang merupakan **rincian dari total yang sama**
-  (mis. anggaran per jenis belanja dan per sumber dana), beri peran Pagu/Realisasi pada salah satunya saja.
-* Kode kolom (*field key*) dibuat otomatis dari nama kolom dan ada di bagian **Lanjutan**. Setelah kolom dibuat,
-  kodenya tidak bisa diubah lagi (sudah dipakai menyimpan data) — nama kolom tetap bisa diganti bebas.
-* Untuk kolom **angka** pada jenis data mingguan tersedia **Cara Rekap** (jumlahkan / nilai terakhir / rata-rata /
-  maksimum). **Bawaan kolom baru: Nilai terakhir** (angka dianggap berjalan/kumulatif — mis. minggu 1 = 10, minggu 2
-  = 30 → rekap bulan pakai 30, bukan 10 + 30). Ganti ke *Jumlahkan* hanya untuk kolom yang memang mencatat tambahan
-  baru tiap minggu secara terpisah. Lencana cara rekap tampil di daftar kolom.
-* Pada jenis data mingguan, kotak **Boleh lebih dari 1 pelatihan per minggu** (di *Edit Pengaturan*) mengizinkan
-  tombol "Tambah Pelatihan" di Input Mingguan diklik berkali-kali (banyak baris per minggu); tanpa kotak ini,
-  jenis data itu cuma bisa punya satu baris nilai per minggu ("Isi Data Minggu Ini").
-* Pada jenis data bulanan **Per nama**, kotak **Data kumulatif (bulan terbaru menggantikan sebelumnya)** (di
-  *Edit Pengaturan*) mengaktifkan perilaku loncat-otomatis-ke-bulan-terakhir di **Data by Name** — lihat
-  [Input Bulanan](#input-bulanan).
-* **Opsi bersyarat** untuk kolom bertipe *Pilihan*: opsinya bisa dibuat berbeda tergantung nilai kolom pilihan
-  lain di baris yang sama (mis. "Jenjang Jabatan" berbeda untuk Instruktur vs Widyaiswara pada *Data Instruktur
-  dan WI*). Saat menambah/mengubah kolom bertipe Pilihan, centang **"Opsi tergantung kolom lain (bersyarat)"**,
-  pilih kolom *Pilihan* lain di level yang sama sebagai acuan (kolom acuan harus sudah punya opsi tetap sendiri),
-  lalu isi opsi untuk **setiap** nilai kolom acuan itu. Tombol ini nonaktif bila belum ada kolom Pilihan lain yang
-  bisa dijadikan acuan — buat kolom acuannya (opsi tetap biasa) terlebih dahulu.
-* Perubahan langsung berlaku bagi semua pengguna **tanpa deploy ulang** — form input dan template Excel mengikuti
-  definisi terbaru.
-* Menghapus Jenis Data menghapus juga kolom, nilai rekap, data rincian, dan berkas terkait (ada konfirmasi).
-
-> Kartu/grafik Dashboard mengambil angka dari **key** Jenis Data & **field_key** kolom yang dipilih di **Kelola
-> Dashboard** (lihat menu Admin di bawah) — bukan lagi tertanam tetap di kode. Mengganti `key` jenis data atau
-> `field_key` kolom yang sedang dipakai sebagai sumber widget membuat widget itu berhenti menemukan datanya
-> (tampil kosong); buka **Kelola Dashboard** untuk memilih ulang sumbernya setelah mengganti key/kolom. Begitu
-> pula mengganti **judul** Jenis Data: `key` internalnya tidak ikut berubah (stabil sejak dibuat), tapi mengubah
-> struktur kolom suatu Jenis Data mengubah arti data yang sudah tersimpan di baris-baris lama miliknya.
+**Tempat Sampah.** Berisi data yang dihapus dalam 30 hari terakhir. **Pulihkan** mengembalikan datanya, ikon tempat
+sampah membuangnya permanen. Tab **Catatan Aktivitas** mencatat penghapusan, pemulihan, perubahan periode, dan impor.
 
 ## Tampilan Publik
 
-Tanpa login, satu halaman ringkas: pilih tahun, lalu lihat total data terdata per kategori (jenis data yang ditandai publik) beserta totalnya. Semua data yang bersifat
-identitas pribadi (nama, NIK, telepon, alamat, NIP) **tidak pernah** dikirim ke halaman ini.
+Pengunjung tanpa login bisa memilih tahun dan melihat total data per kategori untuk jenis data yang diizinkan Admin.
+Data pribadi seperti nama, NIK, telepon, alamat, dan NIP tidak pernah ditampilkan di halaman ini.
+
+## Jika ada masalah
+
+| Masalah | Yang perlu dicek |
+| :-- | :-- |
+| Lupa password | Minta Admin melakukan Reset Password |
+| Data sudah diisi tapi tidak muncul di Dashboard atau rekap | Statusnya mungkin masih *Menunggu Persetujuan*. Data baru dihitung setelah disetujui Admin |
+| Tidak bisa mengubah data | Baris itu sudah disetujui. Klik **Edit** dan simpan untuk mengajukan perubahan ke Admin |
+| Tulisan merah **Server terputus** | Muat ulang halaman setelah beberapa saat. Kalau masih terjadi, hubungi Admin |
+| Angka di tabel rekap 0 padahal datanya ada | Admin perlu memeriksa **Dihitung di rekap sebagai** pada jenis data itu |
+| Muncul pesan terlalu banyak percobaan login | Tunggu 15 menit, lalu coba lagi dengan password yang benar |

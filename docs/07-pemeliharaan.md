@@ -26,7 +26,7 @@ npm run periods -- 2024 --reset     # KEMBALIKAN tanggal & deadline tahun itu ke
 ### Memasukkan data tahun-tahun lalu
 1. **Kelola Periode** → *Buat 5 tahun ke belakang*.
 2. **Impor Data Historis** untuk tiap jenis data (template Excel per jenis data) — lihat panduan di
-   [06-panduan-pengguna.md](06-panduan-pengguna.md#impor-data-historis).
+   [06-panduan-pengguna.md](06-panduan-pengguna.md#pengaturan-lanjutan).
 3. **Jangan menghapus UPT** yang sudah tidak ada: menghapus UPT menghapus seluruh datanya. Biarkan di daftar.
 4. Verifikasi di **Rekap Triwulan & Tahun** (pilih tahun lampau) dan bandingkan dengan sumber data lama.
 
@@ -234,7 +234,7 @@ Belum diuji di lingkungan ini: `docker compose` (Docker tidak terpasang) dan Mar
   belum ada — semua akun UPT saat ini bisa mengisi semua Jenis Data yang levelnya sesuai.
 * **Impor Data Historis**: belum ada pilihan "Perbarui/Tambah" vs "Ganti Semua" saat mengunggah ulang berkas untuk
   jenis data & periode yang sama — perilaku saat ini selalu memperbarui baris ber-NIK yang sama (lihat bagian
-  [Impor Data Historis](06-panduan-pengguna.md#impor-data-historis)).
+  [Impor Data Historis](06-panduan-pengguna.md#pengaturan-lanjutan)).
 * **UPT yang sudah tidak ada** belum dapat dinonaktifkan dari UI (hanya dihapus, yang ikut menghapus datanya). Biarkan tetap di daftar.
 * Token disimpan di `localStorage` (umum untuk SPA); bila kebijakan Anda mengharuskan cookie `HttpOnly`,
   ini perlu penyesuaian di `be/src/routes/auth.js` dan `fe/src/lib/db.js`.

@@ -74,7 +74,7 @@ Sembilan jenis data bawaan (berpasangan) dari instalasi awal:
 | Data Belanja Modal · Capaian Anggaran per Jenis Belanja · Capaian Anggaran per Sumber Dana | (mingguan saja, tidak dipublikasikan) |
 
 > Admin bebas menambah/mengubah jenis data lewat **Kelola Jenis Data** (termasuk lewat wizard **Buat dari Excel**,
-> lihat [06-panduan-pengguna.md](06-panduan-pengguna.md#kelola-jenis-data-form-builder)); daftar di atas hanya
+> lihat [06-panduan-pengguna.md](06-panduan-pengguna.md#kelola-jenis-data)); daftar di atas hanya
 > baseline instalasi. Di lingkungan pengembangan saat ini, misalnya, "Data Aparatur" dan "Data Instruktur dan WI"
 > (bulanan) sudah direstrukturisasi ulang kolom-kolomnya lewat menu Admin — struktur kolom yang berlaku selalu
 > yang ada di `field_definitions`, bukan tabel di atas.
