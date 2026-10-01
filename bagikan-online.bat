@@ -29,11 +29,14 @@ start "FE" cmd /k "cd /d %~dp0fe && npx next start -p %PORT_FE%"
 timeout /t 8 >nul
 
 echo [4/4] Membuka alamat online. Cari baris berisi https://... di jendela TUNNEL, itu alamat yang dibagikan.
-where cloudflared >nul 2>nul
-if %errorlevel%==0 (
-  start "TUNNEL" cmd /k "cloudflared tunnel --url http://localhost:%PORT_FE%"
+REM Cloudflare Tunnel (gratis, tanpa akun, alamat tetap selama jendela TUNNEL terbuka): dari PATH atau Laragon
+set CLOUDFLARED=
+where cloudflared >nul 2>nul && set CLOUDFLARED=cloudflared
+if not defined CLOUDFLARED if exist "C:\laragon\bin\cloudflared\cloudflared.exe" set CLOUDFLARED="C:\laragon\bin\cloudflared\cloudflared.exe"
+if defined CLOUDFLARED (
+  start "TUNNEL" cmd /k "%CLOUDFLARED% tunnel --no-autoupdate --url http://localhost:%PORT_FE%"
 ) else (
-  REM Tanpa unduhan: memakai SSH bawaan Windows ke localhost.run (gratis, tanpa akun)
+  REM Cadangan tanpa unduhan: SSH bawaan Windows ke localhost.run (alamatnya berganti berkala)
   start "TUNNEL" cmd /k "ssh -o StrictHostKeyChecking=accept-new -R 80:localhost:%PORT_FE% nokey@localhost.run"
 )
 echo.
